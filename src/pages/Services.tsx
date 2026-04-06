@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -7,90 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
-  Volume2, Lightbulb, Layers, Check, ArrowRight, Music, Megaphone, Ticket,
-  Briefcase, CalendarIcon, MapPin, Clock, Monitor, ChevronRight, Sparkles
+  Check, ArrowRight, CalendarIcon, MapPin, Clock, ChevronRight, Monitor
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import soundImg from "@/assets/sound-system.jpg";
-import lightingImg from "@/assets/lighting-system.jpg";
-import stageImg from "@/assets/stage-design.jpg";
-import heroImg from "@/assets/hero-event.jpg";
-import concertImg from "@/assets/event-concert.jpg";
-import corporateImg from "@/assets/event-corporate.jpg";
-
-interface ServiceItem {
-  name: string;
-  icon: typeof Volume2;
-  description: string;
-}
-
-interface ServiceCategory {
-  title: string;
-  description: string;
-  image: string;
-  color: string;
-  items: ServiceItem[];
-  packages?: { name: string; price: string; features: string[] }[];
-}
-
-const serviceCategories: ServiceCategory[] = [
-  {
-    title: "Event Production",
-    description: "End-to-end technical production with world-class equipment and expertise.",
-    image: concertImg,
-    color: "from-primary/80 to-primary",
-    items: [
-      { name: "Sound System", icon: Volume2, description: "Professional audio solutions with crystal-clear sound for any scale." },
-      { name: "Lighting System", icon: Lightbulb, description: "Stunning lighting designs that create the perfect atmosphere." },
-      { name: "Stage Design", icon: Layers, description: "Custom stage designs that captivate audiences." },
-    ],
-    packages: [
-      { name: "Basic", price: "400,000 RWF", features: ["2 Main Speakers", "8 PAR Lights", "4x3m Stage", "Basic Setup"] },
-      { name: "Professional", price: "1,200,000 RWF", features: ["Line Array System", "Moving Heads + DMX", "8x6m Stage", "Sound & Light Engineer", "Setup & Teardown"] },
-      { name: "Premium", price: "3,500,000 RWF", features: ["Full Line Array", "Grand MA Lighting", "12x8m Custom Stage", "Full Crew", "Production Manager", "LED Video Wall"] },
-    ],
-  },
-  {
-    title: "Event Management",
-    description: "Complete event planning and promotion to make your event unforgettable.",
-    image: corporateImg,
-    color: "from-secondary/80 to-secondary",
-    items: [
-      { name: "Branding", icon: Sparkles, description: "Visual identity, event branding, and creative direction." },
-      { name: "Advertisement", icon: Megaphone, description: "Multi-channel promotion across digital and traditional media." },
-      { name: "Ticketing", icon: Ticket, description: "Full ticketing solutions with online sales and QR validation." },
-    ],
-    packages: [
-      { name: "Starter", price: "250,000 RWF", features: ["Basic Branding Package", "Social Media Ads", "Online Ticketing Setup"] },
-      { name: "Growth", price: "700,000 RWF", features: ["Full Brand Identity", "Multi-Channel Ads", "Ticketing + QR Codes", "Event Posters & Flyers", "Dedicated Manager"] },
-      { name: "Enterprise", price: "1,800,000 RWF", features: ["Premium Brand Suite", "Radio + TV + Digital Ads", "Full Ticketing System", "Influencer Partnerships", "PR & Media Coverage", "On-site Coordination"] },
-    ],
-  },
-  {
-    title: "Corporate Events",
-    description: "Professional corporate event solutions for conferences, galas, and team-building.",
-    image: heroImg,
-    color: "from-foreground/70 to-foreground/90",
-    items: [
-      { name: "Corporate Events", icon: Briefcase, description: "Full-service corporate event planning, production, and management." },
-    ],
-    packages: [
-      { name: "Half-Day", price: "500,000 RWF", features: ["Venue Coordination", "Basic AV Setup", "Branding & Signage", "Event Manager"] },
-      { name: "Full-Day", price: "1,500,000 RWF", features: ["Full AV Production", "Custom Branding", "Catering Coordination", "Photography", "Event Manager"] },
-      { name: "Multi-Day", price: "4,000,000 RWF", features: ["Complete Production", "Premium Branding", "Full Catering", "Photo + Video", "Transport Logistics", "Dedicated Team"] },
-    ],
-  },
-];
-
-const equipmentRentals = [
-  { name: "Screen Rental", icon: Monitor, price: "150,000", image: heroImg },
-  { name: "Lighting System Rental", icon: Lightbulb, price: "80,000", image: lightingImg },
-  { name: "Sound System Rental", icon: Volume2, price: "200,000", image: soundImg },
-  { name: "Stage Rental", icon: Layers, price: "180,000", image: stageImg },
-];
+import { services, equipmentRentals } from "@/data/services";
 
 const ServicesPage = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
