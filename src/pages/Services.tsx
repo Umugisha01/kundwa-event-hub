@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
-  Check, ArrowRight, CalendarIcon, MapPin, Clock, ChevronRight, Monitor
+  Check, ArrowRight, CalendarIcon, MapPin, Clock, ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -16,14 +16,25 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { services, equipmentRentals } from "@/data/services";
 
+// Group services by category
+const categories = [
+  { title: "Event Production", color: "from-primary/80 to-primary" },
+  { title: "Event Management", color: "from-secondary/80 to-secondary" },
+  { title: "Corporate Events", color: "from-foreground/70 to-foreground/90" },
+];
+
+const groupedServices = categories.map((cat) => ({
+  ...cat,
+  items: services.filter((s) => s.category === cat.title),
+}));
+
 const ServicesPage = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedItem, setSelectedItem] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [date, setDate] = useState<Date>();
   const [duration, setDuration] = useState("");
   const [location, setLocation] = useState("");
-  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
 
   const openBooking = (item: string, category: string) => {
     setSelectedItem(item);
@@ -80,20 +91,20 @@ const ServicesPage = () => {
       </section>
 
       {/* Service Categories */}
-      {serviceCategories.map((category, i) => (
+      {groupedServices.map((category, i) => (
         <section key={i} className={`section-padding ${i % 2 === 1 ? "bg-muted/40" : ""}`}>
           <div className="max-w-7xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className={`grid md:grid-cols-2 gap-10 items-center mb-14 ${i % 2 === 1 ? "" : ""}`}
+              className="grid md:grid-cols-2 gap-10 items-center"
             >
               {/* Image */}
-              <div className={`${i % 2 === 1 ? "md:order-2" : ""}`}>
+              <div className={i % 2 === 1 ? "md:order-2" : ""}>
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
                   <img
-                    src={category.image}
+                    src={category.items[0]?.heroImage}
                     alt={category.title}
                     className="w-full h-72 md:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
                     loading="lazy"
@@ -110,24 +121,21 @@ const ServicesPage = () => {
               </div>
 
               {/* Info */}
-              <div className={`${i % 2 === 1 ? "md:order-1" : ""}`}>
+              <div className={i % 2 === 1 ? "md:order-1" : ""}>
                 <span className="text-secondary font-semibold text-xs uppercase tracking-widest">
                   {`0${i + 1}`}
                 </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2 mb-4">
                   {category.title}
                 </h2>
-                <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
-                  {category.description}
-                </p>
 
-                {/* Service items */}
+                {/* Service items — now link to detail pages */}
                 <div className="space-y-3 mb-6">
                   {category.items.map((item, j) => (
-                    <div
+                    <Link
                       key={j}
-                      className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/50 hover:border-secondary/50 hover:shadow-md transition-all group cursor-pointer"
-                      onClick={() => openBooking(item.name, category.title)}
+                      to={`/services/${item.slug}`}
+                      className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/50 hover:border-secondary/50 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
@@ -135,65 +143,22 @@ const ServicesPage = () => {
                         </div>
                         <div>
                           <h4 className="font-semibold text-foreground text-sm">{item.name}</h4>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                          <p className="text-xs text-muted-foreground">{item.tagline}</p>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-secondary transition-colors" />
-                    </div>
+                    </Link>
                   ))}
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    className="btn-gold gap-2"
-                    onClick={() => openBooking(`Full ${category.title}`, category.title)}
-                  >
-                    Book {category.title} <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setExpandedCategory(expandedCategory === i ? null : i)}
-                  >
-                    {expandedCategory === i ? "Hide Packages" : "View Packages"}
-                  </Button>
-                </div>
+                <Button
+                  className="btn-gold gap-2"
+                  onClick={() => openBooking(`Full ${category.title}`, category.title)}
+                >
+                  Book {category.title} <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             </motion.div>
-
-            {/* Packages */}
-            {expandedCategory === i && category.packages && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="grid md:grid-cols-3 gap-6 mt-4"
-              >
-                {category.packages.map((pkg, j) => (
-                  <div key={j} className={`card-premium p-6 ${j === 1 ? "ring-2 ring-secondary relative" : ""}`}>
-                    {j === 1 && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                        Popular
-                      </div>
-                    )}
-                    <h3 className="font-bold text-lg text-foreground mb-1">{pkg.name}</h3>
-                    <p className="text-2xl font-bold text-foreground mb-4">{pkg.price}</p>
-                    <ul className="space-y-2 mb-6">
-                      {pkg.features.map((f, k) => (
-                        <li key={k} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-secondary flex-shrink-0" /> {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button
-                      className={j === 1 ? "btn-gold w-full" : "btn-navy w-full"}
-                      onClick={() => openBooking(`${category.title} — ${pkg.name}`, category.title)}
-                    >
-                      Book {pkg.name}
-                    </Button>
-                  </div>
-                ))}
-              </motion.div>
-            )}
           </div>
         </section>
       ))}
@@ -287,24 +252,14 @@ const ServicesPage = () => {
               <Label htmlFor="duration" className="mb-2 block">Duration</Label>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="duration"
-                  placeholder="e.g., 4 hours, 2 days"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                />
+                <Input id="duration" placeholder="e.g., 4 hours, 2 days" value={duration} onChange={(e) => setDuration(e.target.value)} />
               </div>
             </div>
             <div>
               <Label htmlFor="location" className="mb-2 block">Location</Label>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="location"
-                  placeholder="e.g., Kigali Convention Centre"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
+                <Input id="location" placeholder="e.g., Kigali Convention Centre" value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
             </div>
             <Button className="btn-gold w-full gap-2" onClick={handleSubmit}>
