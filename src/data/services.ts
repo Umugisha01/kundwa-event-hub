@@ -8,13 +8,6 @@ import concertImg from "@/assets/event-concert.jpg";
 import corporateImg from "@/assets/event-corporate.jpg";
 import heroImg from "@/assets/hero-event.jpg";
 
-export interface ServicePackage {
-  name: string;
-  price: string;
-  features: string[];
-  popular?: boolean;
-}
-
 export interface ServiceDetail {
   slug: string;
   name: string;
@@ -25,7 +18,7 @@ export interface ServiceDetail {
   heroImage: string;
   galleryImages: string[];
   features: string[];
-  packages: ServicePackage[];
+  highlights: { label: string; value: string }[];
   faqs: { question: string; answer: string }[];
 }
 
@@ -50,15 +43,16 @@ export const services: ServiceDetail[] = [
       "Setup, sound-check & teardown handled",
       "Backup equipment on standby",
     ],
-    packages: [
-      { name: "Basic", price: "200,000 RWF", features: ["2 Main Speakers (JBL)", "1 Powered Subwoofer", "2 Wireless Microphones", "Basic Mixer", "Setup & Teardown"] },
-      { name: "Professional", price: "600,000 RWF", features: ["Line Array System", "4 Subwoofers", "Digital Mixer (32ch)", "6 Wireless Mics", "Monitor Wedges", "Sound Engineer", "Multi-track Recording"], popular: true },
-      { name: "Festival", price: "1,800,000 RWF", features: ["Full Line Array (L/R)", "Subwoofer Array", "FOH & Monitor Consoles", "Complete Mic Package", "In-Ear Monitor System", "2 Sound Engineers", "Delay Towers", "48h Setup Window"] },
+    highlights: [
+      { label: "Capacity", value: "50 – 50,000+" },
+      { label: "Brands", value: "JBL · QSC · d&b" },
+      { label: "Engineers", value: "Certified Team" },
+      { label: "Support", value: "24/7 On-site" },
     ],
     faqs: [
       { question: "What size events can you cover?", answer: "From 50-person corporate meetings to 50,000+ outdoor festivals. We scale our system to match your venue and audience." },
-      { question: "Do you provide sound engineers?", answer: "Yes — Professional and Festival packages include dedicated sound engineers. Basic packages include setup guidance." },
-      { question: "Can I add recording services?", answer: "Multi-track recording is included in Professional+ packages. We can also arrange live streaming audio." },
+      { question: "Do you provide sound engineers?", answer: "Yes — all our setups include dedicated sound engineers for seamless operation." },
+      { question: "Can I add recording services?", answer: "Multi-track recording and live streaming audio are available. Contact us for details." },
     ],
   },
   {
@@ -81,13 +75,14 @@ export const services: ServiceDetail[] = [
       "Pixel-mapped LED bars & strips",
       "Dedicated lighting designer & operator",
     ],
-    packages: [
-      { name: "Ambient", price: "150,000 RWF", features: ["12 LED PAR Lights", "Basic DMX Controller", "Uplighting Package", "Color Wash Effects", "Setup & Programming"] },
-      { name: "Show", price: "500,000 RWF", features: ["8 Moving Heads", "20 LED PARs", "Grand MA Controller", "Haze Machine", "Truss & Rigging", "Lighting Designer", "Custom Programming"], popular: true },
-      { name: "Spectacular", price: "1,500,000 RWF", features: ["Full Moving Head Rig", "LED Video Panels", "Laser Systems", "Grand MA2 Console", "Complete Truss Grid", "2 Lighting Operators", "Pixel Mapping", "Pyro Effects"] },
+    highlights: [
+      { label: "Fixtures", value: "200+ Available" },
+      { label: "Control", value: "Grand MA" },
+      { label: "Setup", value: "Same-day Ready" },
+      { label: "Custom", value: "Brand Colors" },
     ],
     faqs: [
-      { question: "How early do you need to set up?", answer: "Ambient packages need 2-3 hours. Show packages need a half-day. Spectacular rigs require a full day for setup and programming." },
+      { question: "How early do you need to set up?", answer: "Depending on complexity, setup ranges from 2 hours to a full day. We'll coordinate the timeline with you." },
       { question: "Can you match our brand colors?", answer: "Absolutely. We program custom color palettes to match your brand identity perfectly." },
       { question: "Do you provide outdoor lighting?", answer: "Yes, we have weatherproof fixtures and generators for outdoor events." },
     ],
@@ -112,10 +107,11 @@ export const services: ServiceDetail[] = [
       "Branded stage wraps & skirts",
       "Complete setup & teardown crew",
     ],
-    packages: [
-      { name: "Compact", price: "300,000 RWF", features: ["4x3m Stage Platform", "Basic Skirting", "Steps & Ramp", "Podium / Lectern", "Setup & Teardown"] },
-      { name: "Standard", price: "900,000 RWF", features: ["8x6m Stage", "Backline Wall", "LED Screen (P3.9)", "Custom Branding", "Truss Roof", "Safety Rails", "Full Crew"], popular: true },
-      { name: "Grand", price: "3,000,000 RWF", features: ["12x8m+ Custom Stage", "Multi-Level Design", "Full LED Backdrop", "Hydraulic Elements", "Pyro Integration Points", "VIP Wings", "Structural Engineer", "48h Build Time"] },
+    highlights: [
+      { label: "Sizes", value: "4x3m – 20x12m+" },
+      { label: "Safety", value: "Certified" },
+      { label: "LED", value: "P3.9 Walls" },
+      { label: "Crew", value: "Full Team" },
     ],
     faqs: [
       { question: "Can you build custom shapes?", answer: "Yes — our fabrication team can create runways, thrust stages, circular stages, and any custom configuration." },
@@ -143,13 +139,14 @@ export const services: ServiceDetail[] = [
       "Digital invitation design",
       "Brand guidelines document",
     ],
-    packages: [
-      { name: "Essential", price: "150,000 RWF", features: ["Event Logo Design", "Color Palette", "2 Social Media Templates", "1 Poster Design", "Digital Files Package"] },
-      { name: "Professional", price: "450,000 RWF", features: ["Full Visual Identity", "10 Social Media Templates", "Poster & Flyer Suite", "Banner Designs", "Branded Merch Concepts", "Brand Guidelines PDF", "2 Revision Rounds"], popular: true },
-      { name: "Premium", price: "1,200,000 RWF", features: ["Complete Brand System", "Unlimited Social Templates", "All Print Materials", "Venue Signage Design", "Merchandise Production", "Motion Graphics", "Video Intro/Outro", "Dedicated Designer"] },
+    highlights: [
+      { label: "Turnaround", value: "3–14 Days" },
+      { label: "Deliverables", value: "Print + Digital" },
+      { label: "Revisions", value: "Unlimited" },
+      { label: "Ownership", value: "Full Rights" },
     ],
     faqs: [
-      { question: "How long does branding take?", answer: "Essential packages: 3-5 days. Professional: 7-10 days. Premium: 2-3 weeks with revisions." },
+      { question: "How long does branding take?", answer: "Typically 3–14 days depending on the scope. We'll discuss timelines during your consultation." },
       { question: "Do we own the designs?", answer: "Yes — all final designs and source files are transferred to you upon completion." },
       { question: "Can you match existing branding?", answer: "Absolutely. We can extend your existing brand identity into event-specific materials." },
     ],
@@ -174,14 +171,15 @@ export const services: ServiceDetail[] = [
       "PR & press release distribution",
       "Campaign analytics & reporting",
     ],
-    packages: [
-      { name: "Digital", price: "200,000 RWF", features: ["Social Media Ads (2 platforms)", "Ad Creative Design", "2-Week Campaign", "Basic Analytics Report", "Audience Targeting"] },
-      { name: "Multi-Channel", price: "700,000 RWF", features: ["All Social Platforms", "Google Ads Campaign", "2 Influencer Partners", "Email Campaign (5,000+)", "Radio Spots", "4-Week Campaign", "Weekly Reports", "A/B Testing"], popular: true },
-      { name: "Full Force", price: "2,000,000 RWF", features: ["All Digital Channels", "5+ Influencer Partners", "TV Commercial Spot", "Billboard Placement", "PR & Media Coverage", "Email + SMS Campaigns", "6-Week Campaign", "Dedicated Campaign Manager"] },
+    highlights: [
+      { label: "Channels", value: "10+ Platforms" },
+      { label: "Reach", value: "1M+ Audience" },
+      { label: "ROI", value: "3–8x Average" },
+      { label: "Analytics", value: "Real-time" },
     ],
     faqs: [
       { question: "What ROI can I expect?", answer: "Our campaigns typically deliver 3-8x return on ad spend, depending on event type and target audience." },
-      { question: "Do you handle content creation?", answer: "Yes — all packages include ad creative design. Premium packages include video content." },
+      { question: "Do you handle content creation?", answer: "Yes — all engagements include ad creative design. We can also produce video content." },
       { question: "Can you target specific demographics?", answer: "Absolutely. We use advanced targeting for age, location, interests, and behavior." },
     ],
   },
@@ -205,15 +203,16 @@ export const services: ServiceDetail[] = [
       "Attendee check-in system",
       "Post-event analytics & reports",
     ],
-    packages: [
-      { name: "Basic", price: "100,000 RWF", features: ["Online Ticket Page", "2 Ticket Types", "Mobile Money Payments", "QR Code Tickets", "Basic Sales Report"] },
-      { name: "Pro", price: "350,000 RWF", features: ["Custom Ticket Page", "Unlimited Ticket Types", "All Payment Methods", "QR Check-in App", "Real-time Dashboard", "Promo Codes", "Attendee Database", "Email Confirmations"], popular: true },
-      { name: "Enterprise", price: "800,000 RWF", features: ["White-label Platform", "Unlimited Everything", "Reserved Seating Maps", "Group Bookings", "API Integration", "Dedicated Support", "On-site Check-in Team", "Full Analytics Suite"] },
+    highlights: [
+      { label: "Payments", value: "MoMo + Card" },
+      { label: "Validation", value: "QR Codes" },
+      { label: "Dashboard", value: "Real-time" },
+      { label: "Support", value: "On-site Team" },
     ],
     faqs: [
       { question: "What payment methods are supported?", answer: "MTN Mobile Money, Airtel Money, Visa, Mastercard, and bank transfers." },
       { question: "How do attendees receive tickets?", answer: "Via email and SMS with a unique QR code. They can also access tickets in their dashboard." },
-      { question: "What are the transaction fees?", answer: "Package prices are flat fees. Payment processing fees (2-3%) are separate." },
+      { question: "Do you provide on-site check-in staff?", answer: "Yes, we can provide trained check-in teams with scanning devices for your event." },
     ],
   },
   {
@@ -236,13 +235,14 @@ export const services: ServiceDetail[] = [
       "Transport & logistics",
       "Post-event reporting",
     ],
-    packages: [
-      { name: "Half-Day", price: "500,000 RWF", features: ["Venue Coordination", "Basic AV Setup", "Branding & Signage", "Event Manager", "Photography", "Catering Coordination"] },
-      { name: "Full-Day", price: "1,500,000 RWF", features: ["Full AV Production", "Custom Branding Suite", "Premium Catering", "Photography + Videography", "Transport Logistics", "Dedicated Event Manager", "Live Streaming Option"], popular: true },
-      { name: "Multi-Day", price: "4,000,000 RWF", features: ["Complete Production", "Premium Everything", "Full Catering (all meals)", "Photo + Video + Drone", "Hotel & Transport", "Dedicated Team (5+)", "Daily Reporting", "Post-event Video Edit"] },
+    highlights: [
+      { label: "Planning", value: "End-to-End" },
+      { label: "Venues", value: "50+ Partners" },
+      { label: "Catering", value: "Premium" },
+      { label: "Coverage", value: "Photo + Video" },
     ],
     faqs: [
-      { question: "How far in advance should we book?", answer: "We recommend 4-8 weeks for half-day events and 8-12 weeks for multi-day conferences." },
+      { question: "How far in advance should we book?", answer: "We recommend 4-12 weeks depending on event scale. Contact us to discuss your timeline." },
       { question: "Can you handle international delegates?", answer: "Yes — we arrange airport transfers, hotel bookings, translation services, and cultural programs." },
       { question: "Do you provide team-building activities?", answer: "Yes, we offer curated team-building programs including outdoor adventures, workshops, and cultural experiences." },
     ],
@@ -250,10 +250,10 @@ export const services: ServiceDetail[] = [
 ];
 
 export const equipmentRentals = [
-  { slug: "screen-rental", name: "Screen Rental", icon: Monitor, price: "150,000", image: heroImg, description: "High-resolution LED screens and projectors for presentations, video walls, and live feeds." },
-  { slug: "lighting-rental", name: "Lighting System Rental", icon: Lightbulb, price: "80,000", image: lightingImg, description: "Professional lighting rigs available for daily rental — moving heads, PARs, and controllers." },
-  { slug: "sound-rental", name: "Sound System Rental", icon: Volume2, price: "200,000", image: soundImg, description: "Premium audio equipment rental — speakers, mixers, microphones, and monitors." },
-  { slug: "stage-rental", name: "Stage Rental", icon: Layers, price: "180,000", image: stageImg, description: "Modular stage platforms in various sizes, complete with skirting and safety rails." },
+  { slug: "screen-rental", name: "Screen Rental", icon: Monitor, image: heroImg, description: "High-resolution LED screens and projectors for presentations, video walls, and live feeds." },
+  { slug: "lighting-rental", name: "Lighting System Rental", icon: Lightbulb, image: lightingImg, description: "Professional lighting rigs available for rental — moving heads, PARs, and controllers." },
+  { slug: "sound-rental", name: "Sound System Rental", icon: Volume2, image: soundImg, description: "Premium audio equipment — speakers, mixers, microphones, and monitors." },
+  { slug: "stage-rental", name: "Stage Rental", icon: Layers, image: stageImg, description: "Modular stage platforms in various sizes, complete with skirting and safety rails." },
 ];
 
 export function getServiceBySlug(slug: string): ServiceDetail | undefined {
