@@ -11,6 +11,7 @@ import Rentals from "./pages/Rentals.tsx";
 import Events from "./pages/Events.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Contact from "./pages/Contact.tsx";
+import Ticketing from "./pages/Ticketing.tsx";
 
 const queryClient = new QueryClient();
 
