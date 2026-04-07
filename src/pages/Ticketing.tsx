@@ -284,10 +284,10 @@ export default function Ticketing() {
             <p className="text-muted-foreground text-sm">Your ticket has been booked successfully.</p>
 
             {/* QR Code placeholder */}
-            <div className="mx-auto w-48 h-48 bg-foreground rounded-xl flex items-center justify-center">
+            <div className="mx-auto w-48 h-48 bg-primary rounded-xl flex items-center justify-center">
               <div className="text-center">
-                <QrCode className="h-24 w-24 text-background mx-auto" />
-                <p className="text-background text-[10px] mt-1 font-mono">{ticketCode}</p>
+                <QrCode className="h-24 w-24 text-primary-foreground mx-auto" />
+                <p className="text-primary-foreground text-[10px] mt-1 font-mono">{ticketCode}</p>
               </div>
             </div>
 
