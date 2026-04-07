@@ -2,21 +2,17 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
-  Check, ArrowRight, CalendarIcon, MapPin, Clock, ChevronRight
+  ArrowRight, ChevronRight, MessageSquare, Phone, Mail, Send
 } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { services, equipmentRentals } from "@/data/services";
 
-// Group services by category
 const categories = [
   { title: "Event Production", color: "from-primary/80 to-primary" },
   { title: "Event Management", color: "from-secondary/80 to-secondary" },
@@ -29,31 +25,25 @@ const groupedServices = categories.map((cat) => ({
 }));
 
 const ServicesPage = () => {
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [date, setDate] = useState<Date>();
-  const [duration, setDuration] = useState("");
-  const [location, setLocation] = useState("");
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquirySubject, setInquirySubject] = useState("");
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
 
-  const openBooking = (item: string, category: string) => {
-    setSelectedItem(item);
-    setSelectedCategory(category);
-    setBookingOpen(true);
+  const openInquiry = (subject: string) => {
+    setInquirySubject(subject);
+    setInquiryOpen(true);
   };
 
   const handleSubmit = () => {
-    if (!date || !duration || !location) {
-      toast.error("Please fill in all fields");
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Please fill in all required fields");
       return;
     }
-    toast.success(`Booking confirmed for ${selectedItem}`, {
-      description: `${format(date, "PPP")} • ${duration} • ${location}`,
+    toast.success("Inquiry sent!", {
+      description: "Our team will respond within 24 hours.",
     });
-    setBookingOpen(false);
-    setDate(undefined);
-    setDuration("");
-    setLocation("");
+    setInquiryOpen(false);
+    setFormData({ name: "", email: "", phone: "", message: "" });
   };
 
   return (
@@ -129,7 +119,6 @@ const ServicesPage = () => {
                   {category.title}
                 </h2>
 
-                {/* Service items — now link to detail pages */}
                 <div className="space-y-3 mb-6">
                   {category.items.map((item, j) => (
                     <Link
@@ -153,9 +142,9 @@ const ServicesPage = () => {
 
                 <Button
                   className="btn-gold gap-2"
-                  onClick={() => openBooking(`Full ${category.title}`, category.title)}
+                  onClick={() => openInquiry(category.title)}
                 >
-                  Book {category.title} <ArrowRight className="h-4 w-4" />
+                  <MessageSquare className="h-4 w-4" /> Inquire About {category.title}
                 </Button>
               </div>
             </motion.div>
@@ -170,7 +159,7 @@ const ServicesPage = () => {
             <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Equipment</span>
             <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-3">Equipment Rentals</h2>
             <p className="text-primary-foreground/60 max-w-xl mx-auto">
-              Premium event equipment available for daily rental — professionally maintained and delivered.
+              Premium event equipment available for rental — professionally maintained and delivered.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -198,14 +187,12 @@ const ServicesPage = () => {
                     <item.icon className="h-4 w-4 text-secondary" />
                     <h3 className="font-semibold text-primary-foreground text-sm">{item.name}</h3>
                   </div>
-                  <p className="text-lg font-bold text-primary-foreground mb-3">
-                    {item.price} <span className="text-xs text-primary-foreground/50 font-normal">RWF/day</span>
-                  </p>
+                  <p className="text-xs text-primary-foreground/60 mb-4 line-clamp-2">{item.description}</p>
                   <Button
-                    className="btn-gold w-full text-sm"
-                    onClick={() => openBooking(item.name, "Equipment Rental")}
+                    className="btn-gold w-full text-sm gap-1"
+                    onClick={() => openInquiry(item.name)}
                   >
-                    Rent Now
+                    <MessageSquare className="h-3.5 w-3.5" /> Get Quote
                   </Button>
                 </div>
               </motion.div>
@@ -214,57 +201,67 @@ const ServicesPage = () => {
         </div>
       </section>
 
-      {/* Booking Dialog */}
-      <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+      {/* Inquiry Dialog */}
+      <Dialog open={inquiryOpen} onOpenChange={setInquiryOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl">Book: {selectedItem}</DialogTitle>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-secondary" /> Get a Quote
+            </DialogTitle>
             <DialogDescription>
-              Category: <span className="text-secondary font-medium">{selectedCategory}</span>
+              For: <span className="text-secondary font-medium">{inquirySubject}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <Label className="mb-2 block">Event Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Select a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    disabled={(d) => d < new Date()}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label className="text-foreground text-sm">Full Name *</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Your name"
+                className="mt-1"
+              />
             </div>
             <div>
-              <Label htmlFor="duration" className="mb-2 block">Duration</Label>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <Input id="duration" placeholder="e.g., 4 hours, 2 days" value={duration} onChange={(e) => setDuration(e.target.value)} />
-              </div>
+              <Label className="text-foreground text-sm">Email *</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="you@example.com"
+                className="mt-1"
+              />
             </div>
             <div>
-              <Label htmlFor="location" className="mb-2 block">Location</Label>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <Input id="location" placeholder="e.g., Kigali Convention Centre" value={location} onChange={(e) => setLocation(e.target.value)} />
-              </div>
+              <Label className="text-foreground text-sm">Phone</Label>
+              <Input
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+250 78 000 0000"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-foreground text-sm">Message *</Label>
+              <Textarea
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                placeholder="Tell us about your event, date, venue, and requirements..."
+                rows={3}
+                className="mt-1"
+              />
             </div>
             <Button className="btn-gold w-full gap-2" onClick={handleSubmit}>
-              Confirm Booking <ArrowRight className="h-4 w-4" />
+              <Send className="h-4 w-4" /> Send Inquiry
             </Button>
+            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+              <a href="tel:+250780000000" className="flex items-center gap-1 hover:text-secondary transition-colors">
+                <Phone className="h-3 w-3" /> +250 78 000 0000
+              </a>
+              <a href="mailto:info@kundwaib.com" className="flex items-center gap-1 hover:text-secondary transition-colors">
+                <Mail className="h-3 w-3" /> info@kundwaib.com
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
