@@ -11,6 +11,7 @@ import Rentals from "./pages/Rentals.tsx";
 import Events from "./pages/Events.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Contact from "./pages/Contact.tsx";
+import Ticketing from "./pages/Ticketing.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/events" element={<Events />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/ticketing" element={<Ticketing />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
