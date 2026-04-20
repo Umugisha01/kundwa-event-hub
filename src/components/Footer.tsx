@@ -9,13 +9,11 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-white rounded-lg p-2">
-                <img
-                  src={logo}
-                  alt="Kundwa Sound Lighting System logo"
-                  className="h-10 w-auto object-contain"
-                />
-              </div>
+              <img
+                src={logo}
+                alt="Kundwa Sound Lighting System logo"
+                className="h-12 w-auto object-contain brightness-0 invert"
+              />
               <span className="font-heading font-bold text-lg">
                 Kundwa <span className="text-secondary">IB</span> Group
               </span>
