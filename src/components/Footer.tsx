@@ -8,12 +8,17 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="mb-4 inline-block bg-white rounded-lg p-3">
-              <img
-                src={logo}
-                alt="Kundwa Sound Lighting System logo"
-                className="h-12 w-auto object-contain"
-              />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-white rounded-lg p-2">
+                <img
+                  src={logo}
+                  alt="Kundwa Sound Lighting System logo"
+                  className="h-10 w-auto object-contain"
+                />
+              </div>
+              <span className="font-heading font-bold text-lg">
+                Kundwa <span className="text-secondary">IB</span> Group
+              </span>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
               Africa's premier event production and management company. Creating unforgettable experiences.
