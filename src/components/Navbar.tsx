@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Moon, Sun, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/kundwa-logo.png";
 
 const navLinks = [
   { to: "/", label: "Home", labelRw: "Ahabanza" },
@@ -30,12 +31,11 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">K</span>
-            </div>
-            <span className="font-heading font-bold text-lg text-foreground">
-              Kundwa <span className="text-secondary">IB</span> Group
-            </span>
+            <img
+              src={logo}
+              alt="Kundwa Sound Lighting System logo"
+              className="h-10 md:h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Nav */}
