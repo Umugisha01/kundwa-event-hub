@@ -36,6 +36,9 @@ export function Navbar() {
               alt="Kundwa Sound Lighting System logo"
               className="h-10 md:h-12 w-auto object-contain"
             />
+            <span className="font-heading font-bold text-base md:text-lg text-foreground hidden sm:inline">
+              Kundwa <span className="text-secondary">IB</span> Group
+            </span>
           </Link>
 
           {/* Desktop Nav */}
