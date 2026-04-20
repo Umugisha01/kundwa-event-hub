@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
+import logo from "@/assets/kundwa-logo.png";
 
 export function Footer() {
   return (
@@ -7,13 +8,12 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-                <span className="text-secondary-foreground font-bold text-lg">K</span>
-              </div>
-              <span className="font-heading font-bold text-lg">
-                Kundwa <span className="text-secondary">IB</span> Group
-              </span>
+            <div className="mb-4 inline-block bg-white rounded-lg p-3">
+              <img
+                src={logo}
+                alt="Kundwa Sound Lighting System logo"
+                className="h-12 w-auto object-contain"
+              />
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
               Africa's premier event production and management company. Creating unforgettable experiences.
