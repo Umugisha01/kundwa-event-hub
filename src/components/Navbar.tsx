@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Moon, Sun, Globe } from "lucide-react";
+import { Menu, X, Moon, Sun, Globe, LogIn } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/kundwa-logo.png";
 
-const navLinks = [
+const publicLinks = [
   { to: "/", label: "Home", labelRw: "Ahabanza" },
   { to: "/services", label: "Services", labelRw: "Serivisi" },
   { to: "/rentals", label: "Rentals", labelRw: "Gukodesha" },
   { to: "/events", label: "Events", labelRw: "Ibirori" },
-  { to: "/dashboard", label: "Dashboard", labelRw: "Ikibaho" },
   { to: "/contact", label: "Contact", labelRw: "Twandikire" },
 ];
 
@@ -18,6 +18,13 @@ export function Navbar() {
   const [isDark, setIsDark] = useState(false);
   const [lang, setLang] = useState<"en" | "rw">("en");
   const location = useLocation();
+  const { user, role } = useAuth();
+
+  const navLinks = [
+    ...publicLinks,
+    ...(user ? [{ to: "/dashboard", label: "Dashboard", labelRw: "Ikibaho" }] : []),
+    ...(role === "admin" ? [{ to: "/admin", label: "Admin", labelRw: "Ubuyobozi" }] : []),
+  ];
 
   const toggleDark = () => {
     setIsDark(!isDark);
@@ -70,6 +77,13 @@ export function Navbar() {
                 {lang === "en" ? "Buy Ticket" : "Gura Itike"}
               </Button>
             </Link>
+            {!user && (
+              <Link to="/login">
+                <Button variant="outline" size="sm" className="gap-1">
+                  <LogIn className="h-4 w-4" /> {lang === "en" ? "Login" : "Injira"}
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -110,6 +124,13 @@ export function Navbar() {
                 {lang === "en" ? "Buy Ticket" : "Gura Itike"}
               </Button>
             </Link>
+            {!user && (
+              <Link to="/login" onClick={() => setIsOpen(false)}>
+                <Button variant="outline" className="w-full mt-2 text-sm py-2 gap-1">
+                  <LogIn className="h-4 w-4" /> {lang === "en" ? "Login" : "Injira"}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
