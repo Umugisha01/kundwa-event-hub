@@ -37,13 +37,13 @@ export function HeroSection() {
               </Button>
             </Link>
             <Link to="/events">
-              <Button variant="outline" className="gap-2 text-base border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 px-6 py-3">
+              <Button variant="outline" className="gap-2 text-base border-secondary/50 text-primary-foreground bg-secondary/15 backdrop-blur-sm hover:bg-secondary/30 px-6 py-3">
                 <Ticket className="h-4 w-4" />
                 Buy Ticket
               </Button>
             </Link>
             <Link to="/rentals">
-              <Button variant="outline" className="gap-2 text-base border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 px-6 py-3">
+              <Button variant="outline" className="gap-2 text-base border-secondary/50 text-primary-foreground bg-secondary/15 backdrop-blur-sm hover:bg-secondary/30 px-6 py-3">
                 <Wrench className="h-4 w-4" />
                 Rent Equipment
               </Button>
