@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 
 export function AdminStats() {
-  const [stats, setStats] = useState({ events_produced: 0, attendees_served: 0, years_experience: 0, countries_reached: 0 });
+  const [stats, setStats] = useState<any>({ events_produced: 0, attendees_served: 0, years_experience: 0, countries_reached: 0 });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -17,7 +17,8 @@ export function AdminStats() {
 
   const save = async () => {
     setLoading(true);
-    const { error } = await supabase.from("site_statistics").update({ ...stats, updated_at: new Date().toISOString() }).eq("id", stats.id || "");
+    const { id, ...rest } = stats;
+    const { error } = await supabase.from("site_statistics").update({ ...rest, updated_at: new Date().toISOString() }).eq("id", id);
     setLoading(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else toast({ title: "Statistics updated!" });
