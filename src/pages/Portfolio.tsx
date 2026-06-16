@@ -1,17 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { portfolioProjects } from "@/data/portfolio";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Portfolio = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [projects, setProjects] = useState<any[]>(portfolioProjects);
+
+  useEffect(() => {
+    supabase
+      .from("portfolio")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            category: p.category,
+            description: p.description,
+            thumbnail: p.thumbnail,
+            images: p.images || [],
+            videoUrl: p.video_url,
+            date: p.date,
+            client: p.client
+          }));
+          setProjects(mapped);
+        }
+      });
+  }, []);
 
   const project = selectedProject
-    ? portfolioProjects.find((p) => p.id === selectedProject)
+    ? projects.find((p) => p.id === selectedProject)
     : null;
 
   const handleNextImage = () => {
@@ -40,7 +65,7 @@ const Portfolio = () => {
 
           {/* Portfolio Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {portfolioProjects.map((project) => (
+            {projects.map((project) => (
               <div
                 key={project.id}
                 className="group cursor-pointer bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-2xl transition-all duration-300"

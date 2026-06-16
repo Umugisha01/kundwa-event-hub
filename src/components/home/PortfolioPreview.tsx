@@ -1,10 +1,38 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { portfolioProjects } from "@/data/portfolio";
+import { supabase } from "@/integrations/supabase/client";
 
 export function PortfolioPreview() {
-  const featuredProjects = portfolioProjects.slice(0, 3);
+  const [projects, setProjects] = useState<any[]>(portfolioProjects);
+
+  useEffect(() => {
+    supabase
+      .from("portfolio")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            category: p.category,
+            description: p.description,
+            thumbnail: p.thumbnail,
+            images: p.images || [],
+            videoUrl: p.video_url,
+            date: p.date,
+            client: p.client
+          }));
+          setProjects(mapped);
+        }
+      });
+  }, []);
+
+  const featuredProjects = projects.slice(0, 3);
 
   return (
     <section className="py-16 bg-white dark:bg-slate-900 transition-colors duration-200">

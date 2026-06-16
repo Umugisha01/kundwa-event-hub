@@ -4,15 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   BarChart3, Calendar, Wrench, MessageSquare, Users, Settings,
-  Star, Image, LogOut, Ticket, FileText
+  Star, Image, LogOut, Ticket, FileText, Briefcase, Mail
 } from "lucide-react";
 import { AdminEvents } from "@/components/admin/AdminEvents";
 import { AdminServices } from "@/components/admin/AdminServices";
+import { AdminPortfolio } from "@/components/admin/AdminPortfolio";
 import { AdminEquipment } from "@/components/admin/AdminEquipment";
+import { AdminBookings } from "@/components/admin/AdminBookings";
+import { AdminContacts } from "@/components/admin/AdminContacts";
 import { AdminTestimonials } from "@/components/admin/AdminTestimonials";
 import { AdminBrands } from "@/components/admin/AdminBrands";
 import { AdminStats } from "@/components/admin/AdminStats";
-import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminChat } from "@/components/admin/AdminChat";
 import { AdminFooter } from "@/components/admin/AdminFooter";
 
@@ -20,8 +22,10 @@ const tabs = [
   { id: "stats", label: "Statistics", icon: BarChart3 },
   { id: "events", label: "Events", icon: Calendar },
   { id: "services", label: "Services", icon: FileText },
-  { id: "equipment", label: "Equipment", icon: Wrench },
+  { id: "portfolio", label: "Portfolio", icon: Briefcase },
+  { id: "equipment", label: "Rentals", icon: Wrench },
   { id: "bookings", label: "Bookings", icon: Ticket },
+  { id: "contacts", label: "Contacts", icon: Mail },
   { id: "testimonials", label: "Testimonials", icon: Star },
   { id: "brands", label: "Brands", icon: Image },
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -67,8 +71,10 @@ const AdminPage = () => {
             {activeTab === "stats" && <AdminStats />}
             {activeTab === "events" && <AdminEvents />}
             {activeTab === "services" && <AdminServices />}
+            {activeTab === "portfolio" && <AdminPortfolio />}
             {activeTab === "equipment" && <AdminEquipment />}
             {activeTab === "bookings" && <AdminBookings />}
+            {activeTab === "contacts" && <AdminContacts />}
             {activeTab === "testimonials" && <AdminTestimonials />}
             {activeTab === "brands" && <AdminBrands />}
             {activeTab === "chat" && <AdminChat />}

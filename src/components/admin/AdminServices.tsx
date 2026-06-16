@@ -4,69 +4,211 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, X } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Download, FileText, Search, Settings } from "lucide-react";
+import { exportToExcel, exportToPDF } from "@/utils/export";
+
+const empty = { name: "", description: "", icon: "", image_url: "" };
 
 export function AdminServices() {
   const [items, setItems] = useState<any[]>([]);
   const [form, setForm] = useState<any>(null);
   const [editId, setEditId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
-  const fetch = async () => {
-    const { data } = await supabase.from("services").select("*").order("created_at");
-    setItems(data || []);
+  const fetchItems = async () => {
+    try {
+      const { data, error } = await supabase.from("services").select("*").order("name");
+      if (error) throw error;
+      setItems(data || []);
+    } catch (err: any) {
+      toast({ title: "Fetch Error", description: err.message, variant: "destructive" });
+    }
   };
-  useEffect(() => { fetch(); }, []);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   const save = async () => {
-    if (!form.name) { toast({ title: "Name is required", variant: "destructive" }); return; }
-    const payload = { name: form.name, description: form.description, icon: form.icon, image_url: form.image_url };
-    if (editId) {
-      await supabase.from("services").update(payload).eq("id", editId);
-    } else {
-      await supabase.from("services").insert(payload);
+    if (!form.name) {
+      toast({ title: "Name is required", variant: "destructive" });
+      return;
     }
-    toast({ title: editId ? "Service updated!" : "Service created!" });
-    setForm(null); setEditId(null); fetch();
+    const payload = { 
+      name: form.name, 
+      description: form.description, 
+      icon: form.icon, 
+      image_url: form.image_url 
+    };
+
+    try {
+      if (editId) {
+        const { error } = await supabase.from("services").update(payload).eq("id", editId);
+        if (error) throw error;
+        toast({ title: "Service updated!" });
+      } else {
+        const { error } = await supabase.from("services").insert(payload);
+        if (error) throw error;
+        toast({ title: "Service created!" });
+      }
+      setForm(null);
+      setEditId(null);
+      fetchItems();
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+    }
   };
 
   const remove = async (id: string) => {
-    await supabase.from("services").delete().eq("id", id);
-    toast({ title: "Service deleted" }); fetch();
+    if (!confirm("Are you sure you want to delete this service?")) return;
+    try {
+      const { error } = await supabase.from("services").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Service deleted" });
+      fetchItems();
+    } catch (err: any) {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const filteredItems = items.filter(s => 
+    s.name?.toLowerCase().includes(search.toLowerCase()) || 
+    s.description?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleExportExcel = () => {
+    const exportData = filteredItems.map(s => ({
+      ID: s.id,
+      Name: s.name,
+      Icon: s.icon || "N/A",
+      "Image URL": s.image_url || "N/A",
+      Description: s.description
+    }));
+    exportToExcel(exportData, "Services_Report");
+  };
+
+  const handleExportPDF = () => {
+    const columns = [
+      { header: "Service Name", key: "name" },
+      { header: "Icon Class", key: "icon" },
+      { header: "Description", key: "description" }
+    ];
+    exportToPDF("Corporate Services Manifest", columns, filteredItems);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="font-bold text-foreground text-lg">Services ({items.length})</h2>
-        <Button className="btn-gold gap-1" onClick={() => { setForm({ name: "", description: "", icon: "", image_url: "" }); setEditId(null); }}>
-          <Plus className="h-4 w-4" /> Add Service
-        </Button>
+      {/* Header and export buttons */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h2 className="font-bold text-foreground text-lg">Services Portfolio ({filteredItems.length})</h2>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 flex-1 sm:flex-initial">
+            <Download className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5 flex-1 sm:flex-initial">
+            <FileText className="h-4 w-4" /> PDF
+          </Button>
+          <Button className="btn-gold gap-1.5 flex-1 sm:flex-initial" onClick={() => { setForm({ ...empty }); setEditId(null); }}>
+            <Plus className="h-4 w-4" /> Add Service
+          </Button>
+        </div>
       </div>
+
+      {/* Search Filter */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input 
+          placeholder="Search services by title, keywords..." 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+          className="pl-9"
+        />
+      </div>
+
+      {/* Form Card */}
       {form && (
-        <div className="card-premium p-6 space-y-3">
-          <div className="flex justify-between"><h3 className="font-semibold">{editId ? "Edit" : "New"} Service</h3>
+        <div className="card-premium p-6 space-y-4 animate-scale-in">
+          <div className="flex justify-between items-center border-b border-border/40 pb-2">
+            <h3 className="font-bold text-foreground text-md">{editId ? "Edit" : "New"} Service</h3>
             <Button variant="ghost" size="icon" onClick={() => setForm(null)}><X className="h-4 w-4" /></Button>
           </div>
-          <Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <Input placeholder="Icon name (e.g. Speaker)" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
-          <Input placeholder="Image URL" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-          <Button className="btn-gold" onClick={save}>Save</Button>
-        </div>
-      )}
-      <div className="space-y-2">
-        {items.map((s) => (
-          <div key={s.id} className="card-premium p-4 flex items-center justify-between">
-            <div>
-              <p className="font-medium text-foreground">{s.name}</p>
-              <p className="text-xs text-muted-foreground truncate max-w-md">{s.description}</p>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Service Name *</label>
+              <Input placeholder="Line Array Sound System" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" onClick={() => { setForm(s); setEditId(s.id); }}><Edit2 className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" onClick={() => remove(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Icon Identifier (e.g., Speaker, Music)</label>
+              <Input placeholder="Speaker" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-xs text-muted-foreground font-semibold">Image URL</label>
+              <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
             </div>
           </div>
-        ))}
+
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground font-semibold">Detailed Description</label>
+            <Textarea placeholder="Explain key highlights of the event production service..." rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button className="btn-gold" onClick={save}>Save Service</Button>
+            <Button variant="outline" onClick={() => setForm(null)}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Services List Table */}
+      <div className="border border-border/40 rounded-xl overflow-hidden bg-card/40">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-border/60 bg-muted/30">
+                <th className="p-3 font-semibold text-muted-foreground w-16">Icon</th>
+                <th className="p-3 font-semibold text-muted-foreground">Service details</th>
+                <th className="p-3 font-semibold text-muted-foreground">Description</th>
+                <th className="p-3 font-semibold text-muted-foreground text-right w-24">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map(s => (
+                <tr key={s.id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                  <td className="p-3">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary flex items-center justify-center w-10 h-10 border border-primary/15">
+                      <Settings className="h-4 w-4" />
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <div className="font-semibold text-foreground">{s.name}</div>
+                    {s.icon && <div className="text-[10px] text-muted-foreground font-mono">Icon: {s.icon}</div>}
+                  </td>
+                  <td className="p-3 max-w-sm">
+                    <p className="text-xs text-muted-foreground line-clamp-2">{s.description || "No description provided."}</p>
+                  </td>
+                  <td className="p-3 text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm(s); setEditId(s.id); }}>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(s.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredItems.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-muted-foreground text-sm">
+                    No services found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

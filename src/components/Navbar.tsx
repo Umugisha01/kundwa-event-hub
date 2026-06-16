@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Globe, LogIn, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import logo from "@/assets/kundwa-logo.png";
 
 const publicLinks = [
   { to: "/",          label: "Home",      labelRw: "Ahabanza"   },
@@ -143,13 +142,12 @@ export function Navbar() {
                   style={{ background: `radial-gradient(circle, ${BLUE}55 0%, transparent 70%)`, filter: "blur(6px)" }}
                 />
                 <img
-                  src={logo}
+                  src="/kundwa.png"
                   alt="Kundwa IB Group"
-                  className="relative h-10 md:h-11 w-auto object-contain transition-all duration-300"
+                  className="relative h-12 md:h-14 w-auto object-contain transition-all duration-300"
                   style={{
-                    filter: isDark
-                      ? "brightness(0) invert(1) drop-shadow(0 0 6px rgba(147,197,253,0.5))"
-                      : `brightness(0) saturate(100%) invert(23%) sepia(90%) saturate(500%) hue-rotate(200deg) drop-shadow(0 0 6px ${BLUE}66)`,
+                    filter: isDark ? "invert(1) brightness(1.5)" : "none",
+                    mixBlendMode: isDark ? "screen" : "multiply",
                   }}
                 />
               </div>
