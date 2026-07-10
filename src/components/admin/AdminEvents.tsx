@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, Star, X, Download, FileText, Search, Ticket, DollarSign, Users, Award, Calendar } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
+import { FileUpload } from "./FileUpload";
 
 const empty = { 
   title: "", 
@@ -280,7 +281,10 @@ export function AdminEvents() {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Image URL</label>
-              <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+              <div className="flex gap-2">
+                <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="flex-1" />
+                <FileUpload onUpload={(url) => setForm({ ...form, image_url: url })} label="Choose File" />
+              </div>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Ticket Price (RWF)</label>

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, X, Download, FileText, Search } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
+import { FileUpload } from "./FileUpload";
 import { portfolioProjects } from "@/data/portfolio";
 
 const emptyForm = {
@@ -224,21 +225,38 @@ export function AdminPortfolio() {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Thumbnail Image URL *</label>
-              <Input placeholder="https://images.unsplash.com/..." value={form.thumbnail} onChange={(e) => setForm({ ...form, thumbnail: e.target.value })} />
+              <div className="flex gap-2">
+                <Input placeholder="https://images.unsplash.com/..." value={form.thumbnail} onChange={(e) => setForm({ ...form, thumbnail: e.target.value })} className="flex-1" />
+                <FileUpload onUpload={(url) => setForm({ ...form, thumbnail: url })} label="Choose File" />
+              </div>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Video Embed URL (optional)</label>
-              <Input placeholder="https://www.youtube.com/embed/..." value={form.video_url || ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} />
+              <div className="flex gap-2">
+                <Input placeholder="https://www.youtube.com/embed/... or direct MP4 URL" value={form.video_url || ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} className="flex-1" />
+                <FileUpload onUpload={(url) => setForm({ ...form, video_url: url })} label="Choose Video" accept="video/*" />
+              </div>
             </div>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground font-semibold">Additional Images URLs (comma-separated list)</label>
-            <Input 
-              placeholder="url1, url2, url3" 
-              value={Array.isArray(form.images) ? form.images.join(", ") : form.images} 
-              onChange={(e) => setForm({ ...form, images: e.target.value })} 
-            />
+            <div className="flex gap-2">
+              <Input 
+                placeholder="url1, url2, url3" 
+                value={Array.isArray(form.images) ? form.images.join(", ") : form.images} 
+                onChange={(e) => setForm({ ...form, images: e.target.value })} 
+                className="flex-1"
+              />
+              <FileUpload onUpload={(url) => {
+                const currentImages = Array.isArray(form.images) 
+                  ? form.images.join(", ") 
+                  : (form.images || "");
+                const trimmed = currentImages.trim();
+                const updated = trimmed ? `${trimmed}, ${url}` : url;
+                setForm({ ...form, images: updated });
+              }} label="Add Image" />
+            </div>
           </div>
 
           <div className="space-y-1">

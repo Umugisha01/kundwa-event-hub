@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -24,7 +24,7 @@
     --primary:             220 55% 18%;      /* sophisticated dark off-blue */
     --primary-foreground:  220 20% 98%;
 
-    --secondary:           44  75% 52%;      /* muted elegant gold */
+    --secondary:           200 95% 48%;      /* vibrant sky blue */
     --secondary-foreground:220 50% 10%;
 
     --muted:               220 15% 90%;
@@ -46,7 +46,7 @@
     --blue:                220 55% 18%;
     --blue-deep:           220 60% 12%;
     --blue-soft:           220 20% 90%;
-    --gold:                44  75% 52%;
+    --gold:                200 95% 48%;
     --gold-foreground:     220 50% 10%;
 
     /* sidebar */
@@ -74,7 +74,7 @@
     --primary:             220 55% 30%;      /* muted royal blue */
     --primary-foreground:  220 20% 98%;
 
-    --secondary:           44  70% 50%;      /* antique gold */
+    --secondary:           200 90% 55%;      /* soft sky blue */
     --secondary-foreground:220 60% 6%;
 
     --muted:               220 40% 15%;
@@ -102,7 +102,7 @@
     --blue:                220 55% 30%;
     --blue-deep:           220 60% 20%;
     --blue-soft:           220 30% 22%;
-    --gold:                44  70% 50%;
+    --gold:                200 90% 55%;
     --gold-foreground:     220 60% 6%;
   }
 }
@@ -155,7 +155,7 @@
   }
   .text-gradient-gold {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(90deg, hsl(44,87%,55%), hsl(44,87%,75%), hsl(44,87%,55%));
+    background-image: linear-gradient(90deg, hsl(200,90%,55%), hsl(200,95%,75%), hsl(200,90%,55%));
   }
 
   /* Glassmorphism */
@@ -206,11 +206,11 @@
     box-shadow: 0 8px 32px hsl(var(--primary) / 0.60), inset 0 1px 0 rgba(240,245,255,0.25);
   }
 
-  /* ── Gold button ── */
+  /* ── Gold button (Light Blue branding) ── */
   .btn-gold {
     @apply inline-flex items-center gap-2 font-bold px-6 py-3 rounded-xl
            transition-all duration-300 hover:scale-105 active:scale-95;
-    background: linear-gradient(135deg, hsl(44,75%,50%), hsl(44,80%,62%));
+    background: linear-gradient(135deg, hsl(200,95%,50%), hsl(200,90%,60%));
     color: hsl(220,50%,10%);
     box-shadow: 0 4px 20px hsl(var(--secondary) / 0.40), inset 0 1px 0 rgba(240,245,255,0.30);
   }

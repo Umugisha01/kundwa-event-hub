@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -13,15 +12,95 @@ import {
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { getServiceBySlug, services } from "@/data/services";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import * as Icons from "lucide-react";
+
+// Helper component to render icon dynamically
+const ServiceIcon = ({ name, className }: { name: string; className?: string }) => {
+  const IconComponent = (Icons as any)[name] || Icons.Settings;
+  return <IconComponent className={className} />;
+};
 
 const ServiceDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const service = getServiceBySlug(slug || "");
-
+  const [service, setService] = useState<any>(null);
+  const [related, setRelated] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
+
+  useEffect(() => {
+    if (!slug) return;
+    setLoading(true);
+    supabase
+      .from("services")
+      .select("*")
+      .eq("slug", slug)
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const currentService = { ...data[0] };
+          // Map backend JSON fields to match expected React component keys
+          currentService.heroImage = currentService.image_url || "/assets/hero-event.jpg";
+          currentService.galleryImages = currentService.gallery_images && currentService.gallery_images.length > 0
+            ? currentService.gallery_images
+            : [currentService.heroImage];
+          currentService.features = currentService.features || [];
+          currentService.highlights = currentService.highlights || [];
+          currentService.faqs = currentService.faqs || [];
+          
+          setService(currentService);
+          setActiveImage(0);
+
+          // Fetch related services
+          supabase
+            .from("services")
+            .select("*")
+            .eq("category", currentService.category)
+            .then(({ data: relatedData }) => {
+              if (relatedData) {
+                // Map icons for related items
+                const mappedRelated = relatedData
+                  .filter((s: any) => s.slug !== currentService.slug)
+                  .map((s: any) => ({
+                    ...s,
+                    // Map key attributes
+                    tagline: s.tagline || "",
+                    icon: s.icon || "Settings"
+                  }));
+                setRelated(mappedRelated);
+              }
+            });
+        } else {
+          setService(null);
+        }
+        setLoading(false);
+      });
+  }, [slug]);
+
+  const handleInquiry = () => {
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    toast.success("Inquiry sent successfully!", {
+      description: "Our team will get back to you within 24 hours.",
+    });
+    setInquiryOpen(false);
+    setFormData({ name: "", email: "", phone: "", message: "" });
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="section-padding text-center min-h-[60vh] flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-secondary mb-4"></div>
+          <p className="text-muted-foreground">Loading service details...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!service) {
     return (
@@ -38,22 +117,6 @@ const ServiceDetailPage = () => {
       </Layout>
     );
   }
-
-  const handleInquiry = () => {
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-    toast.success("Inquiry sent successfully!", {
-      description: "Our team will get back to you within 24 hours.",
-    });
-    setInquiryOpen(false);
-    setFormData({ name: "", email: "", phone: "", message: "" });
-  };
-
-  const related = services.filter(
-    (s) => s.category === service.category && s.slug !== service.slug
-  );
 
   return (
     <Layout>
@@ -283,7 +346,7 @@ const ServiceDetailPage = () => {
                   className="card-premium p-5 group hover:shadow-lg transition-all flex items-center gap-4"
                 >
                   <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-secondary/20 transition-colors">
-                    <rel.icon className="h-6 w-6 text-secondary" />
+                    <ServiceIcon name={rel.icon} className="h-6 w-6 text-secondary" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-foreground">{rel.name}</h3>

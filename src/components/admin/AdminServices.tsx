@@ -6,8 +6,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, X, Download, FileText, Search, Settings } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
+import { FileUpload } from "./FileUpload";
 
-const empty = { name: "", description: "", icon: "", image_url: "" };
+const empty = { 
+  name: "", 
+  description: "", 
+  icon: "", 
+  image_url: "",
+  category: "Event Production",
+  tagline: "",
+  featuresText: "",
+  galleryText: "",
+  highlightsText: "[]",
+  faqsText: "[]"
+};
 
 export function AdminServices() {
   const [items, setItems] = useState<any[]>([]);
@@ -34,11 +46,44 @@ export function AdminServices() {
       toast({ title: "Name is required", variant: "destructive" });
       return;
     }
+
+    // Split newline text lists into arrays
+    const featuresList = form.featuresText 
+      ? form.featuresText.split("\n").map((f: string) => f.trim()).filter(Boolean) 
+      : [];
+    const galleryList = form.galleryText 
+      ? form.galleryText.split("\n").map((img: string) => img.trim()).filter(Boolean) 
+      : [];
+    
+    // Parse highlights JSON
+    let highlightsList = [];
+    try {
+      highlightsList = form.highlightsText ? JSON.parse(form.highlightsText) : [];
+    } catch (e) {
+      toast({ title: "Highlights JSON invalid", description: "Make sure it is a valid JSON array like: [{\"label\":\"Key\",\"value\":\"Val\"}]", variant: "destructive" });
+      return;
+    }
+    
+    // Parse FAQs JSON
+    let faqsList = [];
+    try {
+      faqsList = form.faqsText ? JSON.parse(form.faqsText) : [];
+    } catch (e) {
+      toast({ title: "FAQs JSON invalid", description: "Make sure it is a valid JSON array like: [{\"question\":\"Q?\",\"answer\":\"Ans\"}]", variant: "destructive" });
+      return;
+    }
+
     const payload = { 
       name: form.name, 
       description: form.description, 
       icon: form.icon, 
-      image_url: form.image_url 
+      image_url: form.image_url,
+      category: form.category,
+      tagline: form.tagline,
+      features: featuresList,
+      gallery_images: galleryList,
+      highlights: highlightsList,
+      faqs: faqsList
     };
 
     try {
@@ -57,6 +102,22 @@ export function AdminServices() {
     } catch (err: any) {
       toast({ title: "Save failed", description: err.message, variant: "destructive" });
     }
+  };
+
+  const startEdit = (item: any) => {
+    setEditId(item.id);
+    setForm({
+      name: item.name || "",
+      icon: item.icon || "",
+      image_url: item.image_url || "",
+      description: item.description || "",
+      category: item.category || "Event Production",
+      tagline: item.tagline || "",
+      featuresText: item.features ? item.features.join("\n") : "",
+      galleryText: item.gallery_images ? item.gallery_images.join("\n") : "",
+      highlightsText: item.highlights ? JSON.stringify(item.highlights, null, 2) : "[]",
+      faqsText: item.faqs ? JSON.stringify(item.faqs, null, 2) : "[]"
+    });
   };
 
   const remove = async (id: string) => {
@@ -80,6 +141,7 @@ export function AdminServices() {
     const exportData = filteredItems.map(s => ({
       ID: s.id,
       Name: s.name,
+      Category: s.category,
       Icon: s.icon || "N/A",
       "Image URL": s.image_url || "N/A",
       Description: s.description
@@ -90,7 +152,8 @@ export function AdminServices() {
   const handleExportPDF = () => {
     const columns = [
       { header: "Service Name", key: "name" },
-      { header: "Icon Class", key: "icon" },
+      { header: "Category", key: "category" },
+      { header: "Icon", key: "icon" },
       { header: "Description", key: "description" }
     ];
     exportToPDF("Corporate Services Manifest", columns, filteredItems);
@@ -139,12 +202,48 @@ export function AdminServices() {
               <Input placeholder="Line Array Sound System" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">Icon Identifier (e.g., Speaker, Music)</label>
-              <Input placeholder="Speaker" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
+              <label className="text-xs text-muted-foreground font-semibold">Category (e.g., Event Production)</label>
+              <Input placeholder="Event Production" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Icon Identifier (e.g., Speaker, Music, Volume2, Lightbulb)</label>
+              <Input placeholder="Volume2" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Tagline</label>
+              <Input placeholder="Crystal-clear audio for every scale" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
             </div>
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs text-muted-foreground font-semibold">Image URL</label>
-              <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+              <label className="text-xs text-muted-foreground font-semibold">Hero Image URL</label>
+              <div className="flex gap-2">
+                <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="flex-1" />
+                <FileUpload onUpload={(url) => setForm({ ...form, image_url: url })} label="Choose File" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Features list (One feature per line)</label>
+              <Textarea placeholder="Line array speakers&#10;Digital mixing consoles&#10;Wireless mics" rows={4} value={form.featuresText} onChange={(e) => setForm({ ...form, featuresText: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Gallery Images list (One URL per line)</label>
+              <div className="flex flex-col gap-2">
+                <Textarea placeholder="https://images.unsplash.com/img1&#10;https://images.unsplash.com/img2" rows={4} value={form.galleryText} onChange={(e) => setForm({ ...form, galleryText: e.target.value })} />
+                <div className="flex justify-end">
+                  <FileUpload onUpload={(url) => {
+                    const current = form.galleryText ? form.galleryText.trim() : "";
+                    const updated = current ? `${current}\n${url}` : url;
+                    setForm({ ...form, galleryText: updated });
+                  }} label="Add from device" />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">Highlights JSON (Array of label/value objects)</label>
+              <Textarea placeholder='[&#10;  { "label": "Capacity", "value": "50 - 50,000+" }&#10;]' rows={4} value={form.highlightsText} onChange={(e) => setForm({ ...form, highlightsText: e.target.value })} className="font-mono text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">FAQs JSON (Array of question/answer objects)</label>
+              <Textarea placeholder='[&#10;  { "question": "Provide sound engineers?", "answer": "Yes, standard." }&#10;]' rows={4} value={form.faqsText} onChange={(e) => setForm({ ...form, faqsText: e.target.value })} className="font-mono text-xs" />
             </div>
           </div>
 
@@ -168,7 +267,7 @@ export function AdminServices() {
               <tr className="border-b border-border/60 bg-muted/30">
                 <th className="p-3 font-semibold text-muted-foreground w-16">Icon</th>
                 <th className="p-3 font-semibold text-muted-foreground">Service details</th>
-                <th className="p-3 font-semibold text-muted-foreground">Description</th>
+                <th className="p-3 font-semibold text-muted-foreground">Category</th>
                 <th className="p-3 font-semibold text-muted-foreground text-right w-24">Actions</th>
               </tr>
             </thead>
@@ -184,12 +283,12 @@ export function AdminServices() {
                     <div className="font-semibold text-foreground">{s.name}</div>
                     {s.icon && <div className="text-[10px] text-muted-foreground font-mono">Icon: {s.icon}</div>}
                   </td>
-                  <td className="p-3 max-w-sm">
-                    <p className="text-xs text-muted-foreground line-clamp-2">{s.description || "No description provided."}</p>
+                  <td className="p-3">
+                    <span className="text-xs font-semibold bg-secondary/15 text-secondary px-2.5 py-1 rounded-full">{s.category}</span>
                   </td>
                   <td className="p-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm(s); setEditId(s.id); }}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(s)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(s.id)}>

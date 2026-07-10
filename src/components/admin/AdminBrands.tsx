@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, X, Download, FileText, Search, Image } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
+import { FileUpload } from "./FileUpload";
 
 export function AdminBrands() {
   const [items, setItems] = useState<any[]>([]);
@@ -128,7 +129,10 @@ export function AdminBrands() {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Brand Logo URL (optional)</label>
-              <Input placeholder="https://logos.com/..." value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
+              <div className="flex gap-2">
+                <Input placeholder="https://logos.com/..." value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className="flex-1" />
+                <FileUpload onUpload={(url) => setForm({ ...form, logo_url: url })} label="Choose File" />
+              </div>
             </div>
           </div>
 

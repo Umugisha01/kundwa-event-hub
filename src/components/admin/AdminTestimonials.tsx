@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, X, Download, FileText, Search, Quote } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
+import { FileUpload } from "./FileUpload";
 
 export function AdminTestimonials() {
   const [items, setItems] = useState<any[]>([]);
@@ -135,7 +136,10 @@ export function AdminTestimonials() {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Avatar Image URL (optional)</label>
-              <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+              <div className="flex gap-2">
+                <Input placeholder="https://images.unsplash.com/..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="flex-1" />
+                <FileUpload onUpload={(url) => setForm({ ...form, image_url: url })} label="Choose File" />
+              </div>
             </div>
           </div>
 

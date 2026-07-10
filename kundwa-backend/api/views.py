@@ -60,14 +60,26 @@ class ChatMessagePermission(permissions.BasePermission):
 
 # ViewSets
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all().order_by('date')
     serializer_class = EventSerializer
     permission_classes = [IsAdminOrReadOnly]
 
+    def get_queryset(self):
+        queryset = Event.objects.all().order_by('date')
+        is_featured = self.request.query_params.get('is_featured')
+        if is_featured is not None:
+            queryset = queryset.filter(is_featured=is_featured.lower() == 'true')
+        return queryset
+
 class ServiceViewSet(viewsets.ModelViewSet):
-    queryset = Service.objects.all().order_by('name')
     serializer_class = ServiceSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Service.objects.all().order_by('name')
+        slug = self.request.query_params.get('slug')
+        if slug is not None:
+            queryset = queryset.filter(slug=slug)
+        return queryset
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.all().order_by('name')
@@ -223,3 +235,25 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+class FileUploadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        import os
+        import uuid
+        from django.core.files.storage import default_storage
+        from django.core.files.base import ContentFile
+
+        if 'file' not in request.FILES:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+
+        file_obj = request.FILES['file']
+        ext = os.path.splitext(file_obj.name)[1]
+        filename = f"{uuid.uuid4()}{ext}"
+
+        # Save to 'uploads/filename' under MEDIA_ROOT
+        path = default_storage.save(f"uploads/{filename}", ContentFile(file_obj.read()))
+        url = f"/media/{path}"
+
+        return Response({'url': url}, status=status.HTTP_201_CREATED)

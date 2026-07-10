@@ -44,11 +44,24 @@ class Event(models.Model):
 
 class Service(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    slug = models.CharField(max_length=255, unique=True, blank=True, null=True)
     name = models.CharField(max_length=255)
+    category = models.CharField(max_length=255, default='Event Production')
+    tagline = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     icon = models.CharField(max_length=100, blank=True, null=True)
     image_url = models.TextField(blank=True, null=True)
+    gallery_images = models.JSONField(default=list, blank=True)
+    features = models.JSONField(default=list, blank=True)
+    highlights = models.JSONField(default=list, blank=True)
+    faqs = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

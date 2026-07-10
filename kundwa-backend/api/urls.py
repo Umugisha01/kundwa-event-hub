@@ -6,7 +6,7 @@ from .views import (
     ChatMessageViewSet, FooterSettingsViewSet, PortfolioViewSet, ContactSubmissionViewSet,
     TestimonialViewSet, TrustedBrandViewSet, SiteStatisticViewSet,
     ProfileViewSet, UserRoleViewSet,
-    RegisterView, CustomTokenObtainPairView
+    RegisterView, CustomTokenObtainPairView, FileUploadView
 )
 
 router = DefaultRouter()
@@ -27,7 +27,12 @@ router.register('user_roles', UserRoleViewSet, basename='user_roles')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
+    path('auth/register', RegisterView.as_view()),
     path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/login', CustomTokenObtainPairView.as_view()),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/token/refresh', TokenRefreshView.as_view()),
+    path('upload/', FileUploadView.as_view(), name='file-upload'),
+    path('upload', FileUploadView.as_view()),
     path('', include(router.urls)),
 ]

@@ -1,13 +1,43 @@
+import { useEffect, useState } from "react";
 import { Users, Calendar, Award, MapPin } from "lucide-react";
-
-const stats = [
-  { icon: Calendar, value: "500+", label: "Events Produced", color: "from-secondary/20 to-secondary/5" },
-  { icon: Users, value: "1M+", label: "Attendees Served", color: "from-primary/25 to-primary/5" },
-  { icon: Award, value: "10+", label: "Years Experience", color: "from-secondary/20 to-secondary/5" },
-  { icon: MapPin, value: "15+", label: "Countries", color: "from-primary/25 to-primary/5" },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 export function StatsSection() {
+  const [statsData, setStatsData] = useState<any>({
+    events_produced: 500,
+    attendees_served: 100000,
+    years_experience: 10,
+    countries_reached: 5
+  });
+
+  useEffect(() => {
+    supabase
+      .from("site_statistics")
+      .select("*")
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setStatsData(data[0]);
+        }
+      });
+  }, []);
+
+  const formatAttendees = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(0) + "M+";
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(0) + "K+";
+    }
+    return num.toString() + "+";
+  };
+
+  const stats = [
+    { icon: Calendar, value: `${statsData.events_produced}+`, label: "Events Produced", color: "from-secondary/20 to-secondary/5" },
+    { icon: Users, value: formatAttendees(statsData.attendees_served), label: "Attendees Served", color: "from-primary/25 to-primary/5" },
+    { icon: Award, value: `${statsData.years_experience}+`, label: "Years Experience", color: "from-secondary/20 to-secondary/5" },
+    { icon: MapPin, value: `${statsData.countries_reached}+`, label: "Countries", color: "from-primary/25 to-primary/5" },
+  ];
+
   return (
     <section className="relative -mt-20 z-20 px-4 sm:px-6 lg:px-8 pb-4">
       <div className="max-w-5xl mx-auto">

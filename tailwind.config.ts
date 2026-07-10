@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "sans-serif"],
-        heading: ["Outfit", "sans-serif"],
+        sans: ["Poppins", "sans-serif"],
+        heading: ["Bricolage Grotesque", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
