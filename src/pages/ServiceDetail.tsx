@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
-  ArrowRight, ArrowLeft, Check, ChevronRight, MessageSquare, Phone, Mail, Send, Zap
+  ArrowRight, ArrowLeft, Check, ChevronRight, MessageSquare, Phone, Mail, Send, Zap, AlertCircle, RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import * as Icons from "lucide-react";
 
 // Helper component to render icon dynamically
@@ -27,57 +28,69 @@ const ServiceDetailPage = () => {
   const [service, setService] = useState<any>(null);
   const [related, setRelated] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
 
-  useEffect(() => {
+  const fetchServiceDetail = useCallback(async () => {
     if (!slug) return;
     setLoading(true);
-    supabase
-      .from("services")
-      .select("*")
-      .eq("slug", slug)
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const currentService = { ...data[0] };
-          // Map backend JSON fields to match expected React component keys
-          currentService.heroImage = currentService.image_url || "/assets/hero-event.jpg";
-          currentService.galleryImages = currentService.gallery_images && currentService.gallery_images.length > 0
-            ? currentService.gallery_images
-            : [currentService.heroImage];
-          currentService.features = currentService.features || [];
-          currentService.highlights = currentService.highlights || [];
-          currentService.faqs = currentService.faqs || [];
-          
-          setService(currentService);
-          setActiveImage(0);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("slug", slug);
 
-          // Fetch related services
-          supabase
-            .from("services")
-            .select("*")
-            .eq("category", currentService.category)
-            .then(({ data: relatedData }) => {
-              if (relatedData) {
-                // Map icons for related items
-                const mappedRelated = relatedData
-                  .filter((s: any) => s.slug !== currentService.slug)
-                  .map((s: any) => ({
-                    ...s,
-                    // Map key attributes
-                    tagline: s.tagline || "",
-                    icon: s.icon || "Settings"
-                  }));
-                setRelated(mappedRelated);
-              }
-            });
-        } else {
-          setService(null);
+      if (error) {
+        setFetchError("Unable to retrieve service details from the server.");
+        setService(null);
+      } else if (data && data.length > 0) {
+        const currentService = { ...data[0] };
+        currentService.heroImage = resolveMediaUrl(currentService.image_url, "/assets/hero-event.jpg");
+        const gallery = currentService.gallery_images && currentService.gallery_images.length > 0
+          ? currentService.gallery_images.map((g: string) => resolveMediaUrl(g, currentService.heroImage))
+          : [currentService.heroImage];
+        currentService.galleryImages = gallery;
+        currentService.features = currentService.features || [];
+        currentService.highlights = currentService.highlights || [];
+        currentService.faqs = currentService.faqs || [];
+        
+        setService(currentService);
+        setActiveImage(0);
+
+        // Fetch related services
+        const { data: relatedData } = await supabase
+          .from("services")
+          .select("*")
+          .eq("category", currentService.category);
+
+        if (relatedData) {
+          const mappedRelated = relatedData
+            .filter((s: any) => s.slug !== currentService.slug)
+            .map((s: any) => ({
+              ...s,
+              tagline: s.tagline || "",
+              icon: s.icon || "Settings",
+              heroImage: resolveMediaUrl(s.image_url, "/assets/hero-event.jpg")
+            }));
+          setRelated(mappedRelated);
         }
-        setLoading(false);
-      });
+      } else {
+        setService(null);
+      }
+    } catch {
+      setFetchError("Unable to connect to services backend.");
+      setService(null);
+    } finally {
+      setLoading(false);
+    }
   }, [slug]);
+
+  useEffect(() => {
+    fetchServiceDetail();
+  }, [fetchServiceDetail]);
 
   const handleInquiry = () => {
     if (!formData.name || !formData.email || !formData.message) {
@@ -105,14 +118,33 @@ const ServiceDetailPage = () => {
   if (!service) {
     return (
       <Layout>
-        <div className="section-padding text-center min-h-[60vh] flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-bold text-foreground mb-4">Service Not Found</h1>
-          <p className="text-muted-foreground mb-6">The service you're looking for doesn't exist.</p>
-          <Link to="/services">
-            <Button className="btn-gold gap-2">
-              <ArrowLeft className="h-4 w-4" /> Back to Services
+        <div className="section-padding text-center min-h-[65vh] flex flex-col items-center justify-center max-w-lg mx-auto">
+          <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+            {fetchError ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <Icons.Settings className="h-8 w-8 text-secondary" />}
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {fetchError ? "Service Details Unavailable" : "Service Not Found"}
+          </h1>
+          <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+            {fetchError 
+              ? "We are currently having trouble retrieving the service information. Please check your network connection or try again."
+              : "The service you requested could not be located in our catalog. Browse our full list of event solutions or speak directly with our team."}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link to="/services">
+              <Button className="btn-gold gap-2">
+                <ArrowLeft className="h-4 w-4" /> All Services
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => fetchServiceDetail()} className="gap-2">
+              <RefreshCw className="h-4 w-4" /> Try Again
             </Button>
-          </Link>
+            <Link to="/contact">
+              <Button variant="outline">
+                Contact Team
+              </Button>
+            </Link>
+          </div>
         </div>
       </Layout>
     );

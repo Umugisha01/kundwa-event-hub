@@ -6,36 +6,6 @@ import { toast } from "@/hooks/use-toast";
 import { Trash2, Download, FileText, Search, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
 
-const mockSubmissions = [
-  {
-    id: "1",
-    full_name: "Jean Bosco Niyomugabo",
-    email: "bosco@gmail.com",
-    phone: "+250 788 111 222",
-    message: "I need stage lighting and sound production setup for a wedding ceremony in Kigali for 300 guests on July 12.",
-    status: "Pending",
-    created_at: new Date(Date.now() - 86400000 * 2).toISOString()
-  },
-  {
-    id: "2",
-    full_name: "Alice Umutoni",
-    email: "alice.u@yahoo.com",
-    phone: "+250 785 333 444",
-    message: "Inquiry about booking sound systems, stage setup and live streaming capabilities for our corporate launch event.",
-    status: "In Progress",
-    created_at: new Date(Date.now() - 86400000 * 5).toISOString()
-  },
-  {
-    id: "3",
-    full_name: "David Keza",
-    email: "david@kezaevents.com",
-    phone: "+250 789 555 666",
-    message: "Do you offer stage rental equipment delivery and assembly services outside Kigali city? Specifically in Musanze.",
-    status: "Resolved",
-    created_at: new Date(Date.now() - 86400000 * 10).toISOString()
-  }
-];
-
 export function AdminContacts() {
   const [items, setItems] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
@@ -46,15 +16,10 @@ export function AdminContacts() {
     try {
       const { data, error } = await supabase.from("contact_submissions").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-
-      if (data && data.length > 0) {
-        setItems(data);
-      } else {
-        setItems(mockSubmissions);
-      }
+      setItems(data || []);
     } catch (err: any) {
-      console.warn("Could not fetch contact submissions from Supabase. Falling back to local data.", err);
-      setItems(mockSubmissions);
+      console.warn("Could not fetch contact submissions:", err);
+      setItems([]);
     }
   };
 

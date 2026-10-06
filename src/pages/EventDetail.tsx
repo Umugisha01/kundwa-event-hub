@@ -17,9 +17,11 @@ import {
   Ticket as TicketIcon,
   ArrowLeft,
   Share2,
-  CalendarX
+  CalendarX,
+  RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { CalendarModal } from "@/components/events/CalendarModal";
 import { TicketCheckoutModal } from "@/components/events/TicketCheckoutModal";
 import heroImg from "@/assets/hero-event.jpg";
@@ -39,6 +41,7 @@ export default function EventDetail() {
 
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [tierQuantities, setTierQuantities] = useState<{ [tierId: string]: number }>({});
   const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<TicketTier | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
@@ -49,20 +52,19 @@ export default function EventDetail() {
 
   const fetchEvent = async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
-      // 1. Try fetching by ID
       let eventData: any = null;
       if (id) {
         const { data, error } = await supabase.from("events").select("*").eq("id", id).single();
-        if (!error && data) {
+        if (error) {
+          setErrorMsg("Could not find this event or the service is temporarily unreachable.");
+        } else if (data) {
           eventData = data;
         }
-      }
-
-      // 2. If not found or invalid id, fetch featured or first event
-      if (!eventData) {
-        const { data } = await supabase.from("events").select("*").order("is_featured", { ascending: false }).limit(1);
-        if (data && data.length > 0) {
+      } else {
+        const { data, error } = await supabase.from("events").select("*").order("is_featured", { ascending: false }).limit(1);
+        if (!error && data && data.length > 0) {
           eventData = data[0];
         }
       }
@@ -134,15 +136,31 @@ export default function EventDetail() {
   if (!event) {
     return (
       <Layout>
-        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
-          <AlertCircle className="h-16 w-16 text-muted-foreground/40 mb-4" />
-          <h2 className="text-2xl font-bold">Event Not Found</h2>
-          <p className="text-muted-foreground mt-2 mb-6">
-            The requested event could not be found or has ended.
+        <div className="min-h-[65vh] flex flex-col items-center justify-center text-center p-6 max-w-lg mx-auto">
+          <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+            {errorMsg ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <CalendarX className="h-8 w-8 text-secondary" />}
+          </div>
+          <h2 className="text-2xl font-bold mb-2">
+            {errorMsg ? "Event Unavailable" : "Event Not Found"}
+          </h2>
+          <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+            {errorMsg 
+              ? "We are currently having trouble retrieving the event details. Please verify your internet connection or check back shortly."
+              : "The requested event could not be found or may have concluded. Browse our upcoming calendar or contact our events team."}
           </p>
-          <Button onClick={() => navigate("/events")} className="btn-gold">
-            Browse All Events
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button onClick={() => navigate("/events")} className="btn-gold">
+              Browse Upcoming Events
+            </Button>
+            <Button variant="outline" onClick={() => fetchEvent()} className="gap-2">
+              <RefreshCw className="h-4 w-4" /> Try Again
+            </Button>
+            <Link to="/contact">
+              <Button variant="outline">
+                Contact Us
+              </Button>
+            </Link>
+          </div>
         </div>
       </Layout>
     );
@@ -187,7 +205,7 @@ export default function EventDetail() {
       <section className="relative bg-slate-950 text-white pt-28 pb-14 md:pt-36 md:pb-16 overflow-hidden border-b border-border/20">
         <div 
           className="absolute inset-0 opacity-25 bg-cover bg-center mix-blend-luminosity filter blur-sm scale-105 pointer-events-none"
-          style={{ backgroundImage: `url(${event.image_url || heroImg})` }}
+          style={{ backgroundImage: `url(${resolveMediaUrl(event.image_url, heroImg)})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
 
@@ -217,7 +235,7 @@ export default function EventDetail() {
               {/* Event Poster Card */}
               <div className="rounded-2xl overflow-hidden border border-border/80 shadow-xl bg-card">
                 <img
-                  src={event.image_url || heroImg}
+                  src={resolveMediaUrl(event.image_url, heroImg)}
                   alt={event.title}
                   className="w-full h-auto max-h-[600px] object-cover md:object-contain bg-slate-950"
                   loading="eager"

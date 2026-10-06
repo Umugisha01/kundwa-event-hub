@@ -13,33 +13,51 @@ import {
   Sparkles 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { TicketCheckoutModal } from "@/components/events/TicketCheckoutModal";
 import { CalendarModal } from "@/components/events/CalendarModal";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import heroImg from "@/assets/hero-event.jpg";
 
 export default function Ticketing() {
   const [events, setEvents] = useState<any[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [tierQuantities, setTierQuantities] = useState<{ [id: string]: number }>({});
   const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<any>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
+  const loadEvents = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: true });
+
+      if (error) {
+        setFetchError("Unable to retrieve ticketed events.");
+        setEvents([]);
+      } else if (data && data.length > 0) {
+        setEvents(data);
+        const ryla = data.find((e: any) => e.title.toLowerCase().includes("ryla"));
+        const initialId = ryla ? ryla.id : data[0].id;
+        setSelectedEventId(initialId);
+      } else {
+        setEvents([]);
+      }
+    } catch {
+      setFetchError("Unable to connect to ticketing service.");
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    supabase
-      .from("events")
-      .select("*")
-      .order("date", { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setEvents(data);
-          // Default to RYLA Rwanda or first featured event
-          const ryla = data.find((e: any) => e.title.toLowerCase().includes("ryla"));
-          const initialId = ryla ? ryla.id : data[0].id;
-          setSelectedEventId(initialId);
-        }
-        setLoading(false);
-      });
+    loadEvents();
   }, []);
 
   const activeEvent = events.find((e) => e.id === selectedEventId) || events[0];
@@ -92,6 +110,31 @@ export default function Ticketing() {
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground text-sm font-semibold">Loading ticketing hub...</p>
           </div>
+        ) : events.length === 0 ? (
+          <div className="max-w-xl mx-auto py-16 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md">
+            <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+              {fetchError ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <TicketIcon className="h-8 w-8 text-secondary" />}
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              {fetchError ? "Ticketing Service Unavailable" : "No Active Ticket Sales"}
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
+              {fetchError
+                ? "We are currently having trouble reaching the ticketing server. Please check your internet connection or try again."
+                : "There are currently no tickets on sale for upcoming events. Check back soon or visit our events calendar for announcements."}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link to="/events">
+                <Button className="btn-gold">Browse Events</Button>
+              </Link>
+              <Button variant="outline" onClick={() => loadEvents()} className="gap-2">
+                <RefreshCw className="h-4 w-4" /> Try Again
+              </Button>
+              <Link to="/contact">
+                <Button variant="outline">Contact Support</Button>
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="space-y-10">
             
@@ -122,7 +165,7 @@ export default function Ticketing() {
                 <div className="lg:col-span-5 rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                   <div className="aspect-4/3 relative overflow-hidden bg-slate-950">
                     <img
-                      src={activeEvent.image_url || heroImg}
+                      src={resolveMediaUrl(activeEvent.image_url, heroImg)}
                       alt={activeEvent.title}
                       className="w-full h-full object-cover"
                     />

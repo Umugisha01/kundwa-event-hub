@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaCalendar, FaTicket, FaWrench, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 
 const defaultPhotos = [
   "/photos/12.jpg",
@@ -40,7 +41,7 @@ export function HeroSection() {
   }, []);
 
   const photos = (Array.isArray(heroData?.carousel_photos) && heroData.carousel_photos.length > 0)
-    ? heroData.carousel_photos
+    ? heroData.carousel_photos.map((p: string) => resolveMediaUrl(p))
     : defaultPhotos;
 
   const words = (Array.isArray(heroData?.glitch_words) && heroData.glitch_words.length > 0)
@@ -52,7 +53,7 @@ export function HeroSection() {
   const headlineSuffix = heroData?.headline_suffix || "Experiences";
   const subtitlePrefix = heroData?.subtitle_prefix || "with";
   const subtitleBrand = heroData?.subtitle_brand || "Kundwa";
-  const bgImage = heroData?.background_image || "/14.jpg";
+  const bgImage = resolveMediaUrl(heroData?.background_image, "/14.jpg");
 
   const ctaButtons = (Array.isArray(heroData?.cta_buttons) && heroData.cta_buttons.length > 0)
     ? heroData.cta_buttons

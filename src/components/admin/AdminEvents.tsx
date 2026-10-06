@@ -64,12 +64,6 @@ const empty = {
   ]
 };
 
-const mockAttendees = [
-  { id: "t1", ticket_code: "KIB-RYLA-001", ticket_type: "EARLY BIRD TICKET", status: "Active", quantity: 1, purchased_at: new Date().toISOString(), customer_name: "Jean Pierre Habimana", customer_email: "jp.habimana@gmail.com", customer_phone: "+250 788 111 222", profiles: { full_name: "Jean Pierre Habimana", email: "jp.habimana@gmail.com" } },
-  { id: "t2", ticket_code: "KIB-RYLA-002", ticket_type: "GATE TICKET", status: "Checked In", quantity: 2, purchased_at: new Date().toISOString(), customer_name: "Sarah Keza", customer_email: "sarah.k@yahoo.com", customer_phone: "+250 788 333 444", profiles: { full_name: "Sarah Keza", email: "sarah.k@yahoo.com" } },
-  { id: "t3", ticket_code: "KIB-RYLA-003", ticket_type: "VIP LEADERSHIP PASS", status: "Active", quantity: 1, purchased_at: new Date().toISOString(), customer_name: "Didier Kamanzi", customer_email: "didier.k@outlook.com", customer_phone: "+250 788 555 666", profiles: { full_name: "Didier Kamanzi", email: "didier.k@outlook.com" } },
-];
-
 export function AdminEvents() {
   const [events, setEvents] = useState<any[]>([]);
   const [form, setForm] = useState<any>(null);
@@ -171,14 +165,10 @@ export function AdminEvents() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        setAttendees(data);
-      } else {
-        setAttendees(mockAttendees);
-      }
+      setAttendees(data || []);
     } catch (err: any) {
-      console.warn("Could not load attendees from database, using fallback:", err);
-      setAttendees(mockAttendees);
+      console.warn("Could not load attendees from database:", err);
+      setAttendees([]);
     } finally {
       setLoadingAttendees(false);
     }

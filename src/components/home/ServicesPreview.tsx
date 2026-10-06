@@ -93,9 +93,27 @@ export function ServicesPreview() {
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
             <p className="text-muted-foreground text-sm">Loading services...</p>
           </div>
+        ) : dbServices.length === 0 ? (
+          <div className="max-w-xl mx-auto py-12 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md">
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+              Our comprehensive services portfolio is currently being refreshed online. Contact our production team directly to discuss sound systems, lighting, stage design, or ticketing solutions.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link to="/services">
+                <Button className="btn-gold gap-1.5">
+                  View All Services <FaArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button variant="outline">
+                  Contact Us
+                </Button>
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="flex flex-wrap justify-center gap-8">
-            {categories.map((cat, i) => (
+            {categories.filter((cat) => cat.items.length > 0).map((cat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { UploadCloud, Loader2 } from "lucide-react";
+import { apiUrl } from "@/config/api";
 
 interface FileUploadProps {
   onUpload: (url: string) => void;
@@ -32,7 +33,7 @@ export function FileUpload({ onUpload, label = "Upload", accept = "image/*" }: F
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/upload/", {
+      const response = await fetch(apiUrl("/api/upload/"), {
         method: "POST",
         headers,
         body: formData,

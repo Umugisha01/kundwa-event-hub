@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: kundwa-backend
+    env: python
+    rootDir: kundwa-backend
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn kundwa_backend.wsgi:application --bind 0.0.0.0:$PORT"
+    healthCheckPath: /health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kundwa-db
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://kundwa.vercel.app,http://localhost:8080"
+      - key: CORS_ALLOW_ALL
+        value: "True"
+
+databases:
+  - name: kundwa-db
+    databaseName: kundwa_db
+    user: kundwa_user
+    plan: free

@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import * as Icons from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/contexts/CartContext";
-import { Calendar } from "lucide-react";
+import { Calendar, Wrench, AlertCircle, RefreshCw } from "lucide-react";
 import soundImg from "@/assets/sound-system.jpg";
 import lightingImg from "@/assets/lighting-system.jpg";
 import stageImg from "@/assets/stage-design.jpg";
@@ -23,64 +25,14 @@ const RentalsIcon = ({ name, className }: { name: string; className?: string }) 
 
 const categories = ["All", "Screens", "Lighting", "Sound", "Stages"];
 
-const mockEquipment = [
-  {
-    name: "LED Screen P3.91 Outdoor",
-    category: "Screens",
-    image: heroImg,
-    icon: "Monitor",
-    price: 0,
-    available: true,
-  },
-  {
-    name: "L-Acoustics K2 Line Array",
-    category: "Sound",
-    image: soundImg,
-    icon: "Volume2",
-    price: 0,
-    available: true,
-  },
-  {
-    name: "Robe BMFL Blade Moving Head",
-    category: "Lighting",
-    image: lightingImg,
-    icon: "Lightbulb",
-    price: 0,
-    available: true,
-  },
-  {
-    name: "Aluminium Stage Truss 12x10m",
-    category: "Stages",
-    image: stageImg,
-    icon: "Layers",
-    price: 0,
-    available: true,
-  },
-  {
-    name: "Pioneer DJ Nexus 2 Set",
-    category: "Sound",
-    image: soundImg,
-    icon: "Volume2",
-    price: 0,
-    available: true,
-  },
-  {
-    name: "MA Lighting grandMA3 compact XT",
-    category: "Lighting",
-    image: lightingImg,
-    icon: "Lightbulb",
-    price: 0,
-    available: false,
-  },
-];
-
 const RentalsPage = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { addToCart } = useCart();
   const [active, setActive] = useState("All");
-  const [equipment, setEquipment] = useState<any[]>(mockEquipment);
+  const [equipment, setEquipment] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Rental Dialog Booking States
   const [bookingItem, setBookingItem] = useState<any | null>(null);
@@ -88,35 +40,51 @@ const RentalsPage = () => {
   const [endDate, setEndDate] = useState("2026-07-17");
   const [includeSetup, setIncludeSetup] = useState(false);
 
-  useEffect(() => {
+  const fetchEquipment = useCallback(async () => {
     setLoading(true);
-    supabase
-      .from("equipment")
-      .select("*")
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mapped = data.map((eq: any) => {
-            // Map category to icon string
-            let iconName = "Wrench";
-            if (eq.category === "Screens") iconName = "Monitor";
-            else if (eq.category === "Lighting") iconName = "Lightbulb";
-            else if (eq.category === "Sound") iconName = "Volume2";
-            else if (eq.category === "Stages") iconName = "Layers";
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase.from("equipment").select("*");
+      if (error) {
+        setFetchError("Unable to retrieve rental equipment catalog.");
+        setEquipment([]);
+      } else if (data && data.length > 0) {
+        const mapped = data.map((eq: any) => {
+          let iconName = "Wrench";
+          if (eq.category === "Screens") iconName = "Monitor";
+          else if (eq.category === "Lighting") iconName = "Lightbulb";
+          else if (eq.category === "Sound") iconName = "Volume2";
+          else if (eq.category === "Stages") iconName = "Layers";
 
-            return {
-              name: eq.name,
-              category: eq.category,
-              image: eq.image_url || heroImg,
-              icon: iconName,
-              price: 0,
-              available: eq.status === "Available"
-            };
-          });
-          setEquipment(mapped);
-        }
-        setLoading(false);
-      });
+          let fallbackImg = heroImg;
+          if (eq.category === "Sound") fallbackImg = soundImg;
+          else if (eq.category === "Lighting") fallbackImg = lightingImg;
+          else if (eq.category === "Stages") fallbackImg = stageImg;
+
+          return {
+            name: eq.name,
+            category: eq.category,
+            image: resolveMediaUrl(eq.image_url, fallbackImg),
+            icon: iconName,
+            price: 0,
+            available: eq.status === "Available"
+          };
+        });
+        setEquipment(mapped);
+      } else {
+        setEquipment([]);
+      }
+    } catch {
+      setFetchError("Failed to connect to equipment service.");
+      setEquipment([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchEquipment();
+  }, [fetchEquipment]);
 
   const handleBookRental = () => {
     if (!bookingItem) return;
@@ -227,7 +195,41 @@ const RentalsPage = () => {
                 </div>
               ))}
               {filtered.length === 0 && (
-                <p className="text-muted-foreground text-sm text-center py-8 col-span-4">No equipment found.</p>
+                <div className="col-span-1 sm:col-span-2 lg:col-span-4 py-16 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md max-w-xl mx-auto my-6">
+                  <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                    {fetchError ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <Wrench className="h-8 w-8 text-secondary" />}
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    {active !== "All"
+                      ? `No ${active} Equipment Found`
+                      : fetchError 
+                        ? "Equipment Catalog Temporarily Unavailable" 
+                        : "Equipment Inventory Updating"}
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                    {active !== "All"
+                      ? `There are currently no items listed under the "${active}" category. Try selecting another category or viewing all items.`
+                      : fetchError
+                        ? "We could not connect to our inventory service right now. Please verify your connection or contact our rental team directly."
+                        : "Our equipment catalog including sound systems, lighting fixtures, LED screens, and stages is being updated online. Contact our rental specialists directly for live availability and quotes."}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    {active !== "All" ? (
+                      <Button variant="outline" onClick={() => setActive("All")} className="btn-gold">
+                        View All Categories
+                      </Button>
+                    ) : (
+                      <>
+                        <Link to="/contact">
+                          <Button className="btn-gold">Contact Rental Desk</Button>
+                        </Link>
+                        <Button variant="outline" onClick={() => fetchEquipment()} className="gap-2">
+                          <RefreshCw className="h-4 w-4" /> Try Again
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}

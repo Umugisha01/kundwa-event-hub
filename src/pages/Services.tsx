@@ -14,11 +14,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import * as Icons from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { services as mockServices } from "@/data/services";
+import { resolveMediaUrl } from "@/config/api";
 import { useCart } from "@/contexts/CartContext";
 import { 
   Calendar, Check, Sparkles, AlertCircle, Wrench, 
-  ShieldAlert, Settings, Info, Loader2, CreditCard
+  ShieldAlert, Settings, Info, Loader2, CreditCard, RefreshCw
 } from "lucide-react";
 
 // Helper component to render icon dynamically
@@ -40,7 +40,9 @@ const categories = [
 const ServicesPage = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [dbServices, setDbServices] = useState<any[]>(mockServices);
+  const [dbServices, setDbServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [equipmentRentals, setEquipmentRentals] = useState<any[]>([]);
   const { addToCart } = useCart();
   const [inquiryOpen, setInquiryOpen] = useState(false);
@@ -134,40 +136,59 @@ const ServicesPage = () => {
     setWizardStep(1);
   };
 
-  useEffect(() => {
-    supabase
-      .from("services")
-      .select("*")
-      .then(({ data }) => {
-        if (data && data.length > 0) setDbServices(data);
-      });
+  const loadServicesData = useCallback(async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase.from("services").select("*");
+      if (error) {
+        setFetchError("Unable to retrieve services catalog.");
+        setDbServices([]);
+      } else if (data && data.length > 0) {
+        const mapped = data.map((s: any) => ({
+          ...s,
+          image_url: resolveMediaUrl(s.image_url, "/assets/hero-event.jpg")
+        }));
+        setDbServices(mapped);
+      } else {
+        setDbServices([]);
+      }
+    } catch {
+      setFetchError("Unable to connect to services backend.");
+      setDbServices([]);
+    } finally {
+      setLoading(false);
+    }
 
     // Also fetch equipment rentals for the bottom section
-    supabase
-      .from("equipment")
-      .select("*")
-      .then(({ data }) => {
-        if (data) {
-          // Map to match the rental preview format
-          const mapped = data.slice(0, 4).map((eq: any) => {
-            let iconName = "Wrench";
-            if (eq.category === "Screens") iconName = "Monitor";
-            else if (eq.category === "Lighting") iconName = "Lightbulb";
-            else if (eq.category === "Sound") iconName = "Volume2";
-            else if (eq.category === "Stages") iconName = "Layers";
+    try {
+      const { data } = await supabase.from("equipment").select("*");
+      if (data) {
+        const mapped = data.slice(0, 4).map((eq: any) => {
+          let iconName = "Wrench";
+          if (eq.category === "Screens") iconName = "Monitor";
+          else if (eq.category === "Lighting") iconName = "Lightbulb";
+          else if (eq.category === "Sound") iconName = "Volume2";
+          else if (eq.category === "Stages") iconName = "Layers";
 
-            return {
-              name: eq.name,
-              category: eq.category,
-              image: eq.image_url || "/assets/hero-event.jpg",
-              icon: iconName,
-              available: eq.status === "Available"
-            };
-          });
-          setEquipmentRentals(mapped);
-        }
-      });
+          return {
+            name: eq.name,
+            category: eq.category,
+            image: resolveMediaUrl(eq.image_url, "/assets/hero-event.jpg"),
+            icon: iconName,
+            available: eq.status === "Available"
+          };
+        });
+        setEquipmentRentals(mapped);
+      }
+    } catch {
+      // ignore
+    }
   }, []);
+
+  useEffect(() => {
+    loadServicesData();
+  }, [loadServicesData]);
 
   const groupedServices = categories.map((cat) => {
     const items = dbServices.filter((s) => s.category === cat.title);
@@ -308,76 +329,107 @@ const ServicesPage = () => {
       </section>
 
       {/* Service Categories */}
-      {groupedServices.map((category, i) => (
-        <section key={i} className={`section-padding ${i % 2 === 1 ? "bg-muted/40" : ""}`}>
-          <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="grid md:grid-cols-2 gap-10 items-center"
-            >
-              {/* Image */}
-              <div className={i % 2 === 1 ? "md:order-2" : ""}>
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
-                  <img
-                    src={category.items[0]?.image_url || "/assets/hero-event.jpg"}
-                    alt={category.title}
-                    className="w-full h-72 md:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
-                    width={800}
-                    height={600}
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-40`} />
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <span className="text-white text-sm font-semibold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                      {category.items.length} {category.items.length === 1 ? "service" : "services"} included
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className={i % 2 === 1 ? "md:order-1" : ""}>
-                <span className="text-secondary font-semibold text-xs uppercase tracking-widest">
-                  {`0${i + 1}`}
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2 mb-4">
-                  {category.title}
-                </h2>
-
-                <div className="space-y-3 mb-6">
-                  {category.items.map((item, j) => (
-                    <Link
-                      key={j}
-                      to={`/services/${item.slug}`}
-                      className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/50 hover:border-secondary/50 hover:shadow-md transition-all group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                          <ServiceIcon name={item.icon} className="h-5 w-5 text-secondary" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-foreground text-sm">{item.name}</h4>
-                          <p className="text-xs text-muted-foreground">{item.tagline}</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-secondary transition-colors" />
-                    </Link>
-                  ))}
-                </div>
-
-                <Button
-                  className="btn-gold gap-2"
-                  onClick={() => openInquiry(category.title)}
-                >
-                  <MessageSquare className="h-4 w-4" /> Inquire About {category.title}
-                </Button>
-              </div>
-            </motion.div>
+      {loading ? (
+        <section className="section-padding text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-sm font-semibold">Loading services catalog...</p>
+        </section>
+      ) : dbServices.length === 0 ? (
+        <section className="section-padding">
+          <div className="max-w-xl mx-auto py-16 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md">
+            <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+              {fetchError ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <Settings className="h-8 w-8 text-secondary" />}
+            </div>
+            <h3 className="text-2xl font-bold text-foreground mb-2">
+              {fetchError ? "Services Service Unavailable" : "Services Catalog Updating"}
+            </h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
+              {fetchError
+                ? "We are currently unable to reach our services directory. Please check back shortly or connect with our team directly."
+                : "Our comprehensive catalog of event production, management, and technical solutions is currently being updated online. Reach out to our production directors for custom inquiries and quotes."}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button onClick={() => openInquiry("Custom Event")} className="btn-gold gap-1.5">
+                <MessageSquare className="h-4 w-4" /> Custom Event Inquiry
+              </Button>
+              <Button variant="outline" onClick={() => loadServicesData()} className="gap-2">
+                <RefreshCw className="h-4 w-4" /> Try Again
+              </Button>
+            </div>
           </div>
         </section>
-      ))}
+      ) : (
+        groupedServices.filter((cat) => cat.items.length > 0).map((category, i) => (
+          <section key={i} className={`section-padding ${i % 2 === 1 ? "bg-muted/40" : ""}`}>
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="grid md:grid-cols-2 gap-10 items-center"
+              >
+                {/* Image */}
+                <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                  <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
+                    <img
+                      src={category.items[0]?.image_url || "/assets/hero-event.jpg"}
+                      alt={category.title}
+                      className="w-full h-72 md:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
+                      loading="lazy"
+                      width={800}
+                      height={600}
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-40`} />
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <span className="text-white text-sm font-semibold bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                        {category.items.length} {category.items.length === 1 ? "service" : "services"} included
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className={i % 2 === 1 ? "md:order-1" : ""}>
+                  <span className="text-secondary font-semibold text-xs uppercase tracking-widest">
+                    {`0${i + 1}`}
+                  </span>
+                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2 mb-4">
+                    {category.title}
+                  </h2>
+
+                  <div className="space-y-3 mb-6">
+                    {category.items.map((item, j) => (
+                      <Link
+                        key={j}
+                        to={`/services/${item.slug}`}
+                        className="flex items-center justify-between p-4 rounded-xl bg-card border border-border/50 hover:border-secondary/50 hover:shadow-md transition-all group"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                            <ServiceIcon name={item.icon} className="h-5 w-5 text-secondary" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-foreground text-sm">{item.name}</h4>
+                            <p className="text-xs text-muted-foreground">{item.tagline}</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-secondary transition-colors" />
+                      </Link>
+                    ))}
+                  </div>
+
+                  <Button
+                    className="btn-gold gap-2"
+                    onClick={() => openInquiry(category.title)}
+                  >
+                    <MessageSquare className="h-4 w-4" /> Inquire About {category.title}
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          </section>
+        ))
+      )}
 
       {/* Equipment Rentals */}
       <section className="section-padding bg-primary text-primary-foreground">

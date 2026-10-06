@@ -2,17 +2,21 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaArrowRight, FaPlay } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
-import { portfolioProjects } from "@/data/portfolio";
+import { FolderKanban, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { useTheme } from "@/contexts/ThemeContext";
+import heroImg from "@/assets/hero-event.jpg";
 
 export function PortfolioPreview() {
-  const [projects, setProjects] = useState<any[]>(portfolioProjects);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
 
   const isDark = theme === "dark";
 
   useEffect(() => {
+    setLoading(true);
     supabase
       .from("portfolio")
       .select("*")
@@ -25,14 +29,21 @@ export function PortfolioPreview() {
             title: p.title,
             category: p.category,
             description: p.description,
-            thumbnail: p.thumbnail,
+            thumbnail: resolveMediaUrl(p.thumbnail, heroImg),
             images: p.images || [],
-            videoUrl: p.video_url,
+            videoUrl: p.video_url ? resolveMediaUrl(p.video_url) : undefined,
             date: p.date,
             client: p.client
           }));
           setProjects(mapped);
+        } else {
+          setProjects([]);
         }
+        setLoading(false);
+      })
+      .catch(() => {
+        setProjects([]);
+        setLoading(false);
       });
   }, []);
 
@@ -66,8 +77,32 @@ export function PortfolioPreview() {
         </div>
 
         {/* Projects Grid */}
-        <div className="flex flex-wrap justify-center gap-8 mb-12">
-          {featuredProjects.map((project) => (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
+            <p className="text-muted-foreground text-sm">Loading project showcase...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="max-w-xl mx-auto py-12 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md mb-12">
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+              Our project highlights and stage production reels are currently being curated for this showcase. Explore our services or reach out directly to request our full client portfolio deck.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link to="/services">
+                <Button className="btn-gold gap-1.5">
+                  Explore Services <FaArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button variant="outline">
+                  Contact Us
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-8 mb-12">
+            {featuredProjects.map((project) => (
             <Link
               key={project.id}
               to="/portfolio"
@@ -128,6 +163,7 @@ export function PortfolioPreview() {
             </Link>
           ))}
         </div>
+      )}
 
         {/* CTA Section */}
         <div className="text-center mt-12">

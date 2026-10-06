@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import { portfolioProjects } from "@/data/portfolio";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X, FolderKanban, AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { useTheme } from "@/contexts/ThemeContext";
+import heroImg from "@/assets/hero-event.jpg";
 
 const Portfolio = () => {
   const { theme } = useTheme();
@@ -13,30 +15,49 @@ const Portfolio = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showVideoModal, setShowVideoModal] = useState(false);
-  const [projects, setProjects] = useState<any[]>(portfolioProjects);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchPortfolio = useCallback(async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("portfolio")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setFetchError("Unable to retrieve portfolio projects.");
+        setProjects([]);
+      } else if (data && data.length > 0) {
+        const mapped = data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          category: p.category,
+          description: p.description,
+          thumbnail: resolveMediaUrl(p.thumbnail, heroImg),
+          images: (p.images && Array.isArray(p.images) ? p.images : []).map((img: string) => resolveMediaUrl(img, heroImg)),
+          videoUrl: p.video_url ? resolveMediaUrl(p.video_url) : undefined,
+          date: p.date,
+          client: p.client
+        }));
+        setProjects(mapped);
+      } else {
+        setProjects([]);
+      }
+    } catch {
+      setFetchError("Unable to connect to portfolio service.");
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    supabase
-      .from("portfolio")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mapped = data.map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            category: p.category,
-            description: p.description,
-            thumbnail: p.thumbnail,
-            images: p.images || [],
-            videoUrl: p.video_url,
-            date: p.date,
-            client: p.client
-          }));
-          setProjects(mapped);
-        }
-      });
-  }, []);
+    fetchPortfolio();
+  }, [fetchPortfolio]);
 
   const project = selectedProject
     ? projects.find((p) => p.id === selectedProject)
@@ -135,69 +156,98 @@ const Portfolio = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Portfolio Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="group cursor-pointer bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-2xl transition-all duration-300"
-              >
-                {/* Project Thumbnail */}
-                <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-700">
-                  <img
-                    src={project.thumbnail}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                    <button
-                      onClick={() => {
-                        setSelectedProject(project.id);
-                        setSelectedImageIndex(0);
-                      }}
-                      className="bg-primary hover:bg-primary/90 text-white p-3 rounded-full transition"
-                      title="View images"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
-                    {project.videoUrl && (
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground text-sm font-semibold">Loading portfolio projects...</p>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="max-w-xl mx-auto py-16 px-6 text-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md my-8 shadow-sm">
+              <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                {fetchError ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <FolderKanban className="h-8 w-8 text-secondary" />}
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                {fetchError ? "Portfolio Service Temporarily Unavailable" : "Portfolio Showcase In Preparation"}
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                {fetchError
+                  ? "We are unable to reach the portfolio database right now. Please verify your connection or contact our team directly."
+                  : "We are currently curating and uploading high-definition photo galleries and video reels from our latest productions across East Africa. Reach out to request our full agency credentials deck."}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link to="/contact">
+                  <Button className="btn-gold">Request Credentials Deck</Button>
+                </Link>
+                <Button variant="outline" onClick={() => fetchPortfolio()} className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Try Again
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="group cursor-pointer bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-2xl transition-all duration-300"
+                >
+                  {/* Project Thumbnail */}
+                  <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-700">
+                    <img
+                      src={project.thumbnail}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                       <button
                         onClick={() => {
                           setSelectedProject(project.id);
-                          setShowVideoModal(true);
+                          setSelectedImageIndex(0);
                         }}
-                        className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition"
-                        title="Watch video"
+                        className="bg-primary hover:bg-primary/90 text-white p-3 rounded-full transition"
+                        title="View images"
                       >
-                        <Play className="w-6 h-6 fill-current" />
+                        <ChevronRight className="w-6 h-6" />
                       </button>
-                    )}
+                      {project.videoUrl && (
+                        <button
+                          onClick={() => {
+                            setSelectedProject(project.id);
+                            setShowVideoModal(true);
+                          }}
+                          className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition"
+                          title="Watch video"
+                        >
+                          <Play className="w-6 h-6 fill-current" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Project Info */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">{project.title}</h3>
-                    {project.videoUrl && (
-                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">
-                        Video
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-primary text-sm font-semibold mb-2">
-                    {project.category}
-                  </p>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                    {project.description}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-600">
-                    <span>{project.date}</span>
-                    {project.client && <span>{project.client}</span>}
+                  {/* Project Info */}
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">{project.title}</h3>
+                      {project.videoUrl && (
+                        <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">
+                          Video
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-primary text-sm font-semibold mb-2">
+                      {project.category}
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                      {project.description}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-600">
+                      <span>{project.date}</span>
+                      {project.client && <span>{project.client}</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

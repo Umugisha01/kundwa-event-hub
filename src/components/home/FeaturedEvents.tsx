@@ -1,70 +1,55 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Clock, Map, Ticket } from "lucide-react";
+import { MapPin, Calendar, Clock, Map, Ticket, CalendarX, AlertCircle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import concertImg from "@/assets/event-concert.jpg";
 import corporateImg from "@/assets/event-corporate.jpg";
 import heroImg from "@/assets/hero-event.jpg";
 
-const mockFeaturedEvents = [
-  {
-    id: "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
-    title: "RYLA RWANDA",
-    date: "Friday, March 27, 2026",
-    time: "2:00 PM",
-    location: "Kigali Rwanda",
-    venue: "UR Gikondo Campus",
-    price: "5,000 RWF",
-    image: "/ryla-rwanda.jpg",
-    tag: "Festival",
-    status: "Active"
-  },
-  {
-    id: "fdb64f0c-cea1-46e9-93b1-6be242043e02",
-    title: "Kigali Jazz Junction - Summer Edition",
-    date: "Wednesday, July 22, 2026",
-    time: "6:00 PM",
-    location: "Kigali Rwanda",
-    venue: "KCEV Camp Kigali",
-    price: "15,000 RWF",
-    image: concertImg,
-    tag: "Concert",
-    status: "Upcoming"
-  },
-  {
-    id: "f51dc207-46f0-454c-89cc-cfd3c8e33f88",
-    title: "Rwanda Corporate Tech Summit 2026",
-    date: "Thursday, August 6, 2026",
-    time: "9:00 AM",
-    location: "Kigali Rwanda",
-    venue: "Kigali Convention Centre",
-    price: "50,000 RWF",
-    image: corporateImg,
-    tag: "Corporate",
-    status: "Upcoming"
-  }
-];
-
 export function FeaturedEvents() {
-  const [events, setEvents] = useState<any[]>(mockFeaturedEvents);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const { theme } = useTheme();
   const { addToCart } = useCart();
 
   const isDark = theme === "dark";
 
   useEffect(() => {
+    setLoading(true);
+    setFetchError(null);
     supabase
       .from("events")
       .select("*")
       .eq("is_featured", true)
       .limit(3)
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mapped = data.map((ev: any) => {
+      .then(async ({ data, error }) => {
+        if (error) {
+          setFetchError("Unable to retrieve featured events.");
+          setEvents([]);
+          setLoading(false);
+          return;
+        }
+
+        let eventList = data || [];
+        // If no featured events, fall back to any active upcoming events
+        if (eventList.length === 0) {
+          const { data: allData } = await supabase
+            .from("events")
+            .select("*")
+            .order("date", { ascending: true })
+            .limit(3);
+          if (allData && allData.length > 0) {
+            eventList = allData;
+          }
+        }
+
+        if (eventList.length > 0) {
+          const mapped = eventList.map((ev: any) => {
             const evDate = new Date(ev.date || Date.now());
             const formattedDate = evDate.toLocaleDateString("en-US", {
               weekday: "long",
@@ -100,13 +85,20 @@ export function FeaturedEvents() {
               location: ev.location || "Kigali Rwanda",
               venue: ev.venue || "UR Gikondo Campus",
               price: minPrice.toLocaleString() + " RWF",
-              image: ev.image_url || fallbackImage,
+              image: resolveMediaUrl(ev.image_url, fallbackImage),
               tag: ev.category || "Festival",
               status: ev.status || "Active",
             };
           });
           setEvents(mapped);
+        } else {
+          setEvents([]);
         }
+        setLoading(false);
+      })
+      .catch(() => {
+        setFetchError("Unable to connect to events service.");
+        setEvents([]);
         setLoading(false);
       });
   }, []);
@@ -258,7 +250,31 @@ export function FeaturedEvents() {
               </div>
             ))}
             {events.length === 0 && (
-              <p className="text-muted-foreground text-sm text-center py-8 col-span-3">No featured events at the moment.</p>
+              <div className="w-full max-w-xl mx-auto py-12 px-6 rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md text-center">
+                <div className="h-14 w-14 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                  {fetchError ? <AlertCircle className="h-7 w-7 text-amber-500" /> : <Calendar className="h-7 w-7 text-secondary" />}
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">
+                  {fetchError ? "Events Service Unavailable" : "Upcoming Experiences In Preparation"}
+                </h3>
+                <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                  {fetchError
+                    ? "We're currently unable to load the event highlights. Please check back shortly or connect with our team directly."
+                    : "Our curated calendar of festivals, concerts, and leadership summits is being refreshed. Stay tuned or get in touch to produce your next event."}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link to="/events">
+                    <Button variant="outline" className="btn-gold gap-1.5">
+                      Explore All Events <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                  <Link to="/contact">
+                    <Button variant="outline">
+                      Contact Team
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             )}
           </div>
         )}

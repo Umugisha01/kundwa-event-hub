@@ -280,6 +280,16 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+class HealthCheckView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({
+            "status": "ok",
+            "service": "kundwa-backend",
+            "version": "1.0.0"
+        }, status=status.HTTP_200_OK)
+
 class FileUploadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

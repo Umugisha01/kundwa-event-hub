@@ -1,122 +1,88 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Clock, Map, Ticket, Users, Search } from "lucide-react";
+import { MapPin, Calendar, Clock, Map, Ticket, Users, Search, RefreshCw, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMediaUrl } from "@/config/api";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import concertImg from "@/assets/event-concert.jpg";
 import corporateImg from "@/assets/event-corporate.jpg";
 import heroImg from "@/assets/hero-event.jpg";
 
-const mockEvents = [
-  {
-    id: "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
-    title: "RYLA RWANDA",
-    date: "Friday, March 27, 2026",
-    time: "2:00 PM",
-    location: "Kigali Rwanda",
-    venue: "UR Gikondo Campus",
-    image: "/ryla-rwanda.jpg",
-    tag: "Festival",
-    status: "Active",
-    isFeatured: true
-  },
-  {
-    id: "fdb64f0c-cea1-46e9-93b1-6be242043e02",
-    title: "Kigali Jazz Junction - Summer Edition",
-    date: "Wednesday, July 22, 2026",
-    time: "6:00 PM",
-    location: "Kigali Rwanda",
-    venue: "KCEV Camp Kigali",
-    image: concertImg,
-    tag: "Concert",
-    status: "Upcoming",
-    isFeatured: true
-  },
-  {
-    id: "f51dc207-46f0-454c-89cc-cfd3c8e33f88",
-    title: "Rwanda Corporate Tech Summit 2026",
-    date: "Thursday, August 6, 2026",
-    time: "9:00 AM",
-    location: "Kigali Rwanda",
-    venue: "Kigali Convention Centre",
-    image: corporateImg,
-    tag: "Corporate",
-    status: "Upcoming",
-    isFeatured: true
-  },
-  {
-    id: "4b1b2ad3-8ad0-44e2-a5a7-200962118110",
-    title: "Royal Wedding Gala",
-    date: "Tuesday, July 7, 2026",
-    time: "4:00 PM",
-    location: "Kigali Rwanda",
-    venue: "Intare Conference Arena",
-    image: heroImg,
-    tag: "Gala",
-    status: "Upcoming",
-    isFeatured: false
-  }
-];
-
 const EventsPage = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { addToCart } = useCart();
   const [search, setSearch] = useState("");
-  const [events, setEvents] = useState<any[]>(mockEvents);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: true });
+
+      if (error) {
+        setFetchError("Unable to load events from the server.");
+        setEvents([]);
+      } else if (data && data.length > 0) {
+        const mapped = data.map((ev: any) => {
+          const evDate = new Date(ev.date || Date.now());
+          const formattedDate = evDate.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+          const formattedTime = evDate.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          let minPrice = parseFloat(ev.ticket_price) || 0;
+          if (ev.ticket_tiers && Array.isArray(ev.ticket_tiers) && ev.ticket_tiers.length > 0) {
+            const prices = ev.ticket_tiers.map((t: any) => t.price || 0);
+            minPrice = Math.min(...prices);
+          }
+
+          return {
+            id: ev.id,
+            title: ev.title,
+            date: formattedDate,
+            time: formattedTime,
+            location: ev.location || "Kigali Rwanda",
+            venue: ev.venue || "Kigali",
+            price: minPrice,
+            image: resolveMediaUrl(ev.image_url, heroImg),
+            tag: ev.category || "Event",
+            status: ev.status || "Upcoming",
+            isFeatured: ev.is_featured,
+          };
+        });
+        setEvents(mapped);
+      } else {
+        setEvents([]);
+      }
+    } catch (err: any) {
+      setFetchError("Failed to connect to the events service. Please verify your connection.");
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    supabase
-      .from("events")
-      .select("*")
-      .order("date", { ascending: true })
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mapped = data.map((ev: any) => {
-            const evDate = new Date(ev.date || Date.now());
-            const formattedDate = evDate.toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            });
-            const formattedTime = evDate.toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            });
-
-            let minPrice = parseFloat(ev.ticket_price) || 0;
-            if (ev.ticket_tiers && Array.isArray(ev.ticket_tiers) && ev.ticket_tiers.length > 0) {
-              const prices = ev.ticket_tiers.map((t: any) => t.price || 0);
-              minPrice = Math.min(...prices);
-            }
-
-            return {
-              id: ev.id,
-              title: ev.title,
-              date: formattedDate,
-              time: formattedTime,
-              location: ev.location || "Kigali Rwanda",
-              venue: ev.venue || "UR Gikondo Campus",
-              price: minPrice,
-              image: ev.image_url || heroImg,
-              tag: ev.category || "Festival",
-              status: ev.status || "Active",
-              isFeatured: ev.is_featured,
-            };
-          });
-          setEvents(mapped);
-        }
-        setLoading(false);
-      });
-  }, []);
+    fetchEvents();
+  }, [fetchEvents]);
 
   const filtered = events.filter((e) => e.title.toLowerCase().includes(search.toLowerCase()));
 
@@ -234,8 +200,40 @@ const EventsPage = () => {
                 </Link>
               ))}
               {filtered.length === 0 && (
-                <div className="text-center py-16 col-span-3">
-                  <p className="text-muted-foreground text-base">No upcoming events found matching your search.</p>
+                <div className="col-span-1 md:col-span-2 lg:col-span-3 py-16 px-6 text-center rounded-3xl border border-border/70 bg-card/50 backdrop-blur-md max-w-xl mx-auto my-6">
+                  <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                    {fetchError ? <AlertCircle className="h-8 w-8 text-amber-500" /> : <Calendar className="h-8 w-8 text-secondary" />}
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    {search 
+                      ? "No Matching Events Found" 
+                      : fetchError 
+                        ? "Events Service Unavailable" 
+                        : "No Upcoming Events Scheduled"}
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                    {search
+                      ? `We couldn't find any events matching "${search}". Please try another keyword or clear the search filter.`
+                      : fetchError
+                        ? "We're currently unable to load the event schedule. Please verify your connection or reach out to our team."
+                        : "Our upcoming festival and concert calendar is being updated. Check back shortly or contact our event production team to host or produce your next gathering."}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    {search ? (
+                      <Button variant="outline" onClick={() => setSearch("")} className="btn-gold">
+                        Clear Search Filter
+                      </Button>
+                    ) : (
+                      <>
+                        <Link to="/contact">
+                          <Button className="btn-gold">Contact Event Team</Button>
+                        </Link>
+                        <Button variant="outline" onClick={() => fetchEvents()} className="gap-2">
+                          <RefreshCw className="h-4 w-4" /> Try Again
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

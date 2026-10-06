@@ -7,7 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, X, Download, FileText, Search } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
 import { FileUpload } from "./FileUpload";
-import { portfolioProjects } from "@/data/portfolio";
 
 const emptyForm = {
   title: "",
@@ -31,24 +30,10 @@ export function AdminPortfolio() {
     try {
       const { data, error } = await supabase.from("portfolio").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setItems(data);
-      } else {
-        // Fallback to static mock data if database is empty
-        setItems(portfolioProjects.map(p => ({
-          ...p,
-          video_url: p.videoUrl,
-          images: p.images || []
-        })));
-      }
+      setItems(data || []);
     } catch (err: any) {
-      console.warn("Could not fetch portfolio from Supabase. Falling back to local data.", err);
-      setItems(portfolioProjects.map(p => ({
-        ...p,
-        video_url: p.videoUrl,
-        images: p.images || []
-      })));
+      console.warn("Could not fetch portfolio items:", err);
+      setItems([]);
     }
   };
 
@@ -93,17 +78,11 @@ export function AdminPortfolio() {
       fetchItems();
     } catch (err: any) {
       console.error("Database save failed:", err);
-      // Mock save update to state if supabase fails (demo/fallback mode)
-      if (editId) {
-        setItems(prev => prev.map(item => item.id === editId ? { ...item, ...payload } : item));
-        toast({ title: "Updated locally!", description: "Save simulated in fallback mode." });
-      } else {
-        const newProj = { id: String(Date.now()), ...payload };
-        setItems(prev => [newProj, ...prev]);
-        toast({ title: "Created locally!", description: "Creation simulated in fallback mode." });
-      }
-      setForm(null);
-      setEditId(null);
+      toast({
+        title: "Failed to save project",
+        description: err?.message || "Could not save to the database. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 

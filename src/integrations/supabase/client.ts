@@ -5,6 +5,9 @@
  * routing them to the Django REST backend.
  */
 
+import { apiUrl, resolveMediaUrl, API_BASE } from "@/config/api";
+export { apiUrl, resolveMediaUrl, API_BASE };
+
 export interface User {
   id: string;
   email: string;
@@ -131,7 +134,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
     const refresh = localStorage.getItem("django_refresh_token");
     if (!refresh) return null;
     try {
-      const res = await fetch("/api/auth/token/refresh/", {
+      const res = await fetch(apiUrl("/api/auth/token/refresh/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh }),
@@ -190,10 +193,9 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
       endpoint = "contact_submissions";
     }
 
-    let url = `/api/${endpoint}/`;
-    if (this.isSingle && this.filters.id) {
-      url += `${this.filters.id}/`;
-    } else {
+    const basePath = `/api/${endpoint}/${this.isSingle && this.filters.id ? `${this.filters.id}/` : ""}`;
+    let url = apiUrl(basePath);
+    if (!this.isSingle || !this.filters.id) {
       const params = new URLSearchParams();
       Object.entries(this.filters).forEach(([k, v]) => {
         if (k !== "id") params.append(k, String(v));
@@ -241,7 +243,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
       bodyData = bodyData[0];
     }
 
-    const response = await this.fetchWithAuth(`/api/${endpoint}/`, {
+    const response = await this.fetchWithAuth(apiUrl(`/api/${endpoint}/`), {
       method: "POST",
       body: JSON.stringify(bodyData),
     });
@@ -262,7 +264,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
     // Fallback for singleton settings if id filter wasn't explicitly provided
     if (!id && (endpoint === "hero_settings" || endpoint === "footer_settings" || endpoint === "site_statistics")) {
       try {
-        const getRes = await this.fetchWithAuth(`/api/${endpoint}/`, { method: "GET" });
+        const getRes = await this.fetchWithAuth(apiUrl(`/api/${endpoint}/`), { method: "GET" });
         if (getRes.ok) {
           const list = await getRes.json();
           if (Array.isArray(list) && list.length > 0) {
@@ -274,10 +276,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
       }
     }
 
-    let url = `/api/${endpoint}/`;
-    if (id) {
-      url += `${id}/`;
-    }
+    let url = apiUrl(`/api/${endpoint}/${id ? `${id}/` : ""}`);
 
     let bodyData = this.payload;
     if (Array.isArray(bodyData) && bodyData.length === 1) {
@@ -306,7 +305,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
       return { data: null, error: new Error("Delete requires an id filter") };
     }
 
-    const url = `/api/${endpoint}/${id}/`;
+    const url = apiUrl(`/api/${endpoint}/${id}/`);
     const response = await this.fetchWithAuth(url, {
       method: "DELETE",
     });
@@ -338,7 +337,7 @@ let authListener: Function | null = null;
 const auth = {
   async signUp({ email, password, options }: any) {
     try {
-      const response = await fetch("/api/auth/register/", {
+      const response = await fetch(apiUrl("/api/auth/register/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -362,7 +361,7 @@ const auth = {
 
   async signInWithPassword({ email, password }: any) {
     try {
-      const response = await fetch("/api/auth/login/", {
+      const response = await fetch(apiUrl("/api/auth/login/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: email, password }),

@@ -6,7 +6,7 @@ from .views import (
     ChatMessageViewSet, FooterSettingsViewSet, HeroSettingsViewSet, PortfolioViewSet, ContactSubmissionViewSet,
     TestimonialViewSet, TrustedBrandViewSet, SiteStatisticViewSet,
     ProfileViewSet, UserRoleViewSet,
-    RegisterView, CustomTokenObtainPairView, FileUploadView
+    RegisterView, CustomTokenObtainPairView, FileUploadView, HealthCheckView
 )
 
 router = DefaultRouter()
@@ -27,6 +27,8 @@ router.register('profiles', ProfileViewSet, basename='profiles')
 router.register('user_roles', UserRoleViewSet, basename='user_roles')
 
 urlpatterns = [
+    path('health/', HealthCheckView.as_view(), name='health-check'),
+    path('health', HealthCheckView.as_view()),
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/register', RegisterView.as_view()),
     path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
