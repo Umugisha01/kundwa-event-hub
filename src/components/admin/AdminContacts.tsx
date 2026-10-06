@@ -39,12 +39,8 @@ export function AdminContacts() {
       }
       fetchItems();
     } catch (err: any) {
-      console.warn("Update status failed on database, simulating locally:", err);
-      setItems(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
-      if (selected && selected.id === id) {
-        setSelected({ ...selected, status: newStatus });
-      }
-      toast({ title: "Status Updated (Local)!", description: "Simulated update in fallback mode." });
+      console.error("Update status failed on database:", err);
+      toast({ title: "Failed to Update Status", description: err.message || "Database request could not be completed.", variant: "destructive" });
     }
   };
 
@@ -56,10 +52,8 @@ export function AdminContacts() {
       if (selected && selected.id === id) setSelected(null);
       fetchItems();
     } catch (err: any) {
-      console.warn("Delete failed, simulating locally:", err);
-      setItems(prev => prev.filter(item => item.id !== id));
-      if (selected && selected.id === id) setSelected(null);
-      toast({ title: "Deleted (Local)!", description: "Simulated deletion in fallback mode." });
+      console.error("Delete failed on database:", err);
+      toast({ title: "Failed to Delete Submission", description: err.message || "Database request could not be completed.", variant: "destructive" });
     }
   };
 

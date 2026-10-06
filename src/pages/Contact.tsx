@@ -50,16 +50,12 @@ const ContactPage = () => {
       setPhone("");
       setMessage("");
     } catch (err: any) {
-      console.warn("Database submission failed, using local fallback simulation:", err);
-      // Graceful fallback user experience
+      console.error("Contact submission error:", err);
       toast({
-        title: "Request Logged!",
-        description: "Your custom service request has been received. Thank you!"
+        title: "Submission Temporarily Unavailable",
+        description: "We could not deliver your request online right now. Please call or WhatsApp us at +250 788 000 000 or email info@kundwaib.com.",
+        variant: "destructive"
       });
-      setFullName("");
-      setEmail("");
-      setPhone("");
-      setMessage("");
     } finally {
       setIsSubmitting(false);
     }

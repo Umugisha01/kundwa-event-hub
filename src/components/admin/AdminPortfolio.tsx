@@ -93,9 +93,8 @@ export function AdminPortfolio() {
       toast({ title: "Project deleted successfully." });
       fetchItems();
     } catch (err: any) {
-      console.warn("Delete failed on DB, deleting from local state:", err);
-      setItems(prev => prev.filter(item => item.id !== id));
-      toast({ title: "Deleted locally!", description: "Deletion simulated in fallback mode." });
+      console.error("Delete failed on DB:", err);
+      toast({ title: "Failed to Delete Project", description: err.message || "Database request could not be completed.", variant: "destructive" });
     }
   };
 
