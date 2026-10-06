@@ -1,33 +1,50 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FaMapPin, FaCalendar, FaTicket, FaArrowRight } from "react-icons/fa6";
+import { MapPin, Calendar, Clock, Map, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import concertImg from "@/assets/event-concert.jpg";
 import corporateImg from "@/assets/event-corporate.jpg";
+import heroImg from "@/assets/hero-event.jpg";
 
 const mockFeaturedEvents = [
   {
-    id: "e1",
-    title: "Kigali Jazz Junction - Summer Edition",
-    date: "Aug 15, 2026",
-    location: "Kigali Conference and Exhibition Center (KCEV)",
-    price: "15,000 RWF",
-    rawPrice: 15000,
-    image: concertImg,
-    tag: "Concert"
+    id: "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    title: "RYLA RWANDA",
+    date: "Friday, March 27, 2026",
+    time: "2:00 PM",
+    location: "Kigali Rwanda",
+    venue: "UR Gikondo Campus",
+    price: "5,000 RWF",
+    image: "/ryla-rwanda.jpg",
+    tag: "Festival",
+    status: "Active"
   },
   {
-    id: "e2",
+    id: "fdb64f0c-cea1-46e9-93b1-6be242043e02",
+    title: "Kigali Jazz Junction - Summer Edition",
+    date: "Wednesday, July 22, 2026",
+    time: "6:00 PM",
+    location: "Kigali Rwanda",
+    venue: "KCEV Camp Kigali",
+    price: "15,000 RWF",
+    image: concertImg,
+    tag: "Concert",
+    status: "Upcoming"
+  },
+  {
+    id: "f51dc207-46f0-454c-89cc-cfd3c8e33f88",
     title: "Rwanda Corporate Tech Summit 2026",
-    date: "Sep 05, 2026",
-    location: "Kigali Convention Centre (KCC)",
+    date: "Thursday, August 6, 2026",
+    time: "9:00 AM",
+    location: "Kigali Rwanda",
+    venue: "Kigali Convention Centre",
     price: "50,000 RWF",
-    rawPrice: 50000,
     image: corporateImg,
-    tag: "Conference"
+    tag: "Corporate",
+    status: "Upcoming"
   }
 ];
 
@@ -48,27 +65,44 @@ export function FeaturedEvents() {
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           const mapped = data.map((ev: any) => {
-            let tag = "Show";
-            const lowerTitle = ev.title.toLowerCase();
-            if (lowerTitle.includes("festival")) tag = "Festival";
-            else if (lowerTitle.includes("summit") || lowerTitle.includes("conference") || lowerTitle.includes("tech")) tag = "Conference";
-            else if (lowerTitle.includes("gala") || lowerTitle.includes("dinner")) tag = "Gala";
-            else if (lowerTitle.includes("wedding")) tag = "Wedding";
-            else if (lowerTitle.includes("concert") || lowerTitle.includes("jazz") || lowerTitle.includes("night") || lowerTitle.includes("live")) tag = "Concert";
+            const evDate = new Date(ev.date || Date.now());
+            const formattedDate = evDate.toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            });
+            const formattedTime = evDate.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+            let minPrice = parseFloat(ev.ticket_price) || 0;
+            if (ev.ticket_tiers && Array.isArray(ev.ticket_tiers) && ev.ticket_tiers.length > 0) {
+              const prices = ev.ticket_tiers.map((t: any) => t.price || 0);
+              minPrice = Math.min(...prices);
+            }
+
+            let fallbackImage = heroImg;
+            const lowerTitle = (ev.title || "").toLowerCase();
+            if (lowerTitle.includes("jazz") || lowerTitle.includes("concert")) {
+              fallbackImage = concertImg;
+            } else if (lowerTitle.includes("tech") || lowerTitle.includes("summit") || lowerTitle.includes("corporate")) {
+              fallbackImage = corporateImg;
+            }
 
             return {
               id: ev.id,
               title: ev.title,
-              date: new Date(ev.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric"
-              }),
-              location: ev.location || "TBD",
-              price: parseFloat(ev.ticket_price || ev.price).toLocaleString() + " RWF",
-              rawPrice: parseFloat(ev.ticket_price || ev.price) || 15000,
-              image: ev.image_url || "/assets/hero-event.jpg",
-              tag
+              date: formattedDate,
+              time: ev.door_time || formattedTime,
+              location: ev.location || "Kigali Rwanda",
+              venue: ev.venue || "UR Gikondo Campus",
+              price: minPrice.toLocaleString() + " RWF",
+              image: ev.image_url || fallbackImage,
+              tag: ev.category || "Festival",
+              status: ev.status || "Active",
             };
           });
           setEvents(mapped);
@@ -135,54 +169,90 @@ export function FeaturedEvents() {
                 />
 
                 {/* Event Image Container */}
-                <div className="relative h-52 w-full overflow-hidden bg-muted/20">
+                <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-950">
                   <img
                     src={event.image}
                     alt={event.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    onError={(e: any) => {
+                      // Fallback if URL fails to load
+                      const lower = (event.title || "").toLowerCase();
+                      if (lower.includes("jazz") || lower.includes("concert")) {
+                        e.currentTarget.src = concertImg;
+                      } else if (lower.includes("tech") || lower.includes("summit") || lower.includes("corporate")) {
+                        e.currentTarget.src = corporateImg;
+                      } else {
+                        e.currentTarget.src = heroImg;
+                      }
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90" />
-                  <div className="absolute top-4 left-4 z-10">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-white bg-secondary px-3 py-1 rounded-full">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
+                  
+                  {/* Category Tag */}
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white bg-secondary px-3 py-1 rounded-full shadow-md">
                       {event.tag}
                     </span>
                   </div>
+
+                  {/* Status Badge */}
+                  {event.status && (
+                    <div className="absolute top-3 right-3 z-10">
+                      <span className="text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20">
+                        {event.status}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Event Details */}
-                <div className="p-6 flex-1 flex flex-col justify-between pl-8">
+                {/* Event Details: Name, Day & Date, Time, Location, Name of place */}
+                <div className="p-6 flex-1 flex flex-col justify-between pl-8 space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-4 group-hover:text-secondary transition-colors duration-300">
-                      {event.title}
-                    </h3>
-                    <div className="space-y-2.5 mb-6">
-                      <div className="flex items-center gap-2.5 text-sm font-semibold text-muted-foreground">
-                        <FaCalendar className="h-3.5 w-3.5 text-secondary shrink-0" />
-                        {event.date}
+                    <Link to={`/events/${event.id}`}>
+                      <h3 className="font-black text-secondary group-hover:text-primary dark:group-hover:text-white transition-colors duration-300 text-xl tracking-tight uppercase mb-4">
+                        {event.title}
+                      </h3>
+                    </Link>
+
+                    {/* Metadata Grid matching Events page */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-2 text-xs sm:text-sm font-medium mb-4">
+                      {/* Day and Date */}
+                      <div className="flex items-center gap-2 text-foreground/85">
+                        <Calendar className="h-4 w-4 text-secondary shrink-0" />
+                        <span className="truncate">{event.date}</span>
                       </div>
-                      <div className="flex items-center gap-2.5 text-sm font-semibold text-muted-foreground">
-                        <FaMapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
-                        {event.location}
+
+                      {/* Time */}
+                      <div className="flex items-center gap-2 text-foreground/85">
+                        <Clock className="h-4 w-4 text-secondary shrink-0" />
+                        <span>{event.time}</span>
+                      </div>
+
+                      {/* Location */}
+                      <div className="flex items-center gap-2 text-foreground/85">
+                        <MapPin className="h-4 w-4 text-secondary shrink-0" />
+                        <span className="truncate">{event.location}</span>
+                      </div>
+
+                      {/* Name of Place (Venue) */}
+                      <div className="flex items-center gap-2 text-foreground/85">
+                        <Map className="h-4 w-4 text-secondary shrink-0" />
+                        <span className="truncate">{event.venue}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                    <span className="font-extrabold text-foreground text-sm">From {event.price}</span>
-                    <Button 
-                      size="sm" 
-                      className="btn-gold text-xs py-2 px-4 gap-1.5 font-bold rounded-lg shadow-md shadow-secondary/10"
-                      onClick={() => addToCart({
-                        id: event.id,
-                        type: "ticket",
-                        name: event.title,
-                        price: event.rawPrice || 15000,
-                        image: event.image
-                      })}
-                    >
-                      <FaTicket className="h-3.5 w-3.5" /> Buy Ticket
-                    </Button>
+                  {/* Card Footer */}
+                  <div className="pt-4 border-t border-border/40">
+                    <Link to={`/events/${event.id}`} className="block w-full">
+                      <Button 
+                        size="sm" 
+                        className="w-full btn-gold text-xs py-2.5 px-4 gap-1.5 font-bold rounded-lg shadow-md shadow-secondary/10"
+                      >
+                        <Ticket className="h-3.5 w-3.5" /> Buy Ticket
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>

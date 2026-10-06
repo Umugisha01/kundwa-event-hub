@@ -71,6 +71,10 @@ export function Testimonials() {
     ? "rgba(10, 15, 30, 0.85)"
     : "rgba(255, 255, 255, 0.85)";
 
+  // Ensure enough items to fill the marquee seamlessly across all screen widths
+  const repeatCount = Math.max(2, Math.ceil(10 / Math.max(brands.length, 1)));
+  const marqueeBrands = Array.from({ length: repeatCount }).flatMap(() => brands);
+
   return (
     <section className="py-20 md:py-28 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
@@ -142,28 +146,83 @@ export function Testimonials() {
           ))}
         </div>
 
-        {/* Partners */}
-        <div className="text-center pt-8 border-t border-border/20">
-          <p className="text-xs font-bold text-muted-foreground/60 mb-8 uppercase tracking-[0.2em]">
-            Trusted By Leading Brands
+        {/* Trusted Partners - Slow Motion Marquee */}
+        <div className="pt-10 border-t border-border/20">
+          <p className="text-center text-xs md:text-sm font-extrabold text-muted-foreground/75 mb-8 uppercase tracking-[0.25em]">
+            Trusted Partners
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            {brands.map((b, i) => (
-              <span key={b.id || i} className="transition-transform duration-300 hover:scale-105">
-                {b.logo_url ? (
-                  <img
-                    src={b.logo_url}
-                    alt={b.name}
-                    className="h-8 md:h-10 object-contain filter grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="text-muted-foreground/40 font-extrabold text-base tracking-wider hover:text-secondary transition-colors duration-300">
-                    {b.name}
-                  </span>
-                )}
-              </span>
-            ))}
+
+          <div className="relative w-full overflow-hidden py-3">
+            {/* Cinematic Edge Gradients for Smooth In/Out Fade */}
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 md:w-36 z-10 bg-gradient-to-r from-background via-background/85 to-transparent" />
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 md:w-36 z-10 bg-gradient-to-l from-background via-background/85 to-transparent" />
+
+            {/* Continuous Marquee Track Moving Right to Left */}
+            <div className="flex w-max animate-marquee-slow hover:[animation-play-state:paused]">
+              {/* Set 1 */}
+              <div className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14">
+                {marqueeBrands.map((b, i) => (
+                  <div
+                    key={`partner-track-1-${b.id || b.name}-${i}`}
+                    className="flex-shrink-0 flex items-center justify-center px-6 py-3.5 rounded-2xl bg-card/60 dark:bg-card/25 border border-border/40 backdrop-blur-md shadow-sm hover:border-secondary/40 hover:bg-card/90 hover:scale-105 transition-all duration-300 group cursor-pointer"
+                  >
+                    {b.logo_url ? (
+                      <img
+                        src={b.logo_url}
+                        alt={b.name}
+                        className="h-8 md:h-10 w-auto max-w-[130px] md:max-w-[160px] object-contain filter grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = "none";
+                          if (target.nextElementSibling) {
+                            (target.nextElementSibling as HTMLElement).style.display = "block";
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      style={{ display: b.logo_url ? "none" : "block" }}
+                      className="text-muted-foreground/70 font-extrabold text-sm md:text-base tracking-wider group-hover:text-secondary transition-colors duration-300 whitespace-nowrap"
+                    >
+                      {b.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Set 2 (Identical Clone for 100% Seamless Infinite Loop) */}
+              <div className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14" aria-hidden="true">
+                {marqueeBrands.map((b, i) => (
+                  <div
+                    key={`partner-track-2-${b.id || b.name}-${i}`}
+                    className="flex-shrink-0 flex items-center justify-center px-6 py-3.5 rounded-2xl bg-card/60 dark:bg-card/25 border border-border/40 backdrop-blur-md shadow-sm hover:border-secondary/40 hover:bg-card/90 hover:scale-105 transition-all duration-300 group cursor-pointer"
+                  >
+                    {b.logo_url ? (
+                      <img
+                        src={b.logo_url}
+                        alt={b.name}
+                        className="h-8 md:h-10 w-auto max-w-[130px] md:max-w-[160px] object-contain filter grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = "none";
+                          if (target.nextElementSibling) {
+                            (target.nextElementSibling as HTMLElement).style.display = "block";
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      style={{ display: b.logo_url ? "none" : "block" }}
+                      className="text-muted-foreground/70 font-extrabold text-sm md:text-base tracking-wider group-hover:text-secondary transition-colors duration-300 whitespace-nowrap"
+                    >
+                      {b.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

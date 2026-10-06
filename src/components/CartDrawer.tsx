@@ -153,7 +153,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                           {/* Price & Quantity controls */}
                           <div className="flex items-center justify-between mt-3">
                             <span className="font-extrabold text-sm text-foreground">
-                              {(item.price * (item.type === "rental" ? (item.days || 1) : 1)).toLocaleString()} RWF
+                              {item.type === "rental" ? (
+                                <span className="text-secondary font-bold text-xs">Quote on Request</span>
+                              ) : (
+                                `${item.price.toLocaleString()} RWF`
+                              )}
                             </span>
                             <div className="flex items-center border border-border/40 rounded-lg overflow-hidden bg-muted/20">
                               <button 

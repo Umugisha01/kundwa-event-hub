@@ -32,7 +32,7 @@ const SignupPage = () => {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Account created!", description: "Welcome to Kundwa IB Group" });
-      navigate("/dashboard");
+      navigate("/admin");
     }
   };
 

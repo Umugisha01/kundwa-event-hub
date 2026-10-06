@@ -26,3 +26,20 @@ dist-ssr
 # Raw media folder
 Photo&Videos/
 
+# Large media videos
+*.MOV
+*.mov
+*.mp4
+*.mkv
+*.avi
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+.env
+

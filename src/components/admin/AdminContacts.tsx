@@ -170,9 +170,10 @@ export function AdminContacts() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Table/List View */}
-        <div className="lg:col-span-2 space-y-3">
-          <div className="border border-border/40 rounded-xl overflow-hidden bg-card/40">
+        {/* Table/List View - Left Column */}
+        <div className={`lg:col-span-2 space-y-3 ${selected ? "hidden lg:block" : "block"}`}>
+          {/* Desktop Table View */}
+          <div className="hidden md:block border border-border/40 rounded-xl overflow-hidden bg-card/40">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
@@ -231,12 +232,64 @@ export function AdminContacts() {
               </table>
             </div>
           </div>
+
+          {/* Mobile Card List View */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {filteredItems.map(item => (
+              <div 
+                key={item.id} 
+                onClick={() => setSelected(item)}
+                className={`card-premium p-4 space-y-3 cursor-pointer transition-all border-l-4 ${
+                  selected?.id === item.id ? "border-l-secondary bg-muted/20" : "border-l-primary"
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm">{item.full_name}</h4>
+                    <p className="text-xs text-muted-foreground">{item.email}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                    item.status === "Resolved" ? "bg-emerald-500/10 text-emerald-500" :
+                    item.status === "In Progress" ? "bg-amber-500/10 text-amber-500" :
+                    "bg-red-500/10 text-red-500"
+                  }`}>
+                    {item.status === "Resolved" && <CheckCircle2 className="h-3 w-3" />}
+                    {item.status === "Pending" && <AlertCircle className="h-3 w-3" />}
+                    {item.status}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-muted-foreground pt-2 border-t border-border/40">
+                  <span>Date: {new Date(item.created_at).toLocaleDateString()}</span>
+                  <div onClick={e => e.stopPropagation()}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => remove(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredItems.length === 0 && (
+              <p className="text-muted-foreground text-sm text-center py-8">No service requests found.</p>
+            )}
+          </div>
         </div>
 
-        {/* Selected Submission Drawer/Card */}
-        <div className="lg:col-span-1">
+        {/* Selected Submission Drawer/Card - Right Column */}
+        <div className={`lg:col-span-1 ${selected ? "block" : "hidden lg:block"}`}>
           {selected ? (
             <div className="card-premium p-6 space-y-4 animate-scale-in">
+              {/* Mobile Back Button */}
+              <div className="flex items-center gap-2 mb-1 lg:hidden">
+                <Button variant="ghost" size="sm" onClick={() => setSelected(null)} className="px-2">
+                  &larr; Back to Messages
+                </Button>
+              </div>
+
               <div className="flex justify-between items-start border-b border-border/40 pb-2">
                 <div>
                   <h3 className="font-bold text-foreground text-md">Request Details</h3>
@@ -256,11 +309,11 @@ export function AdminContacts() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted-foreground">Email</label>
-                    <div className="text-foreground break-all">{selected.email}</div>
+                    <div className="text-foreground break-all text-xs">{selected.email}</div>
                   </div>
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted-foreground">Phone</label>
-                    <div className="text-foreground">{selected.phone || "N/A"}</div>
+                    <div className="text-foreground text-xs">{selected.phone || "N/A"}</div>
                   </div>
                 </div>
 
@@ -273,7 +326,7 @@ export function AdminContacts() {
 
                 <div className="border-t border-border/40 pt-3 space-y-2">
                   <label className="text-[10px] uppercase font-bold text-muted-foreground block">Update Status</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       size="sm" 
                       variant={selected.status === "Pending" ? "default" : "outline"}
@@ -304,7 +357,7 @@ export function AdminContacts() {
             </div>
           ) : (
             <div className="card-premium p-8 text-center text-muted-foreground text-sm border-dashed">
-              Select a contact submission from the table to view the full message, update status, or take actions.
+              Select a contact submission from the list to view the full message, update status, or take actions.
             </div>
           )}
         </div>

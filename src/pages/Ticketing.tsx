@@ -1,321 +1,290 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Ticket, CreditCard, Smartphone, CheckCircle2, QrCode, ArrowRight, Star, Crown, Users } from "lucide-react";
-
-const ticketTypes = [
-  {
-    id: "standard",
-    name: "Standard",
-    price: "15,000 RWF",
-    priceNum: 15000,
-    icon: Ticket,
-    color: "border-border",
-    features: ["General admission", "Access to main stage", "Food court access"],
-  },
-  {
-    id: "vip",
-    name: "VIP",
-    price: "50,000 RWF",
-    priceNum: 50000,
-    icon: Star,
-    color: "border-secondary",
-    features: ["Priority seating", "Backstage lounge", "Complimentary drinks", "Meet & greet"],
-  },
-  {
-    id: "vvip",
-    name: "VVIP",
-    price: "120,000 RWF",
-    priceNum: 120000,
-    icon: Crown,
-    color: "border-primary",
-    features: ["Front-row reserved", "Private lounge", "Full catering", "Artist meet & greet", "Parking included"],
-  },
-];
-
-const paymentMethods = [
-  { id: "momo", name: "Mobile Money (MTN/Airtel)", icon: Smartphone },
-  { id: "card", name: "Credit / Debit Card", icon: CreditCard },
-];
+import { 
+  Ticket as TicketIcon, 
+  Calendar, 
+  MapPin, 
+  Building2, 
+  ArrowRight, 
+  Minus, 
+  Plus, 
+  Sparkles 
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { TicketCheckoutModal } from "@/components/events/TicketCheckoutModal";
+import { CalendarModal } from "@/components/events/CalendarModal";
+import heroImg from "@/assets/hero-event.jpg";
 
 export default function Ticketing() {
-  const [step, setStep] = useState(1);
-  const [selectedTicket, setSelectedTicket] = useState("vip");
-  const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState("momo");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [tierQuantities, setTierQuantities] = useState<{ [id: string]: number }>({});
+  const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<any>(null);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
-  const chosen = ticketTypes.find((t) => t.id === selectedTicket)!;
-  const total = chosen.priceNum * quantity;
+  useEffect(() => {
+    supabase
+      .from("events")
+      .select("*")
+      .order("date", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setEvents(data);
+          // Default to RYLA Rwanda or first featured event
+          const ryla = data.find((e: any) => e.title.toLowerCase().includes("ryla"));
+          const initialId = ryla ? ryla.id : data[0].id;
+          setSelectedEventId(initialId);
+        }
+        setLoading(false);
+      });
+  }, []);
 
-  const handlePurchase = () => {
-    if (!name || !email) return;
-    setShowConfirmation(true);
+  const activeEvent = events.find((e) => e.id === selectedEventId) || events[0];
+
+  const tiers = activeEvent?.ticket_tiers && Array.isArray(activeEvent.ticket_tiers) && activeEvent.ticket_tiers.length > 0
+    ? activeEvent.ticket_tiers
+    : [
+        {
+          id: "tier-early",
+          name: "EARLY BIRD TICKET",
+          price: parseFloat(activeEvent?.ticket_price) || 5000,
+          description: "General admission pass with workshop access",
+        },
+        {
+          id: "tier-gate",
+          name: "GATE TICKET",
+          price: (parseFloat(activeEvent?.ticket_price) || 5000) * 4,
+          description: "Full pass on festival entry days",
+        },
+      ];
+
+  const handleQtyChange = (tierId: string, delta: number) => {
+    setTierQuantities((prev) => {
+      const cur = prev[tierId] || 1;
+      return { ...prev, [tierId]: Math.max(1, cur + delta) };
+    });
   };
-
-  const ticketCode = `KIB-${Date.now().toString(36).toUpperCase()}`;
 
   return (
     <Layout>
       {/* Hero */}
-      <section className="relative bg-primary py-16 md:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--secondary)/0.15),transparent_60%)]" />
+      <section className="relative bg-slate-950 text-white pt-28 md:pt-36 pb-16 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(14,165,233,0.18),transparent_65%)]" />
         <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
-          <span className="inline-block bg-secondary/20 text-secondary text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
-            Secure Checkout
+          <span className="inline-flex items-center gap-1.5 bg-secondary/15 text-secondary border border-secondary/30 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+            <Sparkles className="w-3.5 h-3.5" /> Instant Digital Ticketing
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-3 font-heading">
-            Get Your Tickets
+          <h1 className="text-3xl md:text-5xl font-black mb-3 font-heading tracking-tight">
+            Select & Book Your Event Tickets
           </h1>
-          <p className="text-primary-foreground/70 max-w-xl mx-auto">
-            Choose your experience, pay securely, and receive an instant digital ticket.
+          <p className="text-slate-300 max-w-xl mx-auto text-sm md:text-base">
+            Choose your preferred ticket tier, adjust quantities, and instantly receive verified QR passes with MoMo or card.
           </p>
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 py-12 md:py-20">
-        {/* Progress */}
-        <div className="flex items-center justify-center gap-2 mb-12">
-          {["Select Ticket", "Your Details", "Payment"].map((label, i) => (
-            <div key={label} className="flex items-center gap-2">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-                  step > i + 1
-                    ? "bg-secondary text-secondary-foreground"
-                    : step === i + 1
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {step > i + 1 ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
-              </div>
-              <span className={`text-sm font-medium hidden sm:inline ${step === i + 1 ? "text-foreground" : "text-muted-foreground"}`}>
-                {label}
+      <section className="py-12 md:py-20 px-4 md:px-8 max-w-7xl mx-auto">
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground text-sm font-semibold">Loading ticketing hub...</p>
+          </div>
+        ) : (
+          <div className="space-y-10">
+            
+            {/* Event Selector Pill Bar */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                Choose Event:
               </span>
-              {i < 2 && <div className="w-8 md:w-16 h-px bg-border" />}
-            </div>
-          ))}
-        </div>
-
-        {/* Step 1 — Ticket Selection */}
-        {step === 1 && (
-          <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Choose Your Experience</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {ticketTypes.map((t) => {
-                const Icon = t.icon;
-                const active = selectedTicket === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => setSelectedTicket(t.id)}
-                    className={`relative rounded-xl border-2 p-6 text-left transition-all ${
-                      active
-                        ? "border-secondary bg-secondary/5 shadow-lg scale-[1.02]"
-                        : "border-border bg-card hover:border-secondary/40"
-                    }`}
-                  >
-                    {t.id === "vip" && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase px-3 py-0.5 rounded-full">
-                        Popular
-                      </span>
-                    )}
-                    <Icon className={`h-8 w-8 mb-3 ${active ? "text-secondary" : "text-muted-foreground"}`} />
-                    <h3 className="text-lg font-bold text-foreground">{t.name}</h3>
-                    <p className="text-2xl font-extrabold text-foreground mt-1">{t.price}</p>
-                    <ul className="mt-4 space-y-2">
-                      {t.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-secondary shrink-0" /> {f}
-                        </li>
-                      ))}
-                    </ul>
-                  </button>
-                );
-              })}
+              {events.map((ev) => (
+                <button
+                  key={ev.id}
+                  onClick={() => setSelectedEventId(ev.id)}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                    selectedEventId === ev.id
+                      ? "bg-secondary text-white shadow-md shadow-secondary/20 scale-[1.02]"
+                      : "bg-muted hover:bg-muted/80 text-foreground border border-border/50"
+                  }`}
+                >
+                  {ev.title}
+                </button>
+              ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/50 rounded-xl p-5">
-              <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <Label className="text-sm font-medium text-foreground">Quantity</Label>
-                <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1.5 text-foreground hover:bg-muted">−</button>
-                  <span className="px-4 py-1.5 font-bold text-foreground bg-card">{quantity}</span>
-                  <button onClick={() => setQuantity(Math.min(10, quantity + 1))} className="px-3 py-1.5 text-foreground hover:bg-muted">+</button>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-xl font-extrabold text-foreground">{total.toLocaleString()} RWF</p>
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-8">
-              <Button className="btn-gold gap-2" onClick={() => setStep(2)}>
-                Continue <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2 — Details */}
-        {step === 2 && (
-          <div className="max-w-lg mx-auto animate-fade-in">
-            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Your Details</h2>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-foreground">Full Name *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-foreground">Email *</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-foreground">Phone</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+250 78 000 0000" className="mt-1" />
-              </div>
-            </div>
-            <div className="flex justify-between mt-8">
-              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button className="btn-gold gap-2" onClick={() => { if (name && email) setStep(3); }}>
-                Continue <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3 — Payment */}
-        {step === 3 && (
-          <div className="max-w-lg mx-auto animate-fade-in">
-            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Payment Method</h2>
-
-            {/* Summary */}
-            <div className="bg-muted/50 rounded-xl p-5 mb-6 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Ticket</span>
-                <span className="font-medium text-foreground">{chosen.name} × {quantity}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Attendee</span>
-                <span className="font-medium text-foreground">{name}</span>
-              </div>
-              <div className="border-t border-border my-2" />
-              <div className="flex justify-between">
-                <span className="font-bold text-foreground">Total</span>
-                <span className="font-extrabold text-lg text-foreground">{total.toLocaleString()} RWF</span>
-              </div>
-            </div>
-
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3 mb-8">
-              {paymentMethods.map((pm) => {
-                const Icon = pm.icon;
-                return (
-                  <label
-                    key={pm.id}
-                    className={`flex items-center gap-4 border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                      paymentMethod === pm.id ? "border-secondary bg-secondary/5" : "border-border bg-card hover:border-secondary/40"
-                    }`}
-                  >
-                    <RadioGroupItem value={pm.id} />
-                    <Icon className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium text-foreground">{pm.name}</span>
-                  </label>
-                );
-              })}
-            </RadioGroup>
-
-            {paymentMethod === "momo" && (
-              <div className="mb-6">
-                <Label className="text-foreground">Mobile Money Number</Label>
-                <Input placeholder="+250 78 000 0000" className="mt-1" />
-              </div>
-            )}
-            {paymentMethod === "card" && (
-              <div className="space-y-4 mb-6">
-                <div>
-                  <Label className="text-foreground">Card Number</Label>
-                  <Input placeholder="4242 4242 4242 4242" className="mt-1" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-foreground">Expiry</Label>
-                    <Input placeholder="MM/YY" className="mt-1" />
+            {activeEvent && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Event Summary Left Card */}
+                <div className="lg:col-span-5 rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
+                  <div className="aspect-4/3 relative overflow-hidden bg-slate-950">
+                    <img
+                      src={activeEvent.image_url || heroImg}
+                      alt={activeEvent.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-3 left-3 bg-secondary text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                      {activeEvent.category || "Featured"}
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-foreground">CVC</Label>
-                    <Input placeholder="123" className="mt-1" />
+
+                  <div className="p-6 space-y-4">
+                    <h3 className="text-2xl font-black text-secondary uppercase tracking-tight">
+                      {activeEvent.title}
+                    </h3>
+
+                    <div className="space-y-2.5 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2.5 text-foreground/80 font-medium">
+                        <Calendar className="w-4 h-4 text-secondary shrink-0" />
+                        <span>
+                          {new Date(activeEvent.date).toLocaleDateString("en-US", {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-foreground/80 font-medium">
+                        <MapPin className="w-4 h-4 text-secondary shrink-0" />
+                        <span>{activeEvent.location || "Kigali Rwanda"}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-foreground/80 font-medium">
+                        <Building2 className="w-4 h-4 text-secondary shrink-0" />
+                        <span>{activeEvent.venue || "UR Gikondo Campus"}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-border flex items-center justify-between">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowCalendarModal(true)}
+                        className="text-xs font-bold rounded-xl"
+                      >
+                        Add to Calendar
+                      </Button>
+
+                      <Link to={`/events/${activeEvent.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs font-bold text-primary hover:underline gap-1"
+                        >
+                          Full Details <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
+
+                {/* Ticket Tiers Right Column matching Template */}
+                <div className="lg:col-span-7 space-y-6">
+                  <div className="border-b border-border pb-3 flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                      <TicketIcon className="w-5 h-5 text-primary" /> Available Ticket Tiers
+                    </h3>
+                    <span className="text-xs text-muted-foreground font-semibold">
+                      Choose quantity and book
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    {tiers.map((tier: any) => {
+                      const qty = tierQuantities[tier.id] || 1;
+                      const subtotal = tier.price * qty;
+
+                      return (
+                        <div
+                          key={tier.id}
+                          className="rounded-2xl border-2 border-secondary/30 hover:border-secondary bg-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all shadow-xs"
+                        >
+                          <div className="space-y-1 max-w-sm">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                              Tier
+                            </span>
+                            <h4 className="font-extrabold text-foreground text-lg">
+                              {tier.name}
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                              {tier.description || "General event entry"}
+                            </p>
+                            <div className="text-2xl font-black text-secondary pt-1">
+                              {tier.price.toLocaleString()} FRW
+                            </div>
+                          </div>
+
+                          <div className="w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between gap-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-border/40">
+                            {/* Quantity Controls */}
+                            <div className="flex items-center border border-border rounded-lg bg-muted/20">
+                              <button
+                                type="button"
+                                onClick={() => handleQtyChange(tier.id, -1)}
+                                disabled={qty <= 1}
+                                className="p-1.5 hover:bg-muted text-foreground disabled:opacity-40"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <span className="px-3 font-bold text-sm text-foreground">
+                                {qty}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleQtyChange(tier.id, 1)}
+                                className="p-1.5 hover:bg-muted text-foreground"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Subtotal */}
+                            <span className="text-xs text-muted-foreground font-semibold">
+                              Total: <span className="text-foreground font-bold">{subtotal.toLocaleString()} FRW</span>
+                            </span>
+
+                            {/* Buy Now */}
+                            <Button
+                              onClick={() => setSelectedTierForCheckout(tier)}
+                              className="btn-gold text-white font-extrabold text-xs px-6 py-5 rounded-xl shadow-md transition-all active:scale-95"
+                            >
+                              BUY NOW
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
               </div>
             )}
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
-              <Button className="btn-gold gap-2" onClick={handlePurchase}>
-                Pay {total.toLocaleString()} RWF
-              </Button>
-            </div>
           </div>
         )}
       </section>
 
-      {/* Confirmation Dialog with QR */}
-      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <DialogContent className="max-w-md text-center">
-          <DialogHeader>
-            <DialogTitle className="flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              </div>
-              Ticket Confirmed!
-            </DialogTitle>
-          </DialogHeader>
+      {/* Calendar Modal */}
+      {showCalendarModal && activeEvent && (
+        <CalendarModal
+          isOpen={showCalendarModal}
+          onClose={() => setShowCalendarModal(false)}
+          event={activeEvent}
+        />
+      )}
 
-          <div className="space-y-4 mt-2">
-            <p className="text-muted-foreground text-sm">Your ticket has been booked successfully.</p>
-
-            {/* QR Code placeholder */}
-            <div className="mx-auto w-48 h-48 bg-primary rounded-xl flex items-center justify-center">
-              <div className="text-center">
-                <QrCode className="h-24 w-24 text-primary-foreground mx-auto" />
-                <p className="text-primary-foreground text-[10px] mt-1 font-mono">{ticketCode}</p>
-              </div>
-            </div>
-
-            <div className="bg-muted/50 rounded-xl p-4 text-left space-y-1.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ticket</span>
-                <span className="font-medium text-foreground">{chosen.name} × {quantity}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Name</span>
-                <span className="font-medium text-foreground">{name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Code</span>
-                <span className="font-mono font-bold text-foreground">{ticketCode}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-bold text-foreground">{total.toLocaleString()} RWF</span>
-              </div>
-            </div>
-
-            <Button className="btn-gold w-full" onClick={() => setShowConfirmation(false)}>
-              Done
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Ticket Checkout Modal */}
+      {selectedTierForCheckout && activeEvent && (
+        <TicketCheckoutModal
+          isOpen={!!selectedTierForCheckout}
+          onClose={() => setSelectedTierForCheckout(null)}
+          event={activeEvent}
+          selectedTier={selectedTierForCheckout}
+          initialQuantity={tierQuantities[selectedTierForCheckout.id] || 1}
+        />
+      )}
     </Layout>
   );
 }

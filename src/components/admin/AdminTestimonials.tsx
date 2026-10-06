@@ -155,8 +155,8 @@ export function AdminTestimonials() {
         </div>
       )}
 
-      {/* Table view */}
-      <div className="border border-border/40 rounded-xl overflow-hidden bg-card/40">
+      {/* Testimonials Table view - Desktop */}
+      <div className="hidden md:block border border-border/40 rounded-xl overflow-hidden bg-card/40">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
@@ -209,6 +209,42 @@ export function AdminTestimonials() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Testimonials Card view - Mobile */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filteredItems.map(t => (
+          <div key={t.id} className="card-premium p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              {t.image_url ? (
+                <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border flex-shrink-0">
+                  <img src={t.image_url} alt={t.client_name} className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+                  <Quote className="h-4 w-4" />
+                </div>
+              )}
+              <div>
+                <h4 className="font-bold text-foreground text-sm">{t.client_name}</h4>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground italic bg-muted/10 p-2.5 rounded-lg border border-border/30">
+              "{t.message}"
+            </p>
+            <div className="flex justify-end gap-1.5 pt-2 border-t border-border/40">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm(t); setEditId(t.id); }}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(t.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+        {filteredItems.length === 0 && (
+          <p className="text-muted-foreground text-sm text-center py-8">No testimonials found.</p>
+        )}
       </div>
     </div>
   );

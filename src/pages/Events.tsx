@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Ticket, Users, Search } from "lucide-react";
+import { MapPin, Calendar, Clock, Map, Ticket, Users, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -12,43 +13,51 @@ import heroImg from "@/assets/hero-event.jpg";
 
 const mockEvents = [
   {
-    id: "e1",
-    title: "Kigali Jazz Junction - Summer Edition",
-    date: "Aug 15, 2026",
-    location: "Kigali Conference and Exhibition Center (KCEV)",
-    price: 15000,
-    image: concertImg,
-    tag: "Concert",
+    id: "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    title: "RYLA RWANDA",
+    date: "Friday, March 27, 2026",
+    time: "2:00 PM",
+    location: "Kigali Rwanda",
+    venue: "UR Gikondo Campus",
+    image: "/ryla-rwanda.jpg",
+    tag: "Festival",
+    status: "Active",
     isFeatured: true
   },
   {
-    id: "e2",
+    id: "fdb64f0c-cea1-46e9-93b1-6be242043e02",
+    title: "Kigali Jazz Junction - Summer Edition",
+    date: "Wednesday, July 22, 2026",
+    time: "6:00 PM",
+    location: "Kigali Rwanda",
+    venue: "KCEV Camp Kigali",
+    image: concertImg,
+    tag: "Concert",
+    status: "Upcoming",
+    isFeatured: true
+  },
+  {
+    id: "f51dc207-46f0-454c-89cc-cfd3c8e33f88",
     title: "Rwanda Corporate Tech Summit 2026",
-    date: "Sep 05, 2026",
-    location: "Kigali Convention Centre (KCC)",
-    price: 50000,
+    date: "Thursday, August 6, 2026",
+    time: "9:00 AM",
+    location: "Kigali Rwanda",
+    venue: "Kigali Convention Centre",
     image: corporateImg,
     tag: "Corporate",
+    status: "Upcoming",
     isFeatured: true
   },
   {
-    id: "e3",
-    title: "Hillsong London Live in Kigali",
-    date: "Nov 12, 2026",
-    location: "BK Arena",
-    price: 10000,
+    id: "4b1b2ad3-8ad0-44e2-a5a7-200962118110",
+    title: "Royal Wedding Gala",
+    date: "Tuesday, July 7, 2026",
+    time: "4:00 PM",
+    location: "Kigali Rwanda",
+    venue: "Intare Conference Arena",
     image: heroImg,
-    tag: "Concert",
-    isFeatured: false
-  },
-  {
-    id: "e4",
-    title: "East African Cultural Festival",
-    date: "Dec 20, 2026",
-    location: "Amahoro Stadium Outdoor Grounds",
-    price: 5000,
-    image: concertImg,
-    tag: "Show",
+    tag: "Gala",
+    status: "Upcoming",
     isFeatured: false
   }
 ];
@@ -66,23 +75,41 @@ const EventsPage = () => {
     supabase
       .from("events")
       .select("*")
+      .order("date", { ascending: true })
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           const mapped = data.map((ev: any) => {
-            let tag = "Show";
-            const lowerTitle = ev.title.toLowerCase();
-            if (lowerTitle.includes("conference") || lowerTitle.includes("corporate")) tag = "Corporate";
-            else if (lowerTitle.includes("worship") || lowerTitle.includes("choir")) tag = "Concert";
+            const evDate = new Date(ev.date || Date.now());
+            const formattedDate = evDate.toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            });
+            const formattedTime = evDate.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+            let minPrice = parseFloat(ev.ticket_price) || 0;
+            if (ev.ticket_tiers && Array.isArray(ev.ticket_tiers) && ev.ticket_tiers.length > 0) {
+              const prices = ev.ticket_tiers.map((t: any) => t.price || 0);
+              minPrice = Math.min(...prices);
+            }
 
             return {
               id: ev.id,
               title: ev.title,
-              date: ev.date,
-              location: ev.location,
-              price: ev.price,
+              date: formattedDate,
+              time: formattedTime,
+              location: ev.location || "Kigali Rwanda",
+              venue: ev.venue || "UR Gikondo Campus",
+              price: minPrice,
               image: ev.image_url || heroImg,
-              tag: tag,
-              isFeatured: ev.is_featured
+              tag: ev.category || "Festival",
+              status: ev.status || "Active",
+              isFeatured: ev.is_featured,
             };
           });
           setEvents(mapped);
@@ -99,7 +126,6 @@ const EventsPage = () => {
       <section className="relative text-white pt-28 md:pt-36 pb-16 md:pb-24 overflow-hidden">
         {/* Abstract Geometric Background Design */}
         <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-          {/* Slanted gradient background base */}
           <div 
             className="absolute inset-0 transition-all duration-300"
             style={{
@@ -108,126 +134,109 @@ const EventsPage = () => {
                 : "linear-gradient(135deg, #0a1124 0%, #15203d 100%)",
             }}
           />
-
-          {/* Ambient blurred glow layers (Purple top-left, Blue bottom-right) */}
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[55%] h-[55%] rounded-full bg-secondary/10 blur-[130px] pointer-events-none" />
-
-          {/* Waves/Flowing Curves (Subtle Opacity SVGs) */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.04] md:opacity-[0.06]" viewBox="0 0 1440 400" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M-100,100 C150,20 400,220 800,80 C1100,10 1300,180 1550,120 L1550,450 L-100,450 Z" fill="url(#bg-wave-gradient-1)" />
-            <path d="M-100,200 C300,120 600,320 1000,180 C1300,80 1450,250 1550,220 L1550,450 L-100,450 Z" fill="url(#bg-wave-gradient-2)" />
-            <defs>
-              <linearGradient id="bg-wave-gradient-1" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#a855f7" />
-                <stop offset="100%" stopColor="#0ea5e9" />
-              </linearGradient>
-              <linearGradient id="bg-wave-gradient-2" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          {/* Abstract Geometric Shapes */}
-          <svg className="absolute top-[15%] left-[6%] w-7 h-7 text-purple-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M12 3L2 21h20L12 3z" />
-          </svg>
-          <svg className="absolute bottom-[20%] left-[8%] w-6 h-6 text-sky-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-          </svg>
-          <svg className="absolute bottom-[18%] left-[48%] w-8 h-8 text-indigo-400/15 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M12 2.5l9 6.5-3.5 10.5h-11L3 9l9-6.5z" />
-          </svg>
-          <svg className="absolute top-[25%] right-[8%] w-6 h-6 text-sky-400/25 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-          </svg>
-          <svg className="absolute bottom-[15%] right-[10%] w-6 h-6 text-purple-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M12 3L2 21h20L12 3z" />
-          </svg>
-
-          {/* Diagonal slash lines */}
-          <svg className="absolute top-[28%] left-[22%] w-16 h-16 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
-          <svg className="absolute top-[18%] right-[28%] w-14 h-14 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
-          <svg className="absolute bottom-[12%] left-[16%] w-12 h-12 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
-          <svg className="absolute bottom-[15%] right-[28%] w-14 h-14 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
         </div>
 
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Events</span>
-          <h1 className="text-4xl md:text-6xl font-bold mt-3 mb-5">Upcoming Events</h1>
-          <p className="text-white/80 max-w-2xl mx-auto mb-8 text-lg font-medium">
-            Discover and book tickets for the best events across Rwanda.
+        <div className="max-w-7xl mx-auto px-4 relative z-10 text-center">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold uppercase tracking-widest mb-4">
+            Curated Experiences
+          </span>
+          <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">
+            Upcoming <span className="text-secondary">Events & Shows</span>
+          </h1>
+          <p className="text-slate-300 max-w-2xl mx-auto text-sm md:text-base mb-8">
+            Experience Kigali's most anticipated festivals, concerts, and leadership summits with instant digital ticketing.
           </p>
+
           <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search events..."
+              type="text"
+              placeholder="Search by event title, venue, or artist..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-secondary focus:ring-secondary/50 rounded-xl"
+              className="pl-10 py-6 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md"
             />
           </div>
         </div>
       </section>
 
-      <section className="section-padding">
+      <section className="section-padding bg-background">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
-              <p className="text-muted-foreground text-sm">Loading upcoming events...</p>
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground text-sm font-semibold">Loading upcoming events...</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((event, i) => (
-                <div key={i} className="card-premium overflow-hidden group">
-                  <div className="relative h-52 overflow-hidden">
-                    <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width={800} height={600} />
-                    <div className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full">{event.tag}</div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-bold text-foreground text-lg mb-3">{event.title}</h3>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4 text-secondary" /> {event.date}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filtered.map((event) => (
+                <Link 
+                  key={event.id} 
+                  to={`/events/${event.id}`}
+                  className="block group"
+                >
+                  <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group h-full">
+                    {/* Poster Image Container */}
+                    <div className="relative aspect-4/3 overflow-hidden bg-slate-950">
+                      <img 
+                        src={event.image} 
+                        alt={event.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        loading="lazy" 
+                      />
+                      <div className="absolute top-3 left-3 bg-secondary text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
+                        {event.tag}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 text-secondary" /> {event.location}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4 text-secondary" /> {event.seats ? event.seats.toLocaleString() : "0"} seats
+                      {event.status && (
+                        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
+                          {event.status}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Card Content: Name, Day & Date, Time, Location, Name of place */}
+                    <div className="p-6 space-y-4">
+                      {/* Event Name */}
+                      <h3 className="font-black text-secondary group-hover:text-primary dark:group-hover:text-white transition-colors text-xl tracking-tight uppercase">
+                        {event.title}
+                      </h3>
+
+                      {/* Metadata Grid: Day & Date, Time, Location, Name of place */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-2 text-xs sm:text-sm font-medium">
+                        {/* Day and Date */}
+                        <div className="flex items-center gap-2 text-foreground/85">
+                          <Calendar className="h-4 w-4 text-secondary shrink-0" />
+                          <span className="truncate">{event.date}</span>
+                        </div>
+
+                        {/* Time */}
+                        <div className="flex items-center gap-2 text-foreground/85">
+                          <Clock className="h-4 w-4 text-secondary shrink-0" />
+                          <span>{event.time}</span>
+                        </div>
+
+                        {/* Location */}
+                        <div className="flex items-center gap-2 text-foreground/85">
+                          <MapPin className="h-4 w-4 text-secondary shrink-0" />
+                          <span className="truncate">{event.location}</span>
+                        </div>
+
+                        {/* Name of Place (Venue) */}
+                        <div className="flex items-center gap-2 text-foreground/85">
+                          <Map className="h-4 w-4 text-secondary shrink-0" />
+                          <span className="truncate">{event.venue}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground">From {event.price} RWF</span>
-                      <Button 
-                        size="sm" 
-                        className="btn-gold text-xs py-1.5 px-3 gap-1"
-                        onClick={() => addToCart({
-                          id: event.id,
-                          type: "ticket",
-                          name: event.title,
-                          price: event.price,
-                          image: event.image
-                        })}
-                      >
-                        <Ticket className="h-3 w-3" /> Buy Ticket
-                      </Button>
-                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
               {filtered.length === 0 && (
-                <p className="text-muted-foreground text-sm text-center py-8 col-span-3">No upcoming events found.</p>
+                <div className="text-center py-16 col-span-3">
+                  <p className="text-muted-foreground text-base">No upcoming events found matching your search.</p>
+                </div>
               )}
             </div>
           )}

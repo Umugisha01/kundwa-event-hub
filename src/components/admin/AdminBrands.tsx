@@ -159,7 +159,7 @@ export function AdminBrands() {
             <p className="text-xs font-semibold text-foreground mt-2 truncate max-w-full">{b.name}</p>
             
             {/* Action overlay */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 bg-background/80 rounded border border-border/40 p-0.5">
+            <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-0.5 bg-background/80 rounded border border-border/40 p-0.5">
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setForm(b); setEditId(b.id); }}>
                 <Edit2 className="h-3 w-3" />
               </Button>

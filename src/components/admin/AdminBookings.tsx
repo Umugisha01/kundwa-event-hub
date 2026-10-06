@@ -347,8 +347,8 @@ export function AdminBookings() {
         </select>
       </div>
 
-      {/* Bookings Table View */}
-      <div className="border border-border/40 rounded-xl overflow-hidden bg-card/40">
+      {/* Bookings Table View - Desktop */}
+      <div className="hidden md:block border border-border/40 rounded-xl overflow-hidden bg-card/40">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
@@ -430,6 +430,73 @@ export function AdminBookings() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Bookings Card View - Mobile */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filteredBookings.map(b => (
+          <div key={b.id} className="card-premium p-4 space-y-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-bold text-foreground text-sm">{b.profiles?.full_name || "User"}</h4>
+                <p className="text-xs text-muted-foreground">{b.profiles?.email}</p>
+              </div>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor(b.status)}`}>
+                {b.status === "Approved" || b.status === "Completed" ? <CheckCircle2 className="h-3 w-3" /> : null}
+                {b.status === "Pending" ? <AlertCircle className="h-3 w-3" /> : null}
+                {b.status === "Rejected" ? <XCircle className="h-3 w-3" /> : null}
+                {b.status}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs py-2 border-t border-b border-border/40">
+              <div>
+                <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Booking Item</span>
+                <span className="font-semibold text-foreground">{b.booking_type === "event" ? b.events?.title : b.equipment?.name}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Type</span>
+                <span className="text-xs uppercase font-mono px-2 py-0.5 rounded bg-muted">
+                  {b.booking_type === "event" ? "Ticket" : "Rental"}
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-1">
+              <div>
+                <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Amount</span>
+                <span className="font-bold text-foreground">{(b.amount || 0).toLocaleString()} RWF</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  title="Print Invoice"
+                  onClick={() => printInvoice(b)}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+                {b.status === "Pending" && (
+                  <>
+                    <Button size="xs" className="btn-gold h-7 text-xs" onClick={() => updateStatus(b.id, "Approved")}>
+                      Approve
+                    </Button>
+                    <Button size="xs" variant="outline" className="h-7 text-xs border-destructive text-destructive hover:bg-destructive/10" onClick={() => updateStatus(b.id, "Rejected")}>
+                      Reject
+                    </Button>
+                  </>
+                )}
+                {b.status === "Approved" && (
+                  <Button size="xs" variant="outline" className="h-7 text-xs border-emerald-500 text-emerald-500 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, "Completed")}>
+                    Complete
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {filteredBookings.length === 0 && (
+          <p className="text-muted-foreground text-sm text-center py-8">No bookings found.</p>
+        )}
       </div>
     </div>
   );

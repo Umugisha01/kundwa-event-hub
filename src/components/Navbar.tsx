@@ -26,7 +26,7 @@ export function Navbar() {
   const [mouseX, setMouseX] = useState(50);
   const navRef = useRef<HTMLElement>(null);
   const location = useLocation();
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { cartCount } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -35,7 +35,6 @@ export function Navbar() {
 
   const navLinks = [
     ...publicLinks,
-    ...(user ? [{ to: "/dashboard", label: "Dashboard", labelRw: "Ikibaho" }] : []),
     ...(role === "admin" ? [{ to: "/admin", label: "Admin", labelRw: "Ubuyobozi" }] : []),
   ];
 

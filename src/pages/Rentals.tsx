@@ -29,7 +29,7 @@ const mockEquipment = [
     category: "Screens",
     image: heroImg,
     icon: "Monitor",
-    price: 75000,
+    price: 0,
     available: true,
   },
   {
@@ -37,7 +37,7 @@ const mockEquipment = [
     category: "Sound",
     image: soundImg,
     icon: "Volume2",
-    price: 120000,
+    price: 0,
     available: true,
   },
   {
@@ -45,7 +45,7 @@ const mockEquipment = [
     category: "Lighting",
     image: lightingImg,
     icon: "Lightbulb",
-    price: 45000,
+    price: 0,
     available: true,
   },
   {
@@ -53,7 +53,7 @@ const mockEquipment = [
     category: "Stages",
     image: stageImg,
     icon: "Layers",
-    price: 90000,
+    price: 0,
     available: true,
   },
   {
@@ -61,7 +61,7 @@ const mockEquipment = [
     category: "Sound",
     image: soundImg,
     icon: "Volume2",
-    price: 50000,
+    price: 0,
     available: true,
   },
   {
@@ -69,7 +69,7 @@ const mockEquipment = [
     category: "Lighting",
     image: lightingImg,
     icon: "Lightbulb",
-    price: 85000,
+    price: 0,
     available: false,
   },
 ];
@@ -108,7 +108,7 @@ const RentalsPage = () => {
               category: eq.category,
               image: eq.image_url || heroImg,
               icon: iconName,
-              price: eq.price_per_day || 35000,
+              price: 0,
               available: eq.status === "Available"
             };
           });
@@ -129,7 +129,7 @@ const RentalsPage = () => {
       id: `rental-${bookingItem.name}`,
       type: "rental",
       name: bookingItem.name,
-      price: bookingItem.price,
+      price: 0,
       image: bookingItem.image,
       startDate,
       endDate,
@@ -147,55 +147,16 @@ const RentalsPage = () => {
       <section className="relative text-white pt-28 md:pt-36 pb-16 md:pb-24 overflow-hidden">
         {/* Abstract Geometric Background Design */}
         <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-          {/* Slanted gradient background base */}
-          <div 
-            className="absolute inset-0 transition-all duration-300"
-            style={{
-              background: isDark
-                ? "linear-gradient(135deg, #050814 0%, #0c1730 100%)"
-                : "linear-gradient(135deg, #0a1124 0%, #15203d 100%)",
-            }}
-          />
-
-          {/* Ambient blurred glow layers (Purple top-left, Blue bottom-right) */}
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[55%] h-[55%] rounded-full bg-secondary/10 blur-[130px] pointer-events-none" />
-
-          {/* Waves/Flowing Curves (Subtle Opacity SVGs) */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.04] md:opacity-[0.06]" viewBox="0 0 1440 400" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M-100,100 C150,20 400,220 800,80 C1100,10 1300,180 1550,120 L1550,450 L-100,450 Z" fill="url(#bg-wave-gradient-1)" />
-            <path d="M-100,200 C300,120 600,320 1000,180 C1300,80 1450,250 1550,220 L1550,450 L-100,450 Z" fill="url(#bg-wave-gradient-2)" />
+          <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="bg-wave-gradient-1" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#a855f7" />
-                <stop offset="100%" stopColor="#0ea5e9" />
-              </linearGradient>
-              <linearGradient id="bg-wave-gradient-2" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <linearGradient id="gridGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
               </linearGradient>
             </defs>
+            <rect width="100" height="100" fill="url(#gridGrad)" />
           </svg>
-
-          {/* Abstract Geometric Shapes */}
-          <svg className="absolute top-[15%] left-[6%] w-7 h-7 text-purple-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M12 3L2 21h20L12 3z" />
-          </svg>
-          <svg className="absolute bottom-[20%] left-[8%] w-6 h-6 text-sky-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-          </svg>
-          <svg className="absolute bottom-[18%] left-[48%] w-8 h-8 text-indigo-400/15 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M12 2.5l9 6.5-3.5 10.5h-11L3 9l9-6.5z" />
-          </svg>
-          <svg className="absolute top-[25%] right-[8%] w-6 h-6 text-sky-400/25 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-          </svg>
-          <svg className="absolute bottom-[15%] right-[10%] w-6 h-6 text-purple-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M12 3L2 21h20L12 3z" />
-          </svg>
-
-          {/* Diagonal slash lines */}
-          <svg className="absolute top-[28%] left-[22%] w-16 h-16 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
+          <svg className="absolute top-[10%] left-[5%] w-24 h-24 text-sky-500/10" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
             <line x1="10" y1="90" x2="90" y2="10" />
           </svg>
           <svg className="absolute top-[18%] right-[28%] w-14 h-14 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
@@ -251,13 +212,9 @@ const RentalsPage = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-4">
                       <RentalsIcon name={item.icon} className="h-4 w-4 text-secondary" />
                       <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
-                    </div>
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-xs font-bold text-muted-foreground">Rate:</span>
-                      <span className="text-sm font-extrabold text-foreground">{item.price.toLocaleString()} RWF/day</span>
                     </div>
                     <Button 
                       className="btn-gold w-full text-sm py-2" 
@@ -321,32 +278,24 @@ const RentalsPage = () => {
                   onCheckedChange={(checked) => setIncludeSetup(!!checked)}
                 />
                 <Label htmlFor="includeSetupCheck" className="text-sm font-medium cursor-pointer">
-                  Include Professional Transport & Setup (+25,000 RWF)
+                  Include Professional Transport & Setup
                 </Label>
               </div>
 
               <div className="p-4 rounded-xl bg-muted/40 border border-border/20 text-xs space-y-2">
                 <div className="flex justify-between">
-                  <span>Daily Rate:</span>
-                  <span className="font-semibold text-foreground">{bookingItem.price.toLocaleString()} RWF</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Days Count:</span>
+                  <span>Rental Duration:</span>
                   <span className="font-semibold text-foreground">
                     {Math.max(1, Math.ceil(Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)))} days
                   </span>
                 </div>
-                {includeSetup && (
-                  <div className="flex justify-between">
-                    <span>Setup & Transport:</span>
-                    <span className="font-semibold text-foreground">25,000 RWF</span>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span>Transport & Setup:</span>
+                  <span className="font-semibold text-foreground">{includeSetup ? "Requested" : "Not requested"}</span>
+                </div>
                 <div className="flex justify-between border-t border-border/40 pt-2 text-sm font-extrabold text-foreground">
-                  <span>Estimated Net:</span>
-                  <span className="text-secondary">
-                    {((bookingItem.price * Math.max(1, Math.ceil(Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)))) + (includeSetup ? 25000 : 0)).toLocaleString()} RWF
-                  </span>
+                  <span>Estimated Rate:</span>
+                  <span className="text-secondary font-bold">Quote on Request</span>
                 </div>
               </div>
 

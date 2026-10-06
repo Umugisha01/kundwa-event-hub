@@ -7,14 +7,14 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import (
     Profile, UserRole, Event, Service, Equipment, Booking, Ticket,
-    ChatMessage, FooterSettings, Portfolio, ContactSubmission,
+    ChatMessage, FooterSettings, HeroSettings, Portfolio, ContactSubmission,
     Testimonial, TrustedBrand, SiteStatistic
 )
 from .serializers import (
     ProfileSerializer, UserRoleSerializer,
     EventSerializer, ServiceSerializer, EquipmentSerializer,
     BookingSerializer, TicketSerializer, ChatMessageSerializer,
-    FooterSettingsSerializer, PortfolioSerializer, ContactSubmissionSerializer,
+    FooterSettingsSerializer, HeroSettingsSerializer, PortfolioSerializer, ContactSubmissionSerializer,
     TestimonialSerializer, TrustedBrandSerializer, SiteStatisticSerializer
 )
 
@@ -42,9 +42,13 @@ class BookingPermission(permissions.BasePermission):
 
 class TicketPermission(permissions.BasePermission):
     def has_permission(self, request, view):
+        if request.method == 'POST':
+            return True
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
+        if not request.user or not request.user.is_authenticated:
+            return False
         if request.user.roles.filter(role='admin').exists():
             return True
         return obj.user == request.user
@@ -107,14 +111,49 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        event_id = self.request.query_params.get('event_id')
+
         if not user.is_authenticated:
+            ticket_code = self.request.query_params.get('ticket_code')
+            if ticket_code:
+                return Ticket.objects.filter(ticket_code=ticket_code)
             return Ticket.objects.none()
+
         if user.roles.filter(role='admin').exists():
-            return Ticket.objects.all().order_by('-purchased_at')
-        return Ticket.objects.filter(user=user).order_by('-purchased_at')
+            qs = Ticket.objects.all().order_by('-purchased_at')
+        else:
+            qs = Ticket.objects.filter(user=user).order_by('-purchased_at')
+
+        if event_id:
+            qs = qs.filter(event_id=event_id)
+        return qs
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        
+        ticket_code = serializer.validated_data.get('ticket_code')
+        if not ticket_code:
+            import uuid
+            ticket_code = f"KIB-{uuid.uuid4().hex[:8].upper()}"
+            
+        ticket = serializer.save(user=user, ticket_code=ticket_code)
+        
+        # Update event tickets_sold and tier sold count
+        event = ticket.event
+        if event:
+            qty = ticket.quantity or 1
+            event.tickets_sold = (event.tickets_sold or 0) + qty
+            
+            # If ticket tier was selected, update tier sold count in JSON
+            if ticket.tier_id and isinstance(event.ticket_tiers, list):
+                updated_tiers = []
+                for tier in event.ticket_tiers:
+                    if str(tier.get('id')) == str(ticket.tier_id) or tier.get('name') == ticket.ticket_type:
+                        tier['sold'] = (tier.get('sold') or 0) + qty
+                    updated_tiers.append(tier)
+                event.ticket_tiers = updated_tiers
+                
+            event.save()
 
 class ChatMessageViewSet(viewsets.ModelViewSet):
     serializer_class = ChatMessageSerializer
@@ -141,6 +180,11 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
 class FooterSettingsViewSet(viewsets.ModelViewSet):
     queryset = FooterSettings.objects.all()
     serializer_class = FooterSettingsSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+class HeroSettingsViewSet(viewsets.ModelViewSet):
+    queryset = HeroSettings.objects.all()
+    serializer_class = HeroSettingsSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 class PortfolioViewSet(viewsets.ModelViewSet):

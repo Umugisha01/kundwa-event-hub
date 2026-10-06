@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, MessageCircle, Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -11,10 +11,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 const ContactPage = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [messages, setMessages] = useState([
-    { from: "admin", text: "Hello! Welcome to Kundwa IB Group. How can we help you today?" },
-  ]);
-  const [input, setInput] = useState("");
 
   // Form states
   const [fullName, setFullName] = useState("");
@@ -22,15 +18,6 @@ const ContactPage = () => {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages([...messages, { from: "user", text: input }]);
-    setInput("");
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { from: "admin", text: "Thank you for your message! Our team will get back to you shortly." }]);
-    }, 1000);
-  };
 
   const submitRequest = async () => {
     if (!fullName.trim() || !email.trim() || !message.trim()) {
@@ -156,65 +143,54 @@ const ContactPage = () => {
       </section>
 
       <section className="section-padding">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
-          {/* Chat */}
-          <div className="card-premium p-6">
-            <h2 className="font-bold text-foreground text-lg mb-4 flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-secondary" /> Live Chat
-            </h2>
-            <div className="h-80 overflow-y-auto space-y-3 mb-4 p-3 rounded-lg bg-muted/30">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${msg.from === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-                    {msg.text}
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-8">
+          {/* Contact Form */}
+          <div className="lg:col-span-7">
+            <div className="card-premium p-6 md:p-8">
+              <h2 className="font-bold text-foreground text-xl mb-2">Custom Service Request</h2>
+              <p className="text-muted-foreground text-sm mb-6">
+                Tell us about your upcoming project or event. Our production team will prepare a tailored solution.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Full Name *</label>
+                  <Input
+                    placeholder="Jean-Pierre Habimana"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Email Address *</label>
+                    <Input
+                      placeholder="name@company.com"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Phone Number</label>
+                    <Input
+                      placeholder="+250 788 000 000"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Type a message..."
-                className="flex-1"
-              />
-              <Button onClick={sendMessage} className="btn-gold">
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <div>
-            <div className="card-premium p-6 mb-6">
-              <h2 className="font-bold text-foreground text-lg mb-4">Custom Service Request</h2>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-                <Input
-                  placeholder="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Input
-                  placeholder="Phone Number"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-                <Textarea
-                  placeholder="Describe your event or service needs..."
-                  rows={4}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                />
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Event Details & Requirements *</label>
+                  <Textarea
+                    placeholder="Describe your event date, venue, sound, lighting, or staging needs..."
+                    rows={5}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  />
+                </div>
                 <Button
-                  className="btn-gold w-full"
+                  className="btn-gold w-full mt-2"
                   onClick={submitRequest}
                   disabled={isSubmitting}
                 >
@@ -222,19 +198,71 @@ const ContactPage = () => {
                 </Button>
               </div>
             </div>
+          </div>
 
-            <div className="card-premium p-6">
-              <h3 className="font-bold text-foreground mb-4">Contact Info</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-secondary" /> Kigali, Rwanda
+          {/* Contact Details & Info */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="card-premium p-6 md:p-8">
+              <h3 className="font-bold text-foreground text-lg mb-4">Direct Contact</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-xl bg-secondary/10 text-secondary border border-secondary/20">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Office Location</p>
+                    <p className="font-medium text-foreground text-sm mt-0.5">Kigali, Rwanda</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4 text-secondary" /> +250 788 000 000
+
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-xl bg-secondary/10 text-secondary border border-secondary/20">
+                    <Phone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Call or WhatsApp</p>
+                    <p className="font-medium text-foreground text-sm mt-0.5">+250 788 000 000</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4 text-secondary" /> info@kundwaib.com
+
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-xl bg-secondary/10 text-secondary border border-secondary/20">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email Inquiry</p>
+                    <p className="font-medium text-foreground text-sm mt-0.5">info@kundwaib.com</p>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="card-premium p-6 md:p-8">
+              <h3 className="font-bold text-foreground text-lg mb-4 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-secondary" /> Operating Hours
+              </h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex justify-between py-1 border-b border-border/30">
+                  <span>Monday – Friday</span>
+                  <span className="font-semibold text-foreground">8:00 AM – 7:00 PM</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-border/30">
+                  <span>Saturday</span>
+                  <span className="font-semibold text-foreground">9:00 AM – 5:00 PM</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span>Sunday</span>
+                  <span className="font-semibold text-foreground">On-Call for Events</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="card-premium p-6 bg-gradient-to-br from-secondary/5 to-transparent border-secondary/20">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-6 w-6 text-secondary flex-shrink-0" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Fast response guaranteed. All booking inquiries receive a response within 24 hours.
+                </p>
               </div>
             </div>
           </div>

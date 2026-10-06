@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaCalendar, FaTicket, FaWrench, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
-const photos = [
+const defaultPhotos = [
   "/photos/12.jpg",
   "/photos/13.jpg",
   "/photos/14.jpg",
@@ -23,9 +24,43 @@ const photos = [
 ];
 
 export function HeroSection() {
+  const [heroData, setHeroData] = useState<any>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [carouselOffset, setCarouselOffset] = useState(135);
+
+  useEffect(() => {
+    supabase
+      .from("hero_settings")
+      .select("*")
+      .single()
+      .then(({ data }) => {
+        if (data) setHeroData(data);
+      });
+  }, []);
+
+  const photos = (Array.isArray(heroData?.carousel_photos) && heroData.carousel_photos.length > 0)
+    ? heroData.carousel_photos
+    : defaultPhotos;
+
+  const words = (Array.isArray(heroData?.glitch_words) && heroData.glitch_words.length > 0)
+    ? heroData.glitch_words
+    : ["Sound", "Events", "IB Group"];
+
+  const headlinePrefix = heroData?.headline_prefix || "Creating";
+  const headlineHighlight = heroData?.headline_highlight || "Unforgettable";
+  const headlineSuffix = heroData?.headline_suffix || "Experiences";
+  const subtitlePrefix = heroData?.subtitle_prefix || "with";
+  const subtitleBrand = heroData?.subtitle_brand || "Kundwa";
+  const bgImage = heroData?.background_image || "/14.jpg";
+
+  const ctaButtons = (Array.isArray(heroData?.cta_buttons) && heroData.cta_buttons.length > 0)
+    ? heroData.cta_buttons
+    : [
+        { id: "1", label: "Book a Service", url: "/services", style: "primary", icon: "calendar" },
+        { id: "2", label: "Buy Ticket", url: "/events", style: "secondary", icon: "ticket" },
+        { id: "3", label: "Rent Equipment", url: "/rentals", style: "outline", icon: "wrench" },
+      ];
 
   useEffect(() => {
     const handleResize = () => {
@@ -48,7 +83,7 @@ export function HeroSection() {
       setActiveIndex((prev) => (prev + 1) % photos.length);
     }, 3500);
     return () => clearInterval(interval);
-  }, [isHovered]);
+  }, [isHovered, photos.length]);
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length);
@@ -59,11 +94,11 @@ export function HeroSection() {
   };
 
   // Glitch dynamic text setup
-  const words = ["Sound", "Events", "IB Group"];
   const [wordIdx, setWordIdx] = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
 
   useEffect(() => {
+    if (!words || words.length === 0) return;
     const interval = setInterval(() => {
       setIsGlitching(true);
       setTimeout(() => {
@@ -74,7 +109,7 @@ export function HeroSection() {
       }, 450);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [words]);
 
   return (
     <section className="relative min-h-[100svh] flex items-center overflow-hidden">
@@ -82,8 +117,8 @@ export function HeroSection() {
       {/* ── Background Image ── */}
       <div className="absolute inset-0">
         <img
-          className="absolute inset-0 w-full h-full object-cover"
-          src="/14.jpg"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          src={bgImage}
           alt="Event Background"
         />
 
@@ -109,10 +144,10 @@ export function HeroSection() {
               className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[1.05] tracking-tight mb-4 animate-fade-in"
               style={{ animationDelay: "0.1s" }}
             >
-              Creating{" "}
+              {headlinePrefix}{" "}
               <span className="relative inline-block">
                 <span className="text-secondary drop-shadow-[0_0_30px_rgba(56,189,248,0.5)]">
-                  Unforgettable
+                  {headlineHighlight}
                 </span>
                 {/* underline accent */}
                 <svg className="absolute -bottom-2 left-0 w-full" height="6" viewBox="0 0 200 6" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -120,7 +155,7 @@ export function HeroSection() {
                 </svg>
               </span>
               <br />
-              Experiences
+              {headlineSuffix}
             </h1>
 
             {/* Headline Subtitle with Dynamic Glitching Text */}
@@ -128,13 +163,13 @@ export function HeroSection() {
               className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-6 leading-normal animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
-              <span className="text-white/70 font-light">with</span>{" "}
-              <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]">Kundwa</span>{" "}
+              <span className="text-white/70 font-light">{subtitlePrefix}</span>{" "}
+              <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]">{subtitleBrand}</span>{" "}
               <span 
                 className={`text-secondary inline-block ${isGlitching ? "glitch-active" : ""}`}
-                data-text={words[wordIdx]}
+                data-text={words[wordIdx % words.length] || words[0]}
               >
-                {words[wordIdx]}
+                {words[wordIdx % words.length] || words[0]}
               </span>
             </div>
 
@@ -143,34 +178,39 @@ export function HeroSection() {
               className="flex flex-wrap gap-4 animate-fade-in mt-6 md:mt-10"
               style={{ animationDelay: "0.3s" }}
             >
-              {/* Primary gold CTA */}
-              <Link to="/services">
-                <button className="relative group px-7 py-3.5 rounded-2xl font-bold text-base text-[hsl(204,80%,10%)] overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-secondary/30 flex items-center gap-2">
-                  <span className="absolute inset-0 bg-secondary transition-all duration-300 group-hover:brightness-110" />
-                  <span className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-white blur-xl transition-opacity" />
-                  <FaCalendar className="relative h-4.5 w-4.5" />
-                  <span className="relative">Book a Service</span>
-                </button>
-              </Link>
-
-              {/* Ticket outline CTA */}
-              <Link to="/events">
-                <button className="px-7 py-3.5 rounded-2xl font-bold text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-secondary/50 hover:text-secondary transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2">
-                  <FaTicket className="h-4.5 w-4.5" />
-                  Buy Ticket
-                </button>
-              </Link>
-
-              {/* Rent equipment */}
-              <Link to="/rentals">
-                <button className="px-7 py-3.5 rounded-2xl font-bold text-base text-white border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 flex items-center gap-2">
-                  <FaWrench className="h-4.5 w-4.5" />
-                  Rent Equipment
-                </button>
-              </Link>
+              {ctaButtons.map((btn: any) => {
+                if (btn.style === "primary") {
+                  return (
+                    <Link key={btn.id || btn.label} to={btn.url}>
+                      <button className="relative group px-7 py-3.5 rounded-2xl font-bold text-base text-[hsl(204,80%,10%)] overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-secondary/30 flex items-center gap-2">
+                        <span className="absolute inset-0 bg-secondary transition-all duration-300 group-hover:brightness-110" />
+                        <span className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-white blur-xl transition-opacity" />
+                        <FaCalendar className="relative h-4.5 w-4.5" />
+                        <span className="relative">{btn.label}</span>
+                      </button>
+                    </Link>
+                  );
+                }
+                if (btn.style === "secondary") {
+                  return (
+                    <Link key={btn.id || btn.label} to={btn.url}>
+                      <button className="px-7 py-3.5 rounded-2xl font-bold text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-secondary/50 hover:text-secondary transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2">
+                        <FaTicket className="h-4.5 w-4.5" />
+                        {btn.label}
+                      </button>
+                    </Link>
+                  );
+                }
+                return (
+                  <Link key={btn.id || btn.label} to={btn.url}>
+                    <button className="px-7 py-3.5 rounded-2xl font-bold text-base text-white border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 flex items-center gap-2">
+                      <FaWrench className="h-4.5 w-4.5" />
+                      {btn.label}
+                    </button>
+                  </Link>
+                );
+              })}
             </div>
-
-
           </div>
 
           {/* Right Column (3D Photo Carousel) */}

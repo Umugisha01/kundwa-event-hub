@@ -24,11 +24,35 @@ export function Footer() {
   const phone = settings?.contact_phone || "+250 788 000 000";
   const address = settings?.contact_address || "Kigali, Rwanda";
   const copyright = settings?.copyright_text || `© ${new Date().getFullYear()} Kundwa IB Group. All rights reserved.`;
+  const tagline = settings?.tagline || "Creating unforgettable experiences with world-class sound, lighting, and stage production.";
 
   const facebook = settings?.facebook_url || "https://facebook.com";
   const instagram = settings?.instagram_url || "https://instagram.com";
   const twitter = settings?.twitter_url || "https://twitter.com";
   const youtube = settings?.youtube_url || "https://youtube.com";
+
+  const defaultQuickLinks = [
+    { id: "1", label: "Home", url: "/" },
+    { id: "2", label: "Services", url: "/services" },
+    { id: "3", label: "Rentals", url: "/rentals" },
+    { id: "4", label: "Events", url: "/events" },
+    { id: "5", label: "Contact", url: "/contact" },
+  ];
+
+  const defaultServices = [
+    { id: "1", label: "Sound Systems", url: "/services" },
+    { id: "2", label: "Lighting Design", url: "/services" },
+    { id: "3", label: "Stage Production", url: "/services" },
+    { id: "4", label: "Event Management", url: "/services" },
+  ];
+
+  const quickLinks = Array.isArray(settings?.quick_links) && settings.quick_links.length > 0
+    ? settings.quick_links
+    : defaultQuickLinks;
+
+  const servicesList = Array.isArray(settings?.services_list) && settings.services_list.length > 0
+    ? settings.services_list
+    : defaultServices;
 
   // Persistent Premium Dark Background style (always dark with glowing diagonal ray)
   const footerStyle = {
@@ -62,9 +86,9 @@ export function Footer() {
               />
             </div>
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
-              Creating unforgettable experiences with world-class sound, lighting, and stage production.
+              {tagline}
             </p>
-            {/* CTA Buy Ticket & Login Buttons (Moved here) */}
+            {/* CTA Buy Ticket & Login Buttons */}
             <div className="flex flex-col gap-3 w-full max-w-[200px]">
               <Link to="/events">
                 <button
@@ -101,13 +125,13 @@ export function Footer() {
           <div>
             <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs">Quick Links</h4>
             <div className="space-y-3">
-              {["Home", "Services", "Rentals", "Events", "Contact"].map((item) => (
+              {quickLinks.map((item: any) => (
                 <Link
-                  key={item}
-                  to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+                  key={item.id || item.label}
+                  to={item.url || "/"}
                   className="block text-sm text-slate-300 hover:text-secondary transition-colors font-medium"
                 >
-                  {item}
+                  {item.label}
                 </Link>
               ))}
             </div>
@@ -117,10 +141,15 @@ export function Footer() {
           <div>
             <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-xs">Services</h4>
             <div className="space-y-3 text-sm text-slate-300 font-medium">
-              <p className="hover:text-secondary transition-colors cursor-pointer">Sound Systems</p>
-              <p className="hover:text-secondary transition-colors cursor-pointer">Lighting Design</p>
-              <p className="hover:text-secondary transition-colors cursor-pointer">Stage Production</p>
-              <p className="hover:text-secondary transition-colors cursor-pointer">Event Management</p>
+              {servicesList.map((service: any) => (
+                <Link
+                  key={service.id || service.label}
+                  to={service.url || "/services"}
+                  className="block hover:text-secondary transition-colors cursor-pointer"
+                >
+                  {service.label}
+                </Link>
+              ))}
             </div>
           </div>
 

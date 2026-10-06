@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     EventViewSet, ServiceViewSet, EquipmentViewSet, BookingViewSet, TicketViewSet,
-    ChatMessageViewSet, FooterSettingsViewSet, PortfolioViewSet, ContactSubmissionViewSet,
+    ChatMessageViewSet, FooterSettingsViewSet, HeroSettingsViewSet, PortfolioViewSet, ContactSubmissionViewSet,
     TestimonialViewSet, TrustedBrandViewSet, SiteStatisticViewSet,
     ProfileViewSet, UserRoleViewSet,
     RegisterView, CustomTokenObtainPairView, FileUploadView
@@ -17,6 +17,7 @@ router.register('bookings', BookingViewSet, basename='bookings')
 router.register('tickets', TicketViewSet, basename='tickets')
 router.register('chat_messages', ChatMessageViewSet, basename='chat_messages')
 router.register('footer_settings', FooterSettingsViewSet, basename='footer_settings')
+router.register('hero_settings', HeroSettingsViewSet, basename='hero_settings')
 router.register('portfolio', PortfolioViewSet, basename='portfolio')
 router.register('contact_submissions', ContactSubmissionViewSet, basename='contact_submissions')
 router.register('testimonials', TestimonialViewSet, basename='testimonials')

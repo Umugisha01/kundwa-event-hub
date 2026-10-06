@@ -259,8 +259,8 @@ export function AdminServices() {
         </div>
       )}
 
-      {/* Services List Table */}
-      <div className="border border-border/40 rounded-xl overflow-hidden bg-card/40">
+      {/* Services List Table - Desktop */}
+      <div className="hidden md:block border border-border/40 rounded-xl overflow-hidden bg-card/40">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
@@ -308,6 +308,39 @@ export function AdminServices() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Services Card list - Mobile */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filteredItems.map(s => (
+          <div key={s.id} className="card-premium p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary flex items-center justify-center w-10 h-10 border border-primary/15 flex-shrink-0">
+                  <Settings className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground text-sm">{s.name}</h4>
+                  {s.icon && <p className="text-[10px] text-muted-foreground font-mono">Icon: {s.icon}</p>}
+                </div>
+              </div>
+              <span className="text-xs font-semibold bg-secondary/15 text-secondary px-2.5 py-1 rounded-full flex-shrink-0">
+                {s.category}
+              </span>
+            </div>
+            <div className="flex justify-end gap-1.5 pt-2 border-t border-border/40">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(s)}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(s.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+        {filteredItems.length === 0 && (
+          <p className="text-muted-foreground text-sm text-center py-8">No services found.</p>
+        )}
       </div>
     </div>
   );

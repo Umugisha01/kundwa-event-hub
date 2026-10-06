@@ -105,7 +105,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Delivery: flat setup and transport fee if rental setup is active
   const hasSetup = items.some((item) => item.type === "rental" && item.includeSetup);
-  const cartDelivery = hasSetup ? 25000 : 0; // 25,000 RWF flat delivery/setup charge
+  const cartDelivery = 0; // Delivery/setup fee for rentals is quote-based (no flat monetary rate displayed)
 
   const cartTotal = cartSubtotal + cartTax + cartDelivery;
 

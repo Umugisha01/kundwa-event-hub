@@ -203,8 +203,8 @@ export function AdminEquipment() {
         </div>
       )}
 
-      {/* Equipment Rental Table */}
-      <div className="border border-border/40 rounded-xl overflow-hidden bg-card/40">
+      {/* Equipment Rental Table - Desktop */}
+      <div className="hidden md:block border border-border/40 rounded-xl overflow-hidden bg-card/40">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
@@ -262,6 +262,51 @@ export function AdminEquipment() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Equipment Rental Card Grid - Mobile */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filteredItems.map(eq => (
+          <div key={eq.id} className="card-premium p-4 space-y-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-bold text-foreground text-sm">{eq.name}</h4>
+                <span className="text-[10px] font-semibold px-2 py-0.5 bg-muted rounded mt-1.5 inline-block">
+                  {eq.category}
+                </span>
+              </div>
+              <Button 
+                variant="ghost"
+                size="sm" 
+                onClick={() => toggle(eq.id, eq.status)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold hover:scale-105 transition-all ${
+                  eq.status === "Available" 
+                    ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" 
+                    : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                }`}
+              >
+                {eq.status === "Available" ? <ShieldCheck className="h-3.5 w-3.5" /> : <ShieldAlert className="h-3.5 w-3.5" />}
+                {eq.status}
+              </Button>
+            </div>
+            {eq.description && (
+              <p className="text-xs text-muted-foreground line-clamp-2 bg-muted/10 p-2.5 rounded border border-border/30">
+                {eq.description}
+              </p>
+            )}
+            <div className="flex justify-end gap-1.5 pt-2 border-t border-border/40">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm(eq); setEditId(eq.id); }}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(eq.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+        {filteredItems.length === 0 && (
+          <p className="text-muted-foreground text-sm text-center py-8">No rental equipment found.</p>
+        )}
       </div>
     </div>
   );
