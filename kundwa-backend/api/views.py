@@ -319,6 +319,12 @@ class RegisterView(APIView):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        username_or_email = attrs.get('username', '').strip()
+        if '@' in username_or_email:
+            user_by_email = User.objects.filter(email__iexact=username_or_email).first()
+            if user_by_email:
+                attrs['username'] = user_by_email.username
+
         data = super().validate(attrs)
         data['user'] = {
             'id': str(self.user.id),

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
+import { AdminHoldButton } from "@/components/AdminHoldButton";
 
 const publicLinks = [
   { to: "/", label: "Home", labelRw: "Ahabanza" },
@@ -234,6 +235,9 @@ export function Navbar() {
                   </span>
                 )}
               </button>
+
+              {/* Secret Press & Hold Admin Portal */}
+              <AdminHoldButton />
             </div>
           </div>
 
@@ -273,6 +277,10 @@ export function Navbar() {
                 </span>
               )}
             </button>
+
+            {/* Secret Press & Hold Admin Portal */}
+            <AdminHoldButton />
+
             {/* Hamburger */}
             <button
               onClick={() => setIsOpen(o => !o)}
