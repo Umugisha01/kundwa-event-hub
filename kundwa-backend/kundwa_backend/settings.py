@@ -76,18 +76,36 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'kundwa_backend.wsgi.application'
 
-# Database configuration (PostgreSQL with SQLite fallback)
+# Database configuration (PostgreSQL with resilient fallback)
+USE_LOCAL_DB = os.environ.get('USE_LOCAL_DB', 'False').lower() in ('true', '1')
 DATABASE_URL = os.environ.get('DATABASE_URL')
-DB_NAME = os.environ.get('DB_NAME')
+DB_NAME = os.environ.get('DB_NAME', 'kudwaDB')
+DB_USER = os.environ.get('DB_USER', 'postgres')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'Bnc20031!')
+DB_HOST = os.environ.get('DB_HOST', 'localhost')
+DB_PORT = os.environ.get('DB_PORT', '5432')
 
-if DATABASE_URL:
+def _is_host_resolvable(url_str):
+    if not url_str:
+        return False
+    try:
+        import urllib.parse, socket
+        parsed = urllib.parse.urlparse(url_str)
+        if parsed.hostname:
+            socket.getaddrinfo(parsed.hostname, parsed.port or 5432, socket.AF_UNSPEC, socket.SOCK_STREAM)
+            return True
+    except Exception:
+        return False
+    return True
+
+if not USE_LOCAL_DB and DATABASE_URL and _is_host_resolvable(DATABASE_URL):
     try:
         import dj_database_url
         is_supabase_or_ssl = 'supabase' in DATABASE_URL or 'sslmode' in DATABASE_URL
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
-                conn_max_age=0 if not DEBUG else 600,
+                conn_max_age=0,  # 0 prevents stale sockets on cloud DBs
                 ssl_require=is_supabase_or_ssl
             )
         }
@@ -98,15 +116,15 @@ if DATABASE_URL:
                 'NAME': BASE_DIR / 'db.sqlite3',
             }
         }
-elif DB_NAME:
+elif USE_LOCAL_DB or DB_HOST in ('localhost', '127.0.0.1'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': DB_NAME,
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            'NAME': os.environ.get('LOCAL_DB_NAME', 'kudwaDB'),
+            'USER': os.environ.get('LOCAL_DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('LOCAL_DB_PASSWORD', 'Bnc20031!'),
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 else:
