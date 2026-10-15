@@ -10,12 +10,13 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import * as Icons from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { resolveMediaUrl } from "@/config/api";
 import { useCart } from "@/contexts/CartContext";
+import { services as defaultServices } from "@/data/services";
 import { 
   Calendar, Check, Sparkles, AlertCircle, Wrench, 
   ShieldAlert, Settings, Info, Loader2, CreditCard, RefreshCw
@@ -31,15 +32,16 @@ const ServiceIcon = ({ name, className }: { name: any; className?: string }) => 
   return <IconComponent className={className} />;
 };
 
-const categories = [
-  { title: "Event Production", color: "from-primary/80 to-primary" },
-  { title: "Event Management", color: "from-secondary/80 to-secondary" },
-  { title: "Corporate Events", color: "from-foreground/70 to-foreground/90" },
+const defaultCategories = [
+  { title: "Event Production", color: "from-primary/80 to-primary", order: 1, cta_text: "Inquire About Event Production" },
+  { title: "Event Management", color: "from-secondary/80 to-secondary", order: 2, cta_text: "Inquire About Event Management" },
+  { title: "Corporate Events", color: "from-foreground/70 to-foreground/90", order: 3, cta_text: "Inquire About Corporate Events" },
 ];
 
 const ServicesPage = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [mainServices, setMainServices] = useState<any[]>([]);
   const [dbServices, setDbServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -47,9 +49,16 @@ const ServicesPage = () => {
   const { addToCart } = useCart();
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [inquirySubject, setInquirySubject] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: ""
+  });
   
-  // 10-Step Wizard States
+  // Multi-Step Service Inquiry Wizard States
   const [wizardStep, setWizardStep] = useState(1);
+  const [wizardSubmitting, setWizardSubmitting] = useState(false);
   const [wizardData, setWizardData] = useState({
     category: "Event Production",
     venueType: "indoor",
@@ -68,17 +77,16 @@ const ServicesPage = () => {
     customerName: "",
     customerEmail: "",
     customerPhone: "",
-    paymentOption: "momo",
-    momoPhone: ""
+    notes: ""
   });
 
   const handleWizardNext = () => {
     if (wizardStep === 4) {
-      // Simulate AI analyzing configuration for 2 seconds
+      // Simulate AI analyzing configuration for 1.5s
       setWizardStep(5);
       setTimeout(() => {
         setWizardStep(6);
-      }, 2000);
+      }, 1500);
     } else {
       setWizardStep(prev => prev + 1);
     }
@@ -86,76 +94,117 @@ const ServicesPage = () => {
 
   const handleWizardPrev = () => {
     if (wizardStep === 6) {
-      setWizardStep(4); // Skip the simulated AI processing screen on back
+      setWizardStep(4);
     } else {
       setWizardStep(prev => prev - 1);
     }
   };
 
-  // Pricing formula matching Section 6 & 7 of PRD
-  const getPackagePrice = () => {
-    if (wizardData.packageTier === "Bronze") return 350000;
-    if (wizardData.packageTier === "Silver") return 750000;
-    return 1800000; // Gold
-  };
+  const handleWizardSubmit = async () => {
+    if (!wizardData.customerName || !wizardData.customerEmail || !wizardData.customerPhone) {
+      toast.error("Please fill in your name, email, and phone number.");
+      return;
+    }
+    setWizardSubmitting(true);
+    try {
+      const formattedNotes = `[Service Production Request]
+Category: ${wizardData.category}
+Setup Scale: ${wizardData.packageTier}
+Venue: ${wizardData.venueType === "indoor" ? "Indoor Venue" : "Outdoor Grounds"}
+Expected Capacity: ${wizardData.capacity} attendees
+Duration: ${wizardData.durationDays} day(s)
+Date: ${wizardData.eventDate}
+Production Elements: ${[
+        wizardData.needsSound && "Sound System",
+        wizardData.needsLighting && "Stage Lighting",
+        wizardData.needsScreens && "LED Screens",
+        wizardData.needsStage && "Stage & Truss",
+        wizardData.needsDecor && "Decor & Branding",
+        ...wizardData.customAddons
+      ].filter(Boolean).join(", ")}
+Crew: ${[
+        wizardData.includeSoundEng && "Sound Engineer",
+        wizardData.includeCameraCrew && "Camera Crew"
+      ].filter(Boolean).join(", ") || "None"}
+Message: ${wizardData.notes || "No additional message"}`;
 
-  const getAddonsPrice = () => {
-    let total = 0;
-    if (wizardData.customAddons.includes("subwoofer")) total += 40000;
-    if (wizardData.customAddons.includes("mic")) total += 10000;
-    if (wizardData.customAddons.includes("spotlight")) total += 25000;
-    return total;
-  };
+      // Insert directly into Bookings table as a service inquiry
+      const { error: bookingErr } = await supabase.from("bookings").insert({
+        booking_type: "service",
+        service_name: `${wizardData.category} (${wizardData.packageTier} Scale)`,
+        customer_name: wizardData.customerName,
+        customer_email: wizardData.customerEmail,
+        customer_phone: wizardData.customerPhone,
+        start_date: wizardData.eventDate,
+        rental_days: wizardData.durationDays,
+        notes: formattedNotes,
+        status: "Pending",
+        amount: 0
+      });
 
-  const getCrewPrice = () => {
-    let daily = 0;
-    if (wizardData.includeSoundEng) daily += 30000;
-    if (wizardData.includeCameraCrew) daily += 45000;
-    return daily * wizardData.durationDays;
-  };
+      if (bookingErr) throw bookingErr;
 
-  const wizardSubtotal = getPackagePrice() + getAddonsPrice() + getCrewPrice();
-  const wizardTax = wizardSubtotal * 0.18; // 18% VAT
-  const wizardTotal = wizardSubtotal + wizardTax;
-  const wizardDeposit = wizardTotal * 0.30; // 30% secure booking deposit
+      // Also mirror to service inquiries
+      try {
+        await supabase.from("service_inquiries").insert({
+          service_name: `${wizardData.category} (${wizardData.packageTier})`,
+          customer_name: wizardData.customerName,
+          customer_email: wizardData.customerEmail,
+          customer_phone: wizardData.customerPhone,
+          message: formattedNotes,
+          status: "Pending"
+        });
+      } catch {
+        // ignore
+      }
 
-  const handleWizardSubmit = () => {
-    addToCart({
-      id: `service-${wizardData.category}-${wizardData.packageTier}`,
-      type: "service",
-      name: `Production Booking: ${wizardData.category} (${wizardData.packageTier} Package)`,
-      price: wizardDeposit, // We charge the deposit amount in the cart
-      quantity: 1,
-      image: "/assets/hero-event.jpg",
-      startDate: wizardData.eventDate,
-      days: wizardData.durationDays,
-      packageType: wizardData.packageTier
-    });
-    setInquiryOpen(false);
-    // Reset wizard
-    setWizardStep(1);
+      toast.success("Service inquiry received!", {
+        description: "Your request has been added to our bookings registry. We will contact you shortly."
+      });
+      setWizardStep(9); // Move to completion & direct contact hub
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit inquiry. Please try again or contact us directly.");
+    } finally {
+      setWizardSubmitting(false);
+    }
   };
 
   const loadServicesData = useCallback(async () => {
     setLoading(true);
     setFetchError(null);
     try {
+      // Fetch Main Services packages
+      try {
+        const { data: msData } = await supabase.from("main_services").select("*").order("order");
+        if (msData && msData.length > 0) {
+          setMainServices(msData);
+        }
+      } catch {
+        // fallback
+      }
+
       const { data, error } = await supabase.from("services").select("*");
-      if (error) {
-        setFetchError("Unable to retrieve services catalog.");
-        setDbServices([]);
-      } else if (data && data.length > 0) {
+      if (error || !data || data.length === 0) {
+        const fallback = defaultServices.map((s) => ({
+          ...s,
+          image_url: s.heroImage || "/assets/hero-event.jpg",
+          icon: s.slug === "sound-system" ? "Volume2" : s.slug === "lighting-system" ? "Lightbulb" : s.slug === "stage-design" ? "Layers" : "Sparkles"
+        }));
+        setDbServices(fallback);
+      } else {
         const mapped = data.map((s: any) => ({
           ...s,
           image_url: resolveMediaUrl(s.image_url, "/assets/hero-event.jpg")
         }));
         setDbServices(mapped);
-      } else {
-        setDbServices([]);
       }
     } catch {
-      setFetchError("Unable to connect to services backend.");
-      setDbServices([]);
+      const fallback = defaultServices.map((s) => ({
+        ...s,
+        image_url: s.heroImage || "/assets/hero-event.jpg",
+        icon: s.slug === "sound-system" ? "Volume2" : s.slug === "lighting-system" ? "Lightbulb" : s.slug === "stage-design" ? "Layers" : "Sparkles"
+      }));
+      setDbServices(fallback);
     } finally {
       setLoading(false);
     }
@@ -190,11 +239,49 @@ const ServicesPage = () => {
     loadServicesData();
   }, [loadServicesData]);
 
-  const groupedServices = categories.map((cat) => {
+  const effectiveMainServices = useMemo(() => {
+    if (mainServices.length > 0) {
+      // Include any orphan categories present in services
+      const dbCategories = Array.from(new Set(dbServices.map((s) => s.category))).filter(Boolean);
+      const existingTitles = new Set(mainServices.map((m) => m.title));
+      const orphans = dbCategories
+        .filter((cat) => !existingTitles.has(cat))
+        .map((cat, i) => ({
+          title: cat,
+          order: mainServices.length + i + 1,
+          color: "from-secondary/80 to-secondary",
+          cta_text: `Inquire About ${cat}`
+        }));
+      return [...mainServices, ...orphans];
+    }
+    const dbCategories = Array.from(new Set(dbServices.map((s) => s.category))).filter(Boolean);
+    if (dbCategories.length > 0) {
+      return dbCategories.map((title, idx) => {
+        const found = defaultCategories.find((d) => d.title === title);
+        return {
+          title,
+          order: found?.order || idx + 1,
+          color: found?.color || "from-primary/80 to-primary",
+          cta_text: found?.cta_text || `Inquire About ${title}`,
+        };
+      });
+    }
+    return defaultCategories;
+  }, [mainServices, dbServices]);
+
+  const groupedServices = effectiveMainServices.map((cat, idx) => {
     const items = dbServices.filter((s) => s.category === cat.title);
+    const coverImage = cat.image_url
+      ? resolveMediaUrl(cat.image_url)
+      : (items[0]?.image_url || "/assets/hero-event.jpg");
+
     return {
       title: cat.title,
-      color: cat.color,
+      description: cat.description,
+      color: cat.color || "from-primary/80 to-primary",
+      order: cat.order || idx + 1,
+      image_url: coverImage,
+      cta_text: cat.cta_text || `Inquire About ${cat.title}`,
       items: items
     };
   });
@@ -372,7 +459,7 @@ const ServicesPage = () => {
                 <div className={i % 2 === 1 ? "md:order-2" : ""}>
                   <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
                     <img
-                      src={category.items[0]?.image_url || "/assets/hero-event.jpg"}
+                      src={category.image_url || category.items[0]?.image_url || "/assets/hero-event.jpg"}
                       alt={category.title}
                       className="w-full h-72 md:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
                       loading="lazy"
@@ -391,11 +478,16 @@ const ServicesPage = () => {
                 {/* Info */}
                 <div className={i % 2 === 1 ? "md:order-1" : ""}>
                   <span className="text-secondary font-semibold text-xs uppercase tracking-widest">
-                    {`0${i + 1}`}
+                    {String(category.order || i + 1).padStart(2, "0")}
                   </span>
-                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2 mb-4">
+                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2 mb-2">
                     {category.title}
                   </h2>
+                  {category.description && (
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                      {category.description}
+                    </p>
+                  )}
 
                   <div className="space-y-3 mb-6">
                     {category.items.map((item, j) => (
@@ -422,7 +514,7 @@ const ServicesPage = () => {
                     className="btn-gold gap-2"
                     onClick={() => openInquiry(category.title)}
                   >
-                    <MessageSquare className="h-4 w-4" /> Inquire About {category.title}
+                    <MessageSquare className="h-4 w-4" /> {category.cta_text || `Inquire About ${category.title}`}
                   </Button>
                 </div>
               </motion.div>
@@ -480,37 +572,39 @@ const ServicesPage = () => {
         </div>
       </section>
 
-      {/* 10-Step Interactive Service Booking Wizard */}
+      {/* Interactive Service Booking & Inquiry Planner Wizard */}
       <Dialog open={inquiryOpen} onOpenChange={setInquiryOpen}>
         <DialogContent className="sm:max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-secondary animate-pulse" /> 
-              {wizardStep === 5 ? "AI Configuration Engine" : "Event Production Planner"}
+              {wizardStep === 5 ? "AI Configuration Engine" : wizardStep === 9 ? "Inquiry Confirmed" : "Event Production Planner"}
             </DialogTitle>
             <DialogDescription>
-              Step {wizardStep} of 10: {
-                wizardStep === 1 ? "Service Category" :
-                wizardStep === 2 ? "Venue & Capacity" :
-                wizardStep === 3 ? "Event Dates" :
-                wizardStep === 4 ? "Core Requirements" :
-                wizardStep === 5 ? "Simulating AI Recommendation..." :
-                wizardStep === 6 ? "Choose Package Tier" :
-                wizardStep === 7 ? "Custom Add-ons" :
-                wizardStep === 8 ? "Crew & Staffing" :
-                wizardStep === 9 ? "Summary & VAT" :
-                "Deposit Payment"
-              }
+              {wizardStep === 9 ? "Your service inquiry has been registered in our bookings system." : (
+                <>Step {wizardStep} of 8: {
+                  wizardStep === 1 ? "Service Category" :
+                  wizardStep === 2 ? "Venue & Capacity" :
+                  wizardStep === 3 ? "Event Schedule" :
+                  wizardStep === 4 ? "Core Requirements" :
+                  wizardStep === 5 ? "Simulating AI Recommendation..." :
+                  wizardStep === 6 ? "Choose Setup Scale" :
+                  wizardStep === 7 ? "Hardware & Crew Needs" :
+                  "Contact Details & Message"
+                }</>
+              )}
             </DialogDescription>
           </DialogHeader>
 
           {/* Progress Bar */}
-          <div className="w-full bg-muted h-1 rounded-full overflow-hidden mt-1 mb-3">
-            <div 
-              className="bg-secondary h-full transition-all duration-300"
-              style={{ width: `${(wizardStep / 10) * 100}%` }}
-            />
-          </div>
+          {wizardStep <= 8 && (
+            <div className="w-full bg-muted h-1 rounded-full overflow-hidden mt-1 mb-3">
+              <div 
+                className="bg-secondary h-full transition-all duration-300"
+                style={{ width: `${(wizardStep / 8) * 100}%` }}
+              />
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto pr-1 py-1 space-y-4 text-sm">
             {/* Step 1: Category */}
@@ -637,28 +731,28 @@ const ServicesPage = () => {
               </div>
             )}
 
-            {/* Step 5: AI Recommendations Loading (Pulsing Interface) */}
+            {/* Step 5: AI Recommendations Loading */}
             {wizardStep === 5 && (
               <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
                 <Loader2 className="h-12 w-12 text-secondary animate-spin" />
                 <div className="space-y-1">
                   <h4 className="font-bold text-base">AI Recommendation Engine Running</h4>
                   <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                    Analyzing capacity of {wizardData.capacity} attendees, {wizardData.venueType} venue layout, and active hardware constraints to compile suggested setup configurations...
+                    Analyzing capacity of {wizardData.capacity} attendees, {wizardData.venueType} venue layout, and active hardware needs to match the ideal production setup...
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Step 6: Package Tier Selection */}
+            {/* Step 6: Setup Scale Selection (NO PRICES) */}
             {wizardStep === 6 && (
               <div className="space-y-3">
-                <Label className="text-xs font-semibold text-muted-foreground">Suggested Packages Matching Your Profile</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">Suggested Production Scale for Your Event</Label>
                 <div className="space-y-3">
                   {[
-                    { tier: "Bronze", price: 350000, desc: "Best for small indoor events. Renders basic sound, 2 mics, and standard stage lights." },
-                    { tier: "Silver", price: 750000, desc: "Popular. Includes 4x line-array columns, intelligent moving heads, and 12sqm screen setup." },
-                    { tier: "Gold", price: 1800000, desc: "Premium Concert-scale. Massive sound rigs, professional stage truss, backup generators." }
+                    { tier: "Bronze", name: "Bronze Scale", desc: "Compact setup. Best for intimate indoor events, seminars, or private parties with clean audio and ambient stage wash." },
+                    { tier: "Silver", name: "Silver Scale", desc: "Pro production setup. 4x line-array columns, intelligent moving heads, multi-zone microphones, and LED screen backdrop." },
+                    { tier: "Gold", name: "Gold Scale", desc: "Concert & Festival Scale. Massive tour-grade line arrays, heavy-duty stage trusses, 360° moving beam heads, and full technical coverage." }
                   ].map((pkg) => (
                     <button
                       key={pkg.tier}
@@ -669,201 +763,260 @@ const ServicesPage = () => {
                           : "border-border/40 hover:bg-muted/15"
                       }`}
                     >
-                      <div className="max-w-[70%]">
+                      <div className="max-w-[85%]">
                         <span className="font-extrabold text-sm flex items-center gap-1.5">
-                          {pkg.tier} 
+                          {pkg.name} 
                           {pkg.tier === "Silver" && <Sparkles className="h-3.5 w-3.5 text-secondary shrink-0" />}
                         </span>
                         <p className="text-xs text-muted-foreground mt-1 leading-normal">{pkg.desc}</p>
                       </div>
-                      <span className="font-black text-secondary text-sm shrink-0">{pkg.price.toLocaleString()} RWF</span>
+                      <ChevronRight className="h-4 w-4 text-secondary shrink-0" />
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Step 7: Custom Add-ons */}
+            {/* Step 7: Hardware & Crew Preferences (NO PRICES) */}
             {wizardStep === 7 && (
-              <div className="space-y-3">
-                <Label className="text-xs font-semibold text-muted-foreground">Optional Hardware Add-ons</Label>
-                <div className="space-y-2">
-                  {[
-                    { key: "subwoofer", label: "Extra Subwoofer System (Double 18\")", price: 40000 },
-                    { key: "mic", label: "Additional Shure QLXD Wireless Microphone", price: 10000 },
-                    { key: "spotlight", label: "High-power Follow Spotlight (Keynote speaker)", price: 25000 }
-                  ].map((add) => {
-                    const active = wizardData.customAddons.includes(add.key);
-                    return (
-                      <label 
-                        key={add.key}
-                        className="flex items-center justify-between p-3 rounded-xl border border-border/40 hover:bg-muted/10 cursor-pointer select-none"
-                      >
-                        <div>
-                          <span className="font-semibold block">{add.label}</span>
-                          <span className="text-xs text-secondary">+{add.price.toLocaleString()} RWF</span>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={active}
-                          onChange={(e) => {
-                            const newAddons = e.target.checked 
-                              ? [...wizardData.customAddons, add.key] 
-                              : wizardData.customAddons.filter(k => k !== add.key);
-                            setWizardData({ ...wizardData, customAddons: newAddons });
-                          }}
-                          className="rounded border-border text-secondary focus:ring-secondary h-4 w-4"
-                        />
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Step 8: Crew & Tech */}
-            {wizardStep === 8 && (
-              <div className="space-y-3">
-                <Label className="text-xs font-semibold text-muted-foreground">Include Professional Crew Operators</Label>
-                <div className="space-y-3">
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-border/40 hover:bg-muted/10 cursor-pointer select-none">
-                    <div>
-                      <span className="font-semibold block">Certified Sound Engineer</span>
-                      <span className="text-xs text-secondary">+30,000 RWF / day</span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={wizardData.includeSoundEng}
-                      onChange={(e) => setWizardData({ ...wizardData, includeSoundEng: e.target.checked })}
-                      className="rounded border-border text-secondary focus:ring-secondary h-4 w-4"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-border/40 hover:bg-muted/10 cursor-pointer select-none">
-                    <div>
-                      <span className="font-semibold block">Videographer & Camera Crew</span>
-                      <span className="text-xs text-secondary">+45,000 RWF / day</span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={wizardData.includeCameraCrew}
-                      onChange={(e) => setWizardData({ ...wizardData, includeCameraCrew: e.target.checked })}
-                      className="rounded border-border text-secondary focus:ring-secondary h-4 w-4"
-                    />
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Step 9: Review & Summary */}
-            {wizardStep === 9 && (
-              <div className="space-y-3">
-                <Label className="text-xs font-semibold text-muted-foreground">Detailed Price Summary Breakdown</Label>
-                <div className="p-4 rounded-xl bg-muted/40 border border-border/20 text-xs space-y-2.5">
-                  <div className="flex justify-between">
-                    <span>Base Package ({wizardData.packageTier}):</span>
-                    <span className="font-semibold text-foreground">{getPackagePrice().toLocaleString()} RWF</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Custom Add-ons:</span>
-                    <span className="font-semibold text-foreground">{getAddonsPrice().toLocaleString()} RWF</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Crew & Operations ({wizardData.durationDays} days):</span>
-                    <span className="font-semibold text-foreground">{getCrewPrice().toLocaleString()} RWF</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span className="font-semibold text-foreground">{wizardSubtotal.toLocaleString()} RWF</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>VAT (18% Local Sales Tax):</span>
-                    <span className="font-semibold text-foreground">{wizardTax.toLocaleString()} RWF</span>
-                  </div>
-                  <div className="flex justify-between border-t border-border/40 pt-2.5 text-sm font-extrabold text-foreground">
-                    <span>Gross Total:</span>
-                    <span className="font-black text-foreground">{wizardTotal.toLocaleString()} RWF</span>
-                  </div>
-                  <div className="flex justify-between bg-secondary/10 p-2.5 rounded-lg border border-secondary/20 font-extrabold text-xs text-secondary">
-                    <span>30% Deposit Due Now:</span>
-                    <span>{wizardDeposit.toLocaleString()} RWF</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 10: MoMo Deposit Details */}
-            {wizardStep === 10 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="wizName" className="text-xs font-semibold text-muted-foreground">Full Name</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">Optional Hardware Add-ons</Label>
+                  <div className="space-y-2">
+                    {[
+                      { key: "subwoofer", label: "Extra Subwoofer System (Double 18\" Low-Frequency Cabinets)" },
+                      { key: "mic", label: "Additional Shure QLXD Wireless Microphone Kits" },
+                      { key: "spotlight", label: "High-power Follow Spotlight (Keynote & Stage)" }
+                    ].map((add) => {
+                      const active = wizardData.customAddons.includes(add.key);
+                      return (
+                        <label 
+                          key={add.key}
+                          className="flex items-center justify-between p-3 rounded-xl border border-border/40 hover:bg-muted/10 cursor-pointer select-none"
+                        >
+                          <span className="font-semibold text-xs">{add.label}</span>
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={(e) => {
+                              const newAddons = e.target.checked 
+                                ? [...wizardData.customAddons, add.key] 
+                                : wizardData.customAddons.filter(k => k !== add.key);
+                              setWizardData({ ...wizardData, customAddons: newAddons });
+                            }}
+                            className="rounded border-border text-secondary focus:ring-secondary h-4 w-4"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground">Include Dedicated Technical Crew</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-border/40 hover:bg-muted/10 cursor-pointer select-none">
+                      <span className="font-semibold text-xs">Certified Sound Engineer (Live Acoustic Tuning & Mixing)</span>
+                      <input
+                        type="checkbox"
+                        checked={wizardData.includeSoundEng}
+                        onChange={(e) => setWizardData({ ...wizardData, includeSoundEng: e.target.checked })}
+                        className="rounded border-border text-secondary focus:ring-secondary h-4 w-4"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-border/40 hover:bg-muted/10 cursor-pointer select-none">
+                      <span className="font-semibold text-xs">Videographer & Camera Crew (Live Video Switching)</span>
+                      <input
+                        type="checkbox"
+                        checked={wizardData.includeCameraCrew}
+                        onChange={(e) => setWizardData({ ...wizardData, includeCameraCrew: e.target.checked })}
+                        className="rounded border-border text-secondary focus:ring-secondary h-4 w-4"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 8: Client Information & Inquiry Message */}
+            {wizardStep === 8 && (
+              <div className="space-y-4">
+                <div className="p-3 rounded-xl bg-secondary/10 border border-secondary/20 text-xs text-foreground space-y-1">
+                  <div className="font-bold flex items-center gap-1.5 text-secondary">
+                    <Sparkles className="h-4 w-4 shrink-0" />
+                    <span>Inquiring for: {wizardData.category} ({wizardData.packageTier} Scale)</span>
+                  </div>
+                  <p className="text-muted-foreground text-[11px]">
+                    {wizardData.venueType === "indoor" ? "Indoor" : "Outdoor"} • {wizardData.capacity} attendees • Date: {wizardData.eventDate} ({wizardData.durationDays} day(s))
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wizName" className="text-xs font-semibold text-muted-foreground">Full Name *</Label>
                   <Input
                     id="wizName"
                     required
-                    placeholder="Your Name"
+                    placeholder="e.g. Jean Dupont"
                     value={wizardData.customerName}
                     onChange={(e) => setWizardData({ ...wizardData, customerName: e.target.value })}
                   />
                 </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="wizEmail" className="text-xs font-semibold text-muted-foreground">Email</Label>
+                    <Label htmlFor="wizEmail" className="text-xs font-semibold text-muted-foreground">Email Address *</Label>
                     <Input
                       id="wizEmail"
                       required
                       type="email"
-                      placeholder="email@example.com"
+                      placeholder="you@example.com"
                       value={wizardData.customerEmail}
                       onChange={(e) => setWizardData({ ...wizardData, customerEmail: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="wizPhone" className="text-xs font-semibold text-muted-foreground">MoMo Phone</Label>
+                    <Label htmlFor="wizPhone" className="text-xs font-semibold text-muted-foreground">Phone / WhatsApp *</Label>
                     <Input
                       id="wizPhone"
                       required
-                      placeholder="+250 78x xxx xxx"
-                      value={wizardData.momoPhone}
-                      onChange={(e) => setWizardData({ ...wizardData, momoPhone: e.target.value })}
+                      placeholder="+250 784 289 407"
+                      value={wizardData.customerPhone}
+                      onChange={(e) => setWizardData({ ...wizardData, customerPhone: e.target.value })}
                     />
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-500 flex gap-2">
-                  <Info className="h-4 w-4 shrink-0" />
-                  <span>Paying the 30% deposit secures the crew and locks down the equipment inventory for your selected date.</span>
+
+                <div className="space-y-1">
+                  <Label htmlFor="wizNotes" className="text-xs font-semibold text-muted-foreground">Message / Event Requirements</Label>
+                  <Textarea
+                    id="wizNotes"
+                    rows={3}
+                    placeholder="Tell us about your event venue, specific timeline, artist requirements, or questions..."
+                    value={wizardData.notes}
+                    onChange={(e) => setWizardData({ ...wizardData, notes: e.target.value })}
+                  />
+                </div>
+
+                {/* Direct Contact Links */}
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/40 space-y-2">
+                  <span className="text-[11px] font-bold text-muted-foreground block uppercase tracking-wider">
+                    Or Contact Our Production Team Directly:
+                  </span>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <a
+                      href={`https://wa.me/250784289407?text=${encodeURIComponent(
+                        `Hello Kundwa Events! I would like to inquire about ${wizardData.category} (${wizardData.packageTier} Scale) for ${wizardData.eventDate}.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 font-bold transition-colors"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" /> WhatsApp Us
+                    </a>
+                    <a
+                      href="tel:+250784289407"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 font-bold transition-colors"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> +250 784 289 407
+                    </a>
+                    <a
+                      href="mailto:info@kundwaib.com"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-foreground hover:bg-muted/80 font-bold transition-colors"
+                    >
+                      <Mail className="h-3.5 w-3.5" /> info@kundwaib.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 9: Submission Confirmation */}
+            {wizardStep === 9 && (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto">
+                  <Check className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Inquiry Added to Bookings!</h3>
+                  <p className="text-xs text-muted-foreground mt-2 max-w-sm mx-auto leading-relaxed">
+                    Thank you, <strong className="text-foreground">{wizardData.customerName}</strong>. Your inquiry for <strong className="text-foreground">{wizardData.category}</strong> has been saved directly to our bookings schedule. Our production director will get in touch with you shortly.
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-card border border-border/60 text-xs text-left space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Service:</span>
+                    <span className="font-semibold">{wizardData.category} ({wizardData.packageTier})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Event Date:</span>
+                    <span className="font-semibold">{wizardData.eventDate} ({wizardData.durationDays} days)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Contact:</span>
+                    <span className="font-semibold">{wizardData.customerPhone}</span>
+                  </div>
+                </div>
+                <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+                  <a
+                    href={`https://wa.me/250784289407?text=${encodeURIComponent(
+                      `Hello Kundwa Events! I submitted an inquiry for ${wizardData.category} for ${wizardData.eventDate}. My name is ${wizardData.customerName}.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold py-2.5 px-5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" /> Chat on WhatsApp Now
+                  </a>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setInquiryOpen(false);
+                      setWizardStep(1);
+                    }}
+                    className="rounded-xl text-xs font-bold"
+                  >
+                    Done / Close
+                  </Button>
                 </div>
               </div>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-4 border-t border-border/40 flex gap-3">
-            {wizardStep > 1 && wizardStep !== 5 && (
-              <Button
-                variant="outline"
-                onClick={handleWizardPrev}
-                className="px-6 rounded-xl font-bold"
-              >
-                Back
-              </Button>
-            )}
-            {wizardStep < 10 && wizardStep !== 5 && (
-              <Button
-                onClick={handleWizardNext}
-                className="btn-gold flex-1 py-3 rounded-xl font-bold gap-1"
-              >
-                Continue <ArrowRight className="h-4 w-4" />
-              </Button>
-            )}
-            {wizardStep === 10 && (
-              <Button
-                onClick={handleWizardSubmit}
-                disabled={!wizardData.customerName || !wizardData.momoPhone}
-                className="btn-gold flex-1 py-3 rounded-xl font-bold gap-1 shadow-lg"
-              >
-                Add Deposit to Cart <Check className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          {wizardStep <= 8 && (
+            <div className="pt-4 border-t border-border/40 flex gap-3">
+              {wizardStep > 1 && wizardStep !== 5 && (
+                <Button
+                  variant="outline"
+                  onClick={handleWizardPrev}
+                  className="px-6 rounded-xl font-bold"
+                >
+                  Back
+                </Button>
+              )}
+              {wizardStep < 8 && wizardStep !== 5 && (
+                <Button
+                  onClick={handleWizardNext}
+                  className="btn-gold flex-1 py-3 rounded-xl font-bold gap-1"
+                >
+                  Continue <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
+              {wizardStep === 8 && (
+                <Button
+                  onClick={handleWizardSubmit}
+                  disabled={!wizardData.customerName || !wizardData.customerPhone || !wizardData.customerEmail || wizardSubmitting}
+                  className="btn-gold flex-1 py-3 rounded-xl font-bold gap-1 shadow-lg"
+                >
+                  {wizardSubmitting ? (
+                    <>Submitting Inquiry <Loader2 className="h-4 w-4 animate-spin" /></>
+                  ) : (
+                    <>Submit Service Inquiry <Send className="h-4 w-4" /></>
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>

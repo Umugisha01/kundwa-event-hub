@@ -336,12 +336,14 @@ def seed():
             {
                 "client_name": "Sarah Keza, Event Director at TechCorp",
                 "message": "Kundwa IB Group transformed our annual summit. The sound was crystal clear, and the 50-meter LED screen was breathtaking.",
-                "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
+                "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+                "rating": 5
             },
             {
                 "client_name": "Jean-Paul Nsengimana, Lead Concert Organizer",
                 "message": "When it comes to sound systems and lighting setups in East Africa, there is no one else I trust. Absolute professionals.",
-                "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+                "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+                "rating": 5
             }
         ]
         for t in testimonials_data:

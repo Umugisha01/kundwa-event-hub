@@ -26,6 +26,17 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          equipment_name?: string | null
+          include_setup?: boolean | null
+          rental_days?: number | null
+          service_name?: string | null
+          start_date?: string | null
+          start_time?: string | null
         }
         Insert: {
           amount?: number | null
@@ -37,7 +48,18 @@ export type Database = {
           notes?: string | null
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          equipment_name?: string | null
+          include_setup?: boolean | null
+          rental_days?: number | null
+          service_name?: string | null
+          start_date?: string | null
+          start_time?: string | null
         }
         Update: {
           amount?: number | null
@@ -49,7 +71,18 @@ export type Database = {
           notes?: string | null
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          equipment_name?: string | null
+          include_setup?: boolean | null
+          rental_days?: number | null
+          service_name?: string | null
+          start_date?: string | null
+          start_time?: string | null
         }
         Relationships: [
           {
@@ -300,6 +333,7 @@ export type Database = {
           id: string
           image_url: string | null
           message: string
+          rating?: number
         }
         Insert: {
           client_name: string
@@ -307,6 +341,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           message: string
+          rating?: number
         }
         Update: {
           client_name?: string
@@ -314,6 +349,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           message?: string
+          rating?: number
         }
         Relationships: []
       }

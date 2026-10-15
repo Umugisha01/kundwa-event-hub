@@ -4,8 +4,8 @@ from datetime import datetime, timezone, timedelta
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from api.models import (
-    Profile, UserRole, FooterSettings, SiteStatistic, Service,
-    Equipment, Event, Testimonial, TrustedBrand, Portfolio
+    Profile, UserRole, FooterSettings, SiteStatistic, MainService, Service,
+    EquipmentCategory, Equipment, Event, Testimonial, TrustedBrand, Portfolio
 )
 
 class Command(BaseCommand):
@@ -61,6 +61,38 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Site statistics seeded."))
         else:
             self.stdout.write("Site statistics exist.")
+
+        # 3.5. Main Services
+        if not MainService.objects.exists():
+            main_services_data = [
+                {
+                    "title": "Event Production",
+                    "order": 1,
+                    "description": "From sound systems to lighting and custom stage design, we deliver world-class production for every scale.",
+                    "image_url": "/assets/lighting-system-nWaROWBf.jpg",
+                    "color": "from-primary/80 to-primary",
+                    "cta_text": "Inquire About Event Production"
+                },
+                {
+                    "title": "Event Management",
+                    "order": 2,
+                    "description": "End-to-end event strategy including multi-channel advertisement, brand identity, and secure ticketing solutions.",
+                    "image_url": "/assets/event-concert-BQ1lRCHR.jpg",
+                    "color": "from-secondary/80 to-secondary",
+                    "cta_text": "Inquire About Event Management"
+                },
+                {
+                    "title": "Corporate Events",
+                    "order": 3,
+                    "description": "Polished corporate conferences, gala dinners, summits, and executive networking productions that leave a mark.",
+                    "image_url": "/assets/event-corporate-Cw1XL7S-.jpg",
+                    "color": "from-foreground/70 to-foreground/90",
+                    "cta_text": "Inquire About Corporate Events"
+                }
+            ]
+            for ms in main_services_data:
+                MainService.objects.create(**ms)
+            self.stdout.write(self.style.SUCCESS("Main services seeded."))
 
         # 4. Services
         if not Service.objects.exists():
@@ -257,6 +289,18 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Services seeded successfully."))
         else:
             self.stdout.write("Services already exist.")
+
+        # 4.5. Equipment Categories
+        if not EquipmentCategory.objects.exists():
+            eq_cats = [
+                {"name": "Screens", "description": "High-resolution LED screens, video walls and projectors", "icon": "Monitor", "order": 1},
+                {"name": "Lighting", "description": "Moving heads, PAR wash lights, lasers, and controllers", "icon": "Lightbulb", "order": 2},
+                {"name": "Sound", "description": "Line arrays, subwoofers, digital mixing consoles and microphones", "icon": "Volume2", "order": 3},
+                {"name": "Stages", "description": "Modular staging platforms, risers, and heavy duty trussing", "icon": "Layers", "order": 4}
+            ]
+            for c in eq_cats:
+                EquipmentCategory.objects.create(**c)
+            self.stdout.write(self.style.SUCCESS("Equipment categories seeded."))
 
         # 5. Equipment
         if not Equipment.objects.exists():
@@ -508,7 +552,8 @@ class Command(BaseCommand):
                 {
                     "client_name": "Sarah Keza, Event Director at TechCorp",
                     "message": "Kundwa IB Group transformed our annual summit. The sound was crystal clear, and the 50-meter LED screen was breathtaking.",
-                    "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
+                    "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+                    "rating": 5
                 }
             ]
             for t in testimonials_data:

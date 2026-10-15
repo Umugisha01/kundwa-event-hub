@@ -11,13 +11,19 @@ import {
   Printer, 
   Ticket as TicketIcon,
   Minus,
-  Plus
+  Plus,
+  Clock,
+  ArrowLeft,
+  AlertCircle,
+  Sparkles,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { apiUrl } from "@/config/api";
 import { CalendarModal } from "./CalendarModal";
 
 interface TicketTier {
@@ -49,7 +55,7 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
   const { user } = useAuth();
 
   const [quantity, setQuantity] = useState(initialQuantity);
-  const [step, setStep] = useState<"details" | "processing" | "success">("details");
+  const [step, setStep] = useState<"details" | "momo_approval" | "processing" | "success">("details");
   const [paymentMethod, setPaymentMethod] = useState<"momo" | "airtel" | "card">("momo");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -60,6 +66,13 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdTicket, setCreatedTicket] = useState<any>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+
+  // MoMo USSD Push states
+  const [momoRef, setMomoRef] = useState<string | null>(null);
+  const [momoPhone, setMomoPhone] = useState<string>("");
+  const [momoTimer, setMomoTimer] = useState<number>(90);
+  const [isCheckingStatus, setIsCheckingStatus] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setQuantity(initialQuantity || 1);
@@ -73,21 +86,53 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
     }
   }, [user]);
 
+  // Polling and Countdown timer when awaiting MoMo PIN approval on phone
+  useEffect(() => {
+    if (step !== "momo_approval" || !momoRef) return;
+
+    const timer = setInterval(() => {
+      setMomoTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const poller = setInterval(async () => {
+      try {
+        const resp = await fetch(apiUrl(`/api/payments/momo/status/${momoRef}/`));
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.status === "successful") {
+            clearInterval(poller);
+            clearInterval(timer);
+            completeTicketGeneration();
+          } else if (data.status === "failed") {
+            clearInterval(poller);
+            clearInterval(timer);
+            setErrorMessage("Transaction was cancelled or declined on the phone.");
+          }
+        }
+      } catch (e) {
+        console.warn("Status polling error:", e);
+      }
+    }, 2500);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(poller);
+    };
+  }, [step, momoRef]);
+
   if (!isOpen) return null;
 
   const unitPrice = selectedTier.price || 0;
   const totalPrice = unitPrice * quantity;
 
-  const handlePurchase = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName || !email || !phone) {
-      alert("Please fill in your contact information");
-      return;
-    }
-
-    setStep("processing");
+  const completeTicketGeneration = async () => {
     setIsSubmitting(true);
-
     try {
       const generatedCode = `KIB-${(event?.title?.slice(0, 4) || "EVNT").toUpperCase()}-${Math.random()
         .toString(36)
@@ -115,6 +160,7 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
           attendee: fullName,
           date: event.date,
           venue: event.venue || event.location,
+          momo_ref: momoRef || undefined,
         }),
       };
 
@@ -124,15 +170,10 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
       }
 
       setCreatedTicket(data || ticketPayload);
-
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setStep("success");
-        if (onSuccess) onSuccess();
-      }, 1500);
+      setStep("success");
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       console.error("Error creating ticket:", err);
-      // Fallback display ticket so user experience is not blocked
       const fallbackTicket = {
         ticket_code: `KIB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         ticket_type: selectedTier.name,
@@ -144,9 +185,105 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
         status: "Active",
       };
       setCreatedTicket(fallbackTicket);
-      setIsSubmitting(false);
       setStep("success");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handlePurchase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName || !email || !phone) {
+      alert("Please fill in your contact information");
+      return;
+    }
+
+    setErrorMessage(null);
+
+    // If Paying via Mobile Money (MTN or Airtel)
+    if (paymentMethod === "momo" || paymentMethod === "airtel") {
+      setIsSubmitting(true);
+      try {
+        const resp = await fetch(apiUrl("/api/payments/momo/initiate/"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalPrice,
+            phone: phone,
+            event_id: event.id,
+            ticket_type: selectedTier.name,
+            tier_id: selectedTier.id,
+            customer_name: fullName,
+            customer_email: email,
+          }),
+        });
+
+        const data = await resp.json();
+        if (data.success && data.ref) {
+          setMomoRef(data.ref);
+          setMomoPhone(data.phone || phone);
+          setMomoTimer(90);
+          setStep("momo_approval");
+        } else {
+          const fallbackRef = `PK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+          setMomoRef(fallbackRef);
+          setMomoPhone(phone);
+          setMomoTimer(90);
+          setStep("momo_approval");
+        }
+      } catch (err) {
+        console.warn("MoMo API fallback:", err);
+        const fallbackRef = `PK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        setMomoRef(fallbackRef);
+        setMomoPhone(phone);
+        setMomoTimer(90);
+        setStep("momo_approval");
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      // Card flow
+      setStep("processing");
+      setIsSubmitting(true);
+      setTimeout(() => {
+        completeTicketGeneration();
+      }, 1800);
+    }
+  };
+
+  const checkPaymentStatusManual = async () => {
+    if (!momoRef) return;
+    setIsCheckingStatus(true);
+    try {
+      const resp = await fetch(apiUrl(`/api/payments/momo/status/${momoRef}/`));
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.status === "successful") {
+          await completeTicketGeneration();
+          return;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
+  const simulateApproveMoMo = async () => {
+    if (!momoRef) return;
+    setIsCheckingStatus(true);
+    try {
+      await fetch(apiUrl(`/api/payments/momo/approve-test/${momoRef}/`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+    await completeTicketGeneration();
+    setIsCheckingStatus(false);
   };
 
   const handlePrint = () => {
@@ -398,17 +535,137 @@ export const TicketCheckoutModal: React.FC<TicketCheckoutModalProps> = ({
               </form>
             )}
 
-            {/* Processing State */}
+            {/* MoMo USSD Approval Screen (Live Mobile Money Push Prompt) */}
+            {step === "momo_approval" && (
+              <div className="space-y-5 animate-in fade-in duration-300">
+                {/* Header with status badge */}
+                <div className="text-center space-y-2">
+                  <div className="relative inline-flex items-center justify-center">
+                    <span className="animate-ping absolute inline-flex h-12 w-12 rounded-full bg-amber-400 opacity-40"></span>
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center shadow-lg relative">
+                      <Smartphone className="w-6 h-6 animate-pulse" />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-extrabold text-foreground">
+                      Mobile Money Prompt Sent!
+                    </h4>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      Please check your phone screen right now to approve the transaction.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Simulated USSD Flash Prompt Card (Designed like real MTN/Airtel prompt in Screenshot 2) */}
+                <div className="rounded-2xl border-2 border-amber-500/30 bg-slate-950 text-white p-5 shadow-2xl relative overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2.5 mb-3.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                      <span className="text-[11px] font-black tracking-wider uppercase text-amber-400">
+                        {paymentMethod === "airtel" ? "Airtel Money USSD" : "MTN MoMo USSD Push"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400">Ref: {momoRef || "PENDING"}</span>
+                  </div>
+
+                  <div className="bg-black/50 border border-white/10 rounded-xl p-3.5 font-mono text-xs space-y-2 text-slate-200">
+                    <div className="text-slate-400 text-[11px]">Incoming USSD Prompt on Phone:</div>
+                    <div className="text-white font-bold text-sm">
+                      Select Transaction to Approve:
+                    </div>
+                    <div className="text-amber-300 font-bold text-sm">
+                      1) Kundwa Events : {totalPrice.toLocaleString()} RWF
+                    </div>
+                    <div className="text-[11px] text-slate-400 pt-1.5 border-t border-white/10 flex justify-between">
+                      <span>Target Line:</span>
+                      <span className="text-white font-semibold">{momoPhone || phone}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-2 text-xs text-amber-300/90 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
+                    <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
+                    <span>Enter your 5-digit MoMo PIN on your phone screen to complete.</span>
+                  </div>
+                </div>
+
+                {/* Fallback instruction banner */}
+                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50 text-xs space-y-1">
+                  <div className="font-bold text-foreground flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 text-secondary" />
+                    Prompt didn't pop up on your phone screen?
+                  </div>
+                  <p className="text-muted-foreground text-[11px] leading-relaxed">
+                    Dial <strong className="text-foreground font-mono">*182*7*1#</strong> (MTN Pending Approvals) on your phone to approve the transaction directly.
+                  </p>
+                </div>
+
+                {/* Live timer & progress */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-secondary" />
+                    Listening for phone PIN approval...
+                  </span>
+                  <span className="font-mono font-bold text-foreground">
+                    {Math.floor(momoTimer / 60)}:{(momoTimer % 60).toString().padStart(2, "0")}
+                  </span>
+                </div>
+
+                {errorMessage && (
+                  <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-xs flex items-center gap-2 border border-destructive/20 font-medium">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {/* Action Controls */}
+                <div className="space-y-2 pt-1">
+                  <Button
+                    type="button"
+                    onClick={checkPaymentStatusManual}
+                    disabled={isCheckingStatus}
+                    className="w-full py-5 rounded-xl font-bold btn-gold shadow-md gap-2 text-xs"
+                  >
+                    {isCheckingStatus ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Verifying Approval...</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4" /> Check Approval Status</>
+                    )}
+                  </Button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setStep("details")}
+                      className="py-4 text-xs font-semibold rounded-xl border-border"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Change Number
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={simulateApproveMoMo}
+                      disabled={isCheckingStatus}
+                      className="py-4 text-xs font-bold rounded-xl gap-1 text-secondary-foreground"
+                      title="Simulate instant PIN approval on phone for test"
+                    >
+                      <Check className="w-3.5 h-3.5 text-emerald-500" /> Test Approve (Demo)
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Processing State for Cards */}
             {step === "processing" && (
               <div className="py-16 text-center space-y-4">
                 <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
                 <h4 className="text-lg font-bold text-foreground">
-                  Processing Ticket Purchase...
+                  Processing Card Payment...
                 </h4>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  {paymentMethod === "momo" || paymentMethod === "airtel"
-                    ? `Please approve the prompt on your phone (${phone}) or standby for instant verification.`
-                    : "Connecting to secure banking network and generating QR code..."}
+                  Connecting to secure banking network and generating QR ticket pass...
                 </p>
               </div>
             )}

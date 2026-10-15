@@ -6,13 +6,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import (
-    Profile, UserRole, Event, Service, Equipment, Booking, Ticket,
+    Profile, UserRole, Event, MainService, Service, EquipmentCategory, Equipment, Booking, Ticket,
     ChatMessage, FooterSettings, HeroSettings, Portfolio, ContactSubmission,
     Testimonial, TrustedBrand, SiteStatistic
 )
 from .serializers import (
     ProfileSerializer, UserRoleSerializer,
-    EventSerializer, ServiceSerializer, EquipmentSerializer,
+    EventSerializer, MainServiceSerializer, ServiceSerializer, EquipmentCategorySerializer, EquipmentSerializer,
     BookingSerializer, TicketSerializer, ChatMessageSerializer,
     FooterSettingsSerializer, HeroSettingsSerializer, PortfolioSerializer, ContactSubmissionSerializer,
     TestimonialSerializer, TrustedBrandSerializer, SiteStatisticSerializer
@@ -33,10 +33,12 @@ class IsAdminOrInsertOnly(permissions.BasePermission):
 
 class BookingPermission(permissions.BasePermission):
     def has_permission(self, request, view):
+        if request.method == 'POST':
+            return True
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        if request.user.roles.filter(role='admin').exists():
+        if request.user and request.user.is_authenticated and request.user.roles.filter(role='admin').exists():
             return True
         return obj.user == request.user
 
@@ -74,6 +76,24 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_featured=is_featured.lower() == 'true')
         return queryset
 
+class MainServiceViewSet(viewsets.ModelViewSet):
+    queryset = MainService.objects.all().order_by('order', 'title')
+    serializer_class = MainServiceSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_title = instance.title
+        updated_instance = serializer.save()
+        if old_title != updated_instance.title:
+            # Sync category name across sub-services
+            Service.objects.filter(category=old_title).update(category=updated_instance.title)
+
+    def perform_destroy(self, instance):
+        # Delete child sub-services when main service package is deleted
+        Service.objects.filter(category=instance.title).delete()
+        instance.delete()
+
 class ServiceViewSet(viewsets.ModelViewSet):
     serializer_class = ServiceSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -81,14 +101,42 @@ class ServiceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Service.objects.all().order_by('name')
         slug = self.request.query_params.get('slug')
+        category = self.request.query_params.get('category')
         if slug is not None:
             queryset = queryset.filter(slug=slug)
+        if category is not None:
+            queryset = queryset.filter(category=category)
         return queryset
 
+class EquipmentCategoryViewSet(viewsets.ModelViewSet):
+    queryset = EquipmentCategory.objects.all().order_by('order', 'name')
+    serializer_class = EquipmentCategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_name = instance.name
+        updated_instance = serializer.save()
+        if old_name != updated_instance.name:
+            Equipment.objects.filter(category=old_name).update(category=updated_instance.name)
+
+    def perform_destroy(self, instance):
+        Equipment.objects.filter(category=instance.name).update(category='Other')
+        instance.delete()
+
 class EquipmentViewSet(viewsets.ModelViewSet):
-    queryset = Equipment.objects.all().order_by('name')
     serializer_class = EquipmentSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Equipment.objects.all().order_by('name')
+        category = self.request.query_params.get('category')
+        status_param = self.request.query_params.get('status')
+        if category and category != 'All':
+            queryset = queryset.filter(category=category)
+        if status_param and status_param != 'All':
+            queryset = queryset.filter(status=status_param)
+        return queryset
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
@@ -103,7 +151,10 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Booking.objects.filter(user=user).order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        if self.request.user and self.request.user.is_authenticated:
+            serializer.save(user=self.request.user)
+        else:
+            serializer.save()
 
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
@@ -311,3 +362,53 @@ class FileUploadView(APIView):
         url = f"/media/{path}"
 
         return Response({'url': url}, status=status.HTTP_201_CREATED)
+
+class MoMoInitiatePaymentView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from .paypack import initiate_momo_cashin, format_rwanda_phone
+
+        amount = request.data.get('amount')
+        phone = request.data.get('phone')
+
+        if not amount or not phone:
+            return Response(
+                {'error': 'Amount and phone number are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            amount_val = int(amount)
+            if amount_val <= 0:
+                raise ValueError("Amount must be positive.")
+        except Exception:
+            return Response(
+                {'error': 'Invalid amount value.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        res = initiate_momo_cashin(
+            amount=amount_val,
+            phone=phone,
+            metadata=request.data
+        )
+
+        return Response(res, status=status.HTTP_200_OK if res.get('success') else status.HTTP_400_BAD_REQUEST)
+
+class MoMoPaymentStatusView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, ref):
+        from .paypack import check_momo_status
+        res = check_momo_status(ref)
+        return Response(res, status=status.HTTP_200_OK)
+
+class MoMoApproveSimulationView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, ref):
+        from .paypack import approve_momo_simulation
+        res = approve_momo_simulation(ref)
+        return Response(res, status=status.HTTP_200_OK)
+

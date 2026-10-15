@@ -3,19 +3,45 @@ import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Play, X, FolderKanban, AlertCircle, RefreshCw } from "lucide-react";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Play, 
+  X, 
+  FolderKanban, 
+  AlertCircle, 
+  RefreshCw, 
+  Image as ImageIcon,
+  Calendar,
+  Building,
+  Video
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveMediaUrl } from "@/config/api";
 import { useTheme } from "@/contexts/ThemeContext";
+import { UniversalVideoPlayer } from "@/components/video/UniversalVideoPlayer";
 import heroImg from "@/assets/hero-event.jpg";
+
+interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  thumbnail: string;
+  images: string[];
+  hasMultipleImages: boolean;
+  videoUrl?: string;
+  date: string;
+  client?: string;
+}
 
 const Portfolio = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [activeModalTab, setActiveModalTab] = useState<"photos" | "video">("photos");
+  const [projects, setProjects] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -32,17 +58,31 @@ const Portfolio = () => {
         setFetchError("Unable to retrieve portfolio projects.");
         setProjects([]);
       } else if (data && data.length > 0) {
-        const mapped = data.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          category: p.category,
-          description: p.description,
-          thumbnail: resolveMediaUrl(p.thumbnail, heroImg),
-          images: (p.images && Array.isArray(p.images) ? p.images : []).map((img: string) => resolveMediaUrl(img, heroImg)),
-          videoUrl: p.video_url ? resolveMediaUrl(p.video_url) : undefined,
-          date: p.date,
-          client: p.client
-        }));
+        const mapped: PortfolioItem[] = data.map((p: any) => {
+          const rawExtra = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+          
+          // Additional images are optional. If none are provided, the gallery displays the main thumbnail.
+          const resolvedThumbnail = resolveMediaUrl(p.thumbnail, heroImg);
+          const gallery = rawExtra.length > 0
+            ? rawExtra.map((img: string) => resolveMediaUrl(img, heroImg))
+            : [resolvedThumbnail];
+
+          // True if there is more than 1 photo or extra photos were uploaded
+          const hasMultiple = rawExtra.length > 0 && !(rawExtra.length === 1 && rawExtra[0] === p.thumbnail);
+
+          return {
+            id: p.id,
+            title: p.title || "Project",
+            category: p.category || "Event Production",
+            description: p.description || "",
+            thumbnail: resolvedThumbnail,
+            images: gallery,
+            hasMultipleImages: hasMultiple,
+            videoUrl: p.video_url?.trim() || undefined,
+            date: p.date || "",
+            client: p.client || undefined
+          };
+        });
         setProjects(mapped);
       } else {
         setProjects([]);
@@ -75,6 +115,12 @@ const Portfolio = () => {
     }
   };
 
+  const closeModal = () => {
+    setSelectedProject(null);
+    setSelectedImageIndex(0);
+    setActiveModalTab("photos");
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -91,11 +137,11 @@ const Portfolio = () => {
             }}
           />
 
-          {/* Ambient blurred glow layers (Purple top-left, Blue bottom-right) */}
+          {/* Ambient blurred glow layers */}
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[55%] h-[55%] rounded-full bg-secondary/10 blur-[130px] pointer-events-none" />
 
-          {/* Waves/Flowing Curves (Subtle Opacity SVGs) */}
+          {/* Flowing Curves */}
           <svg className="absolute inset-0 w-full h-full opacity-[0.04] md:opacity-[0.06]" viewBox="0 0 1440 400" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M-100,100 C150,20 400,220 800,80 C1100,10 1300,180 1550,120 L1550,450 L-100,450 Z" fill="url(#bg-wave-gradient-1)" />
             <path d="M-100,200 C300,120 600,320 1000,180 C1300,80 1450,250 1550,220 L1550,450 L-100,450 Z" fill="url(#bg-wave-gradient-2)" />
@@ -127,27 +173,15 @@ const Portfolio = () => {
           <svg className="absolute bottom-[15%] right-[10%] w-6 h-6 text-purple-400/20 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
             <path d="M12 3L2 21h20L12 3z" />
           </svg>
-
-          {/* Diagonal slash lines */}
-          <svg className="absolute top-[28%] left-[22%] w-16 h-16 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
-          <svg className="absolute top-[18%] right-[28%] w-14 h-14 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
-          <svg className="absolute bottom-[12%] left-[16%] w-12 h-12 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
-          <svg className="absolute bottom-[15%] right-[28%] w-14 h-14 text-sky-400/15" viewBox="0 0 100 100" stroke="currentColor" strokeWidth="1.5">
-            <line x1="10" y1="90" x2="90" y2="10" />
-          </svg>
         </div>
 
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Our Work</span>
-          <h1 className="text-4xl md:text-6xl font-bold mt-3 mb-5">Our Portfolio</h1>
-          <p className="text-white/80 max-w-2xl mx-auto text-lg font-medium">
-            Explore our recent projects showcasing professional event production, sound engineering, and stage design.
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <span className="inline-block py-1 px-3 rounded-full bg-secondary/15 border border-secondary/30 text-secondary text-xs uppercase tracking-widest font-semibold mb-3">
+            Our Proven Track Record
+          </span>
+          <h1 className="text-4xl md:text-6xl font-extrabold mt-2 mb-4 tracking-tight">Our Portfolio</h1>
+          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+            Explore our recent projects showcasing professional event production, sound engineering, stage lighting, and creative designs.
           </p>
         </div>
       </section>
@@ -172,11 +206,11 @@ const Portfolio = () => {
               <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6 leading-relaxed">
                 {fetchError
                   ? "We are unable to reach the portfolio database right now. Please verify your connection or contact our team directly."
-                  : "We are currently curating and uploading high-definition photo galleries and video reels from our latest productions across East Africa. Reach out to request our full agency credentials deck."}
+                  : "We are currently curating and uploading high-definition photo galleries and video reels from our latest productions across East Africa."}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <Link to="/contact">
-                  <Button className="btn-gold">Request Credentials Deck</Button>
+                  <Button className="btn-gold">Contact Production Team</Button>
                 </Link>
                 <Button variant="outline" onClick={() => fetchPortfolio()} className="gap-2">
                   <RefreshCw className="h-4 w-4" /> Try Again
@@ -185,63 +219,89 @@ const Portfolio = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {projects.map((project) => (
+              {projects.map((item) => (
                 <div
-                  key={project.id}
-                  className="group cursor-pointer bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-2xl transition-all duration-300"
+                  key={item.id}
+                  onClick={() => {
+                    setSelectedProject(item.id);
+                    setSelectedImageIndex(0);
+                    setActiveModalTab(item.videoUrl ? "video" : "photos");
+                  }}
+                  className="group cursor-pointer bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col hover:-translate-y-1"
                 >
-                  {/* Project Thumbnail */}
-                  <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-700">
+                  {/* Project Thumbnail & Quick Actions */}
+                  <div className="relative h-56 overflow-hidden bg-slate-900">
                     <img
-                      src={project.thumbnail}
-                      alt={project.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                    
+                    {/* Dark gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    {/* Top Badges */}
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                      <span className="bg-primary/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow">
+                        {item.category}
+                      </span>
+                      {item.videoUrl && (
+                        <span className="flex items-center gap-1 bg-red-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow">
+                          <Play className="w-3 h-3 fill-current" /> Video
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Hover Quick Action Buttons */}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 z-20">
                       <button
-                        onClick={() => {
-                          setSelectedProject(project.id);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProject(item.id);
                           setSelectedImageIndex(0);
+                          setActiveModalTab("photos");
                         }}
-                        className="bg-primary hover:bg-primary/90 text-white p-3 rounded-full transition"
-                        title="View images"
+                        className="bg-white/90 hover:bg-white text-slate-900 p-3 rounded-full transition shadow-lg hover:scale-110 flex items-center gap-1.5 text-xs font-semibold px-4"
+                        title="View Photos"
                       >
-                        <ChevronRight className="w-6 h-6" />
+                        <ImageIcon className="w-4 h-4 text-primary" /> Photos
                       </button>
-                      {project.videoUrl && (
+                      {item.videoUrl && (
                         <button
-                          onClick={() => {
-                            setSelectedProject(project.id);
-                            setShowVideoModal(true);
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProject(item.id);
+                            setActiveModalTab("video");
                           }}
-                          className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition"
-                          title="Watch video"
+                          className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition shadow-lg hover:scale-110 flex items-center gap-1.5 text-xs font-semibold px-4"
+                          title="Play Video"
                         >
-                          <Play className="w-6 h-6 fill-current" />
+                          <Play className="w-4 h-4 fill-current" /> Watch Video
                         </button>
                       )}
                     </div>
                   </div>
 
                   {/* Project Info */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">{project.title}</h3>
-                      {project.videoUrl && (
-                        <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">
-                          Video
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-2 group-hover:text-primary transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-500 pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 font-medium">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" /> {item.date}
+                      </span>
+                      {item.client && (
+                        <span className="flex items-center gap-1 truncate max-w-[150px]">
+                          <Building className="w-3.5 h-3.5" /> {item.client}
                         </span>
                       )}
-                    </div>
-                    <p className="text-primary text-sm font-semibold mb-2">
-                      {project.category}
-                    </p>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                      {project.description}
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-600">
-                      <span>{project.date}</span>
-                      {project.client && <span>{project.client}</span>}
                     </div>
                   </div>
                 </div>
@@ -251,141 +311,173 @@ const Portfolio = () => {
         </div>
       </div>
 
-      {/* Image Gallery Modal */}
-      {project && !showVideoModal && (
-        <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <button
-              onClick={() => setSelectedProject(null)}
-              className="absolute top-4 right-4 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-white p-2 rounded z-50"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="bg-white dark:bg-slate-950 rounded-lg overflow-hidden">
-              {/* Main Image */}
-              <div className="relative bg-black">
-                <img
-                  src={project.images[selectedImageIndex]}
-                  alt={`${project.title} - Image ${selectedImageIndex + 1}`}
-                  className="w-full h-auto max-h-[60vh] object-cover"
-                />
-
-                {/* Navigation Buttons */}
-                {project.images.length > 1 && (
-                  <>
-                    <button
-                      onClick={handlePrevImage}
-                      disabled={selectedImageIndex === 0}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <button
-                      onClick={handleNextImage}
-                      disabled={selectedImageIndex === project.images.length - 1}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
-                  </>
-                )}
+      {/* Unified Project Modal (Photos & Universal Video Player) */}
+      {project && (
+        <Dialog open={!!selectedProject} onOpenChange={(open) => { if (!open) closeModal(); }}>
+          <DialogContent className="max-w-4xl max-h-[92vh] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-0 overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 z-20">
+              <div className="flex items-center gap-3 min-w-0 pr-4">
+                <div className="min-w-0">
+                  <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-50 truncate">
+                    {project.title}
+                  </h2>
+                  <p className="text-xs text-primary font-medium">{project.category}</p>
+                </div>
               </div>
 
-              {/* Project Details */}
-              <div className="p-6 text-white dark:text-slate-50">
-                <h2 className="text-3xl font-bold mb-2">{project.title}</h2>
-                <p className="text-primary font-semibold mb-3">{project.category}</p>
-                <p className="text-slate-300 dark:text-slate-400 mb-4">{project.description}</p>
+              <div className="flex items-center gap-2">
+                {/* Switch between Photos & Video if project has both */}
+                {project.videoUrl && (
+                  <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
+                    <button
+                      onClick={() => setActiveModalTab("photos")}
+                      className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+                        activeModalTab === "photos"
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                      <span>Photos</span>
+                      {project.hasMultipleImages && (
+                        <span className="text-[10px] opacity-75">({project.images.length})</span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setActiveModalTab("video")}
+                      className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+                        activeModalTab === "video"
+                          ? "bg-red-600 text-white shadow-sm"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Video</span>
+                    </button>
+                  </div>
+                )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-slate-400 dark:text-slate-500">
-                  <span>📅 {project.date}</span>
-                  {project.client && <span>🏢 {project.client}</span>}
+                <button
+                  onClick={closeModal}
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-lg transition"
+                  title="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Scrollable Content */}
+            <div className="overflow-y-auto flex-1">
+              {/* VIDEO TAB */}
+              {activeModalTab === "video" && project.videoUrl ? (
+                <div className="p-4 sm:p-6 bg-slate-950 flex flex-col items-center">
+                  <UniversalVideoPlayer
+                    url={project.videoUrl}
+                    title={project.title}
+                    className="max-w-3xl shadow-2xl"
+                  />
+                </div>
+              ) : (
+                /* PHOTOS TAB */
+                <div className="relative bg-black flex flex-col items-center justify-center">
+                  <div className="relative w-full max-h-[55vh] flex justify-center items-center overflow-hidden bg-black">
+                    <img
+                      src={project.images[selectedImageIndex] || project.thumbnail}
+                      alt={`${project.title} - Photo ${selectedImageIndex + 1}`}
+                      className="w-full h-auto max-h-[55vh] object-contain select-none"
+                    />
+
+                    {/* Navigation Buttons (Only shown if multiple images exist) */}
+                    {project.hasMultipleImages && project.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={handlePrevImage}
+                          disabled={selectedImageIndex === 0}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2.5 rounded-full transition shadow-lg"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <button
+                          onClick={handleNextImage}
+                          disabled={selectedImageIndex === project.images.length - 1}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2.5 rounded-full transition shadow-lg"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Thumbnail Strip (Only shown if multiple images exist) */}
+                  {project.hasMultipleImages && project.images.length > 1 && (
+                    <div className="w-full bg-slate-900/90 py-3 px-6 flex items-center justify-between border-t border-slate-800">
+                      <span className="text-xs text-slate-400 font-medium">
+                        Photo {selectedImageIndex + 1} of {project.images.length}
+                      </span>
+                      <div className="flex gap-2 overflow-x-auto max-w-md py-1">
+                        {project.images.map((img, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setSelectedImageIndex(idx)}
+                            className={`w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden border-2 transition ${
+                              idx === selectedImageIndex
+                                ? "border-primary scale-105 shadow-md"
+                                : "border-slate-700 opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <img
+                              src={img}
+                              alt={`Thumbnail ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Project Description & Details */}
+              <div className="p-6 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 space-y-4">
+                <div className="flex flex-wrap items-center gap-6 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Calendar className="w-4 h-4 text-primary" /> {project.date}
+                  </span>
+                  {project.client && (
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Building className="w-4 h-4 text-primary" /> Client: {project.client}
+                    </span>
+                  )}
+                  {project.videoUrl && (
+                    <span className="flex items-center gap-1.5 font-medium text-red-500">
+                      <Video className="w-4 h-4" /> Video Included
+                    </span>
+                  )}
                 </div>
 
-                {/* Image Counter */}
-                {project.images.length > 1 && (
-                  <div className="mt-4 pt-4 border-t border-slate-700 dark:border-slate-800 text-sm text-slate-400 dark:text-slate-500">
-                    Image {selectedImageIndex + 1} of {project.images.length}
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Project Overview
+                  </h4>
+                  <p className="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">
+                    {project.description}
+                  </p>
+                </div>
 
-                {/* Thumbnail Strip */}
-                {project.images.length > 1 && (
-                  <div className="mt-4 flex gap-2 overflow-x-auto">
-                    {project.images.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedImageIndex(idx)}
-                        className={`w-16 h-16 rounded flex-shrink-0 overflow-hidden border-2 transition ${
-                          idx === selectedImageIndex
-                            ? "border-primary"
-                            : "border-slate-700 dark:border-slate-800 hover:border-slate-600 dark:hover:border-slate-700"
-                        }`}
-                      >
-                        <img
-                          src={img}
-                          alt={`Thumbnail ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Video Button */}
-                {project.videoUrl && (
+                {/* Quick switch to video button if on photos tab */}
+                {activeModalTab === "photos" && project.videoUrl && (
                   <Button
-                    onClick={() => setShowVideoModal(true)}
-                    className="w-full mt-6 bg-red-600 hover:bg-red-700"
+                    onClick={() => setActiveModalTab("video")}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white gap-2 font-semibold shadow-md"
                   >
-                    <Play className="w-4 h-4 mr-2 fill-current" />
-                    Watch Video
+                    <Play className="w-4 h-4 fill-current" />
+                    Watch Production Video
                   </Button>
                 )}
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Video Modal */}
-      {project && showVideoModal && project.videoUrl && (
-        <Dialog open={showVideoModal} onOpenChange={() => setShowVideoModal(false)}>
-          <DialogContent className="max-w-4xl bg-white dark:bg-slate-950 border-0 p-0">
-            <button
-              onClick={() => setShowVideoModal(false)}
-              className="absolute top-4 right-4 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-white p-2 rounded z-50"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <div className="w-full bg-slate-950 dark:bg-black flex justify-center items-center">
-              {project.videoUrl.endsWith('.mp4') || 
-               project.videoUrl.endsWith('.webm') || 
-               project.videoUrl.endsWith('.ogg') || 
-               project.videoUrl.includes('/media/') ? (
-                <video
-                  src={project.videoUrl}
-                  controls
-                  autoPlay
-                  className="w-full max-h-[500px]"
-                />
-              ) : (
-                <iframe
-                  width="100%"
-                  height="500"
-                  src={project.videoUrl}
-                  title={project.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full"
-                ></iframe>
-              )}
-            </div>
-            <div className="p-6 bg-slate-900 dark:bg-slate-950 text-white dark:text-slate-50">
-              <h3 className="text-2xl font-bold mb-2">{project.title}</h3>
-              <p className="text-slate-400 dark:text-slate-500">{project.description}</p>
             </div>
           </DialogContent>
         </Dialog>

@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, X, Download, FileText, Search, Quote } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Download, FileText, Search, Quote, Star } from "lucide-react";
 import { exportToExcel, exportToPDF } from "@/utils/export";
 import { FileUpload } from "./FileUpload";
 
 export function AdminTestimonials() {
   const [items, setItems] = useState<any[]>([]);
   const [form, setForm] = useState<any>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -36,7 +37,8 @@ export function AdminTestimonials() {
     const payload = { 
       client_name: form.client_name, 
       message: form.message, 
-      image_url: form.image_url 
+      image_url: form.image_url,
+      rating: Number(form.rating) || 5
     };
 
     try {
@@ -78,6 +80,7 @@ export function AdminTestimonials() {
     const exportData = filteredItems.map(t => ({
       ID: t.id,
       "Client Name": t.client_name,
+      Rating: `${t.rating || 5} Stars`,
       Message: t.message,
       "Avatar URL": t.image_url || "N/A"
     }));
@@ -87,9 +90,14 @@ export function AdminTestimonials() {
   const handleExportPDF = () => {
     const columns = [
       { header: "Client Name", key: "client_name" },
+      { header: "Rating", key: "rating_text" },
       { header: "Feedback Message", key: "message" }
     ];
-    exportToPDF("What Clients Say — Testimonials Report", columns, filteredItems);
+    const dataWithRating = filteredItems.map(t => ({
+      ...t,
+      rating_text: `${t.rating || 5} / 5 Stars`
+    }));
+    exportToPDF("What Clients Say — Testimonials Report", columns, dataWithRating);
   };
 
   return (
@@ -104,7 +112,7 @@ export function AdminTestimonials() {
           <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-1.5 flex-1 sm:flex-initial">
             <FileText className="h-4 w-4" /> PDF
           </Button>
-          <Button className="btn-gold gap-1.5 flex-1 sm:flex-initial" onClick={() => { setForm({ client_name: "", message: "", image_url: "" }); setEditId(null); }}>
+          <Button className="btn-gold gap-1.5 flex-1 sm:flex-initial" onClick={() => { setForm({ client_name: "", message: "", image_url: "", rating: 5 }); setEditId(null); }}>
             <Plus className="h-4 w-4" /> Add Feedback
           </Button>
         </div>
@@ -143,6 +151,68 @@ export function AdminTestimonials() {
             </div>
           </div>
 
+          {/* Star Rating Section */}
+          <div className="space-y-2 p-3.5 rounded-xl bg-muted/20 border border-border/50">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-foreground font-semibold flex items-center gap-1.5">
+                <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                Rating (Stars) *
+              </label>
+              <span className="text-xs font-bold text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/20">
+                {form.rating || 5} of 5 Stars
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              {/* Clickable 5 Stars */}
+              <div 
+                className="flex items-center gap-1.5 bg-background/60 px-3 py-1.5 rounded-lg border border-border/60"
+                onMouseLeave={() => setHoverRating(null)}
+              >
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const activeScore = hoverRating !== null ? hoverRating : (form.rating || 5);
+                  const isFilled = star <= activeScore;
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      onMouseEnter={() => setHoverRating(star)}
+                      onClick={() => setForm({ ...form, rating: star })}
+                      className="p-1 rounded hover:scale-125 transition-transform focus:outline-none cursor-pointer"
+                      title={`${star} Star${star > 1 ? "s" : ""}`}
+                    >
+                      <Star
+                        className={`h-6 w-6 transition-colors ${
+                          isFilled
+                            ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                            : "text-muted-foreground/30 fill-transparent hover:text-amber-400/50"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Quick Select Buttons */}
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setForm({ ...form, rating: num })}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                      (form.rating || 5) === num
+                        ? "bg-amber-400 text-slate-950 shadow-sm ring-2 ring-amber-400/30"
+                        : "bg-muted/40 hover:bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {num} ★
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground font-semibold">Testimonial Quote / Message *</label>
             <Textarea placeholder="Kundwa IB Group exceeded all our event production expectations..." rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
@@ -163,6 +233,7 @@ export function AdminTestimonials() {
               <tr className="border-b border-border/60 bg-muted/30">
                 <th className="p-3 font-semibold text-muted-foreground w-16">Avatar</th>
                 <th className="p-3 font-semibold text-muted-foreground w-44">Client</th>
+                <th className="p-3 font-semibold text-muted-foreground w-36">Rating</th>
                 <th className="p-3 font-semibold text-muted-foreground">Feedback Quote</th>
                 <th className="p-3 font-semibold text-muted-foreground text-right w-24">Actions</th>
               </tr>
@@ -184,12 +255,31 @@ export function AdminTestimonials() {
                   <td className="p-3 font-semibold text-foreground">
                     {t.client_name}
                   </td>
+                  <td className="p-3 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${
+                              i < (Number(t.rating) > 0 ? Number(t.rating) : 5)
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-muted-foreground/30 fill-transparent"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-foreground">
+                        {Number(t.rating) > 0 ? Number(t.rating) : 5}★
+                      </span>
+                    </div>
+                  </td>
                   <td className="p-3">
                     <p className="text-xs text-muted-foreground line-clamp-2 italic">"{t.message}"</p>
                   </td>
                   <td className="p-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm(t); setEditId(t.id); }}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm({ ...t, rating: t.rating ?? 5 }); setEditId(t.id); }}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(t.id)}>
@@ -201,7 +291,7 @@ export function AdminTestimonials() {
               ))}
               {filteredItems.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-muted-foreground text-sm">
+                  <td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">
                     No testimonials found.
                   </td>
                 </tr>
@@ -227,13 +317,30 @@ export function AdminTestimonials() {
               )}
               <div>
                 <h4 className="font-bold text-foreground text-sm">{t.client_name}</h4>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <div className="flex items-center">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3 w-3 ${
+                          i < (Number(t.rating) > 0 ? Number(t.rating) : 5)
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground/30 fill-transparent"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-semibold text-muted-foreground ml-1">
+                    ({Number(t.rating) > 0 ? Number(t.rating) : 5}/5)
+                  </span>
+                </div>
               </div>
             </div>
             <p className="text-xs text-muted-foreground italic bg-muted/10 p-2.5 rounded-lg border border-border/30">
               "{t.message}"
             </p>
             <div className="flex justify-end gap-1.5 pt-2 border-t border-border/40">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm(t); setEditId(t.id); }}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setForm({ ...t, rating: t.rating ?? 5 }); setEditId(t.id); }}>
                 <Edit2 className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => remove(t.id)}>

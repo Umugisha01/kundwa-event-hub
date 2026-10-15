@@ -11,9 +11,13 @@ export interface CartItem {
   // Specific fields
   startDate?: string;
   endDate?: string;
+  startTime?: string;
+  endTime?: string;
   days?: number;
   includeSetup?: boolean;
   packageType?: string;
+  notes?: string;
+  equipmentId?: string;
 }
 
 interface CartContextType {

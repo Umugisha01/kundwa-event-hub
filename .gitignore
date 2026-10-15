@@ -43,6 +43,10 @@ venv/
 .venv/
 env/
 .env
+**/.env
+*.env.*
+*.dump
+kundwa-backend/db.sqlite3
 kundwa-backend/staticfiles/
 
 

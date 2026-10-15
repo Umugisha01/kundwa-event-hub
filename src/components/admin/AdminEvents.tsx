@@ -38,7 +38,7 @@ const empty = {
   venue: "UR Gikondo Campus",
   organizer: "ROTARY CLUB KIGALI VIRUNGA",
   category: "FESTIVAL",
-  phone: "+250789808030",
+  phone: "+250 784 289 407",
   image_url: "", 
   is_featured: false, 
   ticket_price: 5000, 
@@ -313,7 +313,7 @@ export function AdminEvents() {
         <div className="card-premium p-4 flex items-center gap-3">
           <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500"><Award className="h-5 w-5" /></div>
           <div>
-            <p className="text-xs text-muted-foreground font-semibold">Featured Shows</p>
+            <p className="text-xs text-muted-foreground font-semibold">Featured Concerts</p>
             <p className="text-xl font-bold text-foreground">{events.filter(e => e.is_featured).length}</p>
           </div>
         </div>
@@ -465,7 +465,7 @@ export function AdminEvents() {
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground font-semibold">Contact / Inquiry Phone</label>
               <Input 
-                placeholder="e.g. +250789808030" 
+                placeholder="e.g. +250 784 289 407" 
                 value={form.phone} 
                 onChange={(e) => setForm({ ...form, phone: e.target.value })} 
               />

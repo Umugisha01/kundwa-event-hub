@@ -170,8 +170,8 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
     }
   };
 
-  // Calculated KPI Metrics
-  const totalRevenue = bookings.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0) +
+  // Calculated KPI Metrics (Ticket sales generate revenue, service bookings are inquiries)
+  const totalRevenue = bookings.filter((b) => b.booking_type === "event").reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0) +
     tickets.reduce((sum, t) => sum + (parseFloat(t.total_price) || 0), 0);
 
   const totalTicketsSold = tickets.reduce((sum, t) => sum + (parseInt(t.quantity) || 1), 0) +
@@ -184,8 +184,8 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
   // Filtered recent activities for the template-style table
   const filteredBookings = bookings.filter((b) => {
     const q = tableSearch.toLowerCase();
-    const customer = (b.profiles?.full_name || b.profiles?.email || "Guest Client").toLowerCase();
-    const item = (b.booking_type === "event" ? b.events?.title : b.equipment?.name || "Service").toLowerCase();
+    const customer = (b.customer_name || b.profiles?.full_name || b.profiles?.email || "Guest Client").toLowerCase();
+    const item = (b.booking_type === "service" ? (b.service_name || "Service") : b.booking_type === "event" ? (b.events?.title || "") : (b.equipment_name || b.equipment?.name || "Equipment")).toLowerCase();
     const matchesSearch = customer.includes(q) || item.includes(q);
     const matchesFilter = tableFilter === "all" || b.status?.toLowerCase() === tableFilter.toLowerCase();
     return matchesSearch && matchesFilter;
@@ -556,12 +556,14 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
                 </tr>
               ) : (
                 filteredBookings.slice(0, 8).map((b) => {
-                  const clientName = b.profiles?.full_name || b.customer_name || "Private Client";
-                  const clientEmail = b.profiles?.email || b.customer_email || "direct-booking@kundwa.rw";
+                  const clientName = b.customer_name || b.profiles?.full_name || "Valued Client";
+                  const clientEmail = b.customer_email || b.profiles?.email || "direct-booking@kundwa.rw";
                   const initials = clientName.slice(0, 2).toUpperCase();
-                  const itemTitle = b.booking_type === "event"
+                  const itemTitle = b.booking_type === "service"
+                    ? b.service_name || "Event Production Service"
+                    : b.booking_type === "event"
                     ? b.events?.title || "Concert / Festival Pass"
-                    : b.equipment?.name || "Production Rig";
+                    : b.equipment_name || b.equipment?.name || "Production Rig";
 
                   const isApproved = b.status === "Approved" || b.status === "Completed";
                   const isPending = b.status === "Pending";
@@ -583,8 +585,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
 
                       {/* Booking Type */}
                       <td className="py-3.5 px-4">
-                        <span className="font-bold text-muted-foreground uppercase text-[10px] tracking-wider px-2 py-0.5 rounded bg-muted">
-                          {b.booking_type || "Event"}
+                        <span className={`font-bold uppercase text-[10px] tracking-wider px-2 py-0.5 rounded ${
+                          b.booking_type === "service" ? "bg-sky-500/10 text-sky-400" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {b.booking_type === "service" ? "Service" : b.booking_type === "event" ? "Ticket" : "Rental"}
                         </span>
                       </td>
 
@@ -621,7 +625,13 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
 
                       {/* Amount */}
                       <td className="py-3.5 px-4 text-right font-black text-foreground">
-                        {parseFloat(b.amount || 0).toLocaleString()} FRW
+                        {b.booking_type === "event" ? (
+                          `${parseFloat(b.amount || 0).toLocaleString()} RWF`
+                        ) : (
+                          <span className="text-[11px] font-semibold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+                            Quote Inquiry
+                          </span>
+                        )}
                       </td>
 
                       {/* Action */}

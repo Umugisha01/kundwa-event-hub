@@ -50,6 +50,30 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+class MainService(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255, unique=True)
+    slug = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    image_url = models.TextField(blank=True, null=True)
+    order = models.IntegerField(default=0)
+    color = models.CharField(max_length=100, default="from-primary/80 to-primary", blank=True, null=True)
+    cta_text = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'title']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
 class Service(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     slug = models.CharField(max_length=255, unique=True, blank=True, null=True)
@@ -74,6 +98,20 @@ class Service(models.Model):
     def __str__(self):
         return self.name
 
+class EquipmentCategory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    icon = models.CharField(max_length=100, default='Wrench', blank=True, null=True)
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
 class Equipment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
@@ -88,13 +126,24 @@ class Equipment(models.Model):
 
 class Booking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='bookings')
     event = models.ForeignKey(Event, on_delete=models.SET_NULL, blank=True, null=True)
     equipment = models.ForeignKey(Equipment, on_delete=models.SET_NULL, blank=True, null=True)
-    booking_type = models.CharField(max_length=50, default='event') # 'event' or 'equipment'
+    equipment_name = models.CharField(max_length=255, blank=True, null=True)
+    service_name = models.CharField(max_length=255, blank=True, null=True)
+    booking_type = models.CharField(max_length=50, default='service') # 'service', 'equipment', 'event'
     status = models.CharField(max_length=50, default='Pending') # 'Pending', 'Approved', 'Completed', 'Rejected'
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     notes = models.TextField(blank=True, null=True)
+    start_date = models.CharField(max_length=100, blank=True, null=True)
+    end_date = models.CharField(max_length=100, blank=True, null=True)
+    start_time = models.CharField(max_length=50, blank=True, null=True)
+    end_time = models.CharField(max_length=50, blank=True, null=True)
+    rental_days = models.IntegerField(default=1)
+    include_setup = models.BooleanField(default=False)
+    customer_name = models.CharField(max_length=255, blank=True, null=True)
+    customer_phone = models.CharField(max_length=100, blank=True, null=True)
+    customer_email = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -126,7 +175,7 @@ class ChatMessage(models.Model):
 class FooterSettings(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     contact_email = models.CharField(max_length=255, default='info@kundwaib.com')
-    contact_phone = models.CharField(max_length=255, default='+250 788 000 000')
+    contact_phone = models.CharField(max_length=255, default='+250 784 289 407')
     contact_address = models.CharField(max_length=255, default='Kigali, Rwanda')
     tagline = models.TextField(default='Creating unforgettable experiences with world-class sound, lighting, and stage production.', blank=True, null=True)
     facebook_url = models.TextField(blank=True, null=True)
@@ -164,7 +213,7 @@ class Portfolio(models.Model):
     category = models.CharField(max_length=255)
     description = models.TextField()
     thumbnail = models.TextField()
-    images = models.JSONField(default=list) # list of urls
+    images = models.JSONField(default=list, blank=True) # list of urls (optional)
     video_url = models.TextField(blank=True, null=True)
     date = models.CharField(max_length=100)
     client = models.CharField(max_length=255, blank=True, null=True)
@@ -186,6 +235,7 @@ class Testimonial(models.Model):
     client_name = models.CharField(max_length=255)
     message = models.TextField()
     image_url = models.TextField(blank=True, null=True)
+    rating = models.IntegerField(default=5)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class TrustedBrand(models.Model):

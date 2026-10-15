@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    Profile, UserRole, Event, Service, Equipment, Booking, Ticket,
+    Profile, UserRole, Event, MainService, Service, EquipmentCategory, Equipment, Booking, Ticket,
     ChatMessage, FooterSettings, HeroSettings, Portfolio, ContactSubmission,
     Testimonial, TrustedBrand, SiteStatistic
 )
@@ -34,10 +34,30 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
 
+class MainServiceSerializer(serializers.ModelSerializer):
+    items_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MainService
+        fields = '__all__'
+
+    def get_items_count(self, obj):
+        return Service.objects.filter(category=obj.title).count()
+
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = '__all__'
+
+class EquipmentCategorySerializer(serializers.ModelSerializer):
+    items_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EquipmentCategory
+        fields = '__all__'
+
+    def get_items_count(self, obj):
+        return Equipment.objects.filter(category=obj.name).count()
 
 class EquipmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,17 +68,52 @@ class BookingSerializer(serializers.ModelSerializer):
     profiles = serializers.SerializerMethodField()
     events = serializers.SerializerMethodField()
     equipment = serializers.SerializerMethodField()
+    equipment_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
+    event_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
 
     class Meta:
         model = Booking
         fields = '__all__'
 
+    def create(self, validated_data):
+        equipment_id = validated_data.pop('equipment_id', None)
+        event_id = validated_data.pop('event_id', None)
+        if equipment_id:
+            from .models import Equipment
+            eq = Equipment.objects.filter(id=equipment_id).first()
+            if eq:
+                validated_data['equipment'] = eq
+                if not validated_data.get('equipment_name'):
+                    validated_data['equipment_name'] = eq.name
+        if event_id:
+            from .models import Event
+            ev = Event.objects.filter(id=event_id).first()
+            if ev:
+                validated_data['event'] = ev
+        return super().create(validated_data)
+
     def get_profiles(self, obj):
         try:
-            profile = obj.user.profile
-            return {'full_name': profile.full_name, 'email': profile.user.email}
+            if obj.user:
+                profile = getattr(obj.user, 'profile', None)
+                if profile:
+                    return {
+                        'full_name': profile.full_name or obj.customer_name or obj.user.username,
+                        'email': profile.user.email,
+                        'phone': getattr(profile, 'phone', '') or obj.customer_phone or ''
+                    }
+                return {
+                    'full_name': obj.customer_name or obj.user.username,
+                    'email': obj.customer_email or obj.user.email,
+                    'phone': obj.customer_phone or ''
+                }
         except:
-            return {'full_name': obj.user.username, 'email': obj.user.email}
+            pass
+        return {
+            'full_name': obj.customer_name or 'Valued Client',
+            'email': obj.customer_email or 'N/A',
+            'phone': obj.customer_phone or ''
+        }
 
     def get_events(self, obj):
         if obj.event:
@@ -67,7 +122,19 @@ class BookingSerializer(serializers.ModelSerializer):
 
     def get_equipment(self, obj):
         if obj.equipment:
-            return {'name': obj.equipment.name}
+            return {
+                'id': str(obj.equipment.id),
+                'name': obj.equipment.name,
+                'category': obj.equipment.category,
+                'image_url': obj.equipment.image_url,
+                'description': obj.equipment.description
+            }
+        if obj.equipment_name:
+            return {
+                'name': obj.equipment_name,
+                'category': 'Equipment',
+                'image_url': None
+            }
         return None
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -147,6 +214,10 @@ class HeroSettingsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PortfolioSerializer(serializers.ModelSerializer):
+    images = serializers.JSONField(required=False, default=list)
+    video_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    client = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
     class Meta:
         model = Portfolio
         fields = '__all__'

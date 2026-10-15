@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Calendar, Ticket, Wrench, User, LogOut, Edit2, Save, X, QrCode, Calendar as CalendarIcon, Printer, ShieldCheck, ArrowRight } from "lucide-react";
+import { Calendar, Ticket, Wrench, User, LogOut, Edit2, Save, X, QrCode, Calendar as CalendarIcon, Printer, ShieldCheck, ArrowRight, Clock, Truck, FileText, Eye } from "lucide-react";
 import { CalendarModal } from "@/components/events/CalendarModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const DashboardPage = () => {
   const { user, profile, role, signOut } = useAuth();
@@ -17,6 +17,7 @@ const DashboardPage = () => {
   const [form, setForm] = useState({ full_name: "", phone: "" });
   const [activeQrTicket, setActiveQrTicket] = useState<any>(null);
   const [calendarEvent, setCalendarEvent] = useState<any>(null);
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -142,19 +143,92 @@ const DashboardPage = () => {
                 <p className="text-muted-foreground text-sm">No bookings yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {bookings.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <div>
-                        <p className="font-medium text-foreground text-sm">
-                          {b.events?.title || b.equipment?.name || "Booking"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{b.booking_type}</p>
+                  {bookings.map((b) => {
+                    const isRental = b.booking_type === "equipment";
+                    const itemName = isRental 
+                      ? (b.equipment_name || b.equipment?.name || "Equipment Rental")
+                      : b.booking_type === "service"
+                      ? (b.service_name || "Service Production Inquiry")
+                      : (b.events?.title || "Event Ticket");
+
+                    return (
+                      <div key={b.id} className="p-3.5 rounded-xl bg-muted/40 border border-border/40 space-y-2 hover:border-secondary/30 transition-all">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              {isRental && (
+                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/20">
+                                  Rental
+                                </span>
+                              )}
+                              <p className="font-bold text-foreground text-sm">
+                                {itemName}
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground capitalize mt-0.5">
+                              {b.booking_type === "service" 
+                                ? `Service Inquiry ${b.start_date ? `• ${b.start_date}` : ""}` 
+                                : b.booking_type === "equipment"
+                                ? `${b.rental_days || 1} day(s) equipment rental`
+                                : "Event Ticket"}
+                            </p>
+                          </div>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${statusColor(b.status)}`}>
+                            {b.status}
+                          </span>
+                        </div>
+
+                        {/* Rental specific timeline and notes */}
+                        {isRental && (
+                          <div className="text-xs space-y-1.5 pt-1 border-t border-border/30 text-muted-foreground">
+                            {b.start_date && (
+                              <div className="flex items-center gap-1.5 text-foreground/90 font-medium">
+                                <CalendarIcon className="h-3.5 w-3.5 text-secondary shrink-0" />
+                                <span>{b.start_date} → {b.end_date || b.start_date}</span>
+                                {b.start_time && (
+                                  <span className="text-muted-foreground text-[11px]">({b.start_time} – {b.end_time || ""})</span>
+                                )}
+                              </div>
+                            )}
+
+                            {b.include_setup && (
+                              <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                <Truck className="h-3 w-3 shrink-0" />
+                                <span>Transport & Technical Setup Requested</span>
+                              </div>
+                            )}
+
+                            {b.notes && (
+                              <div className="p-2 rounded bg-muted/50 border border-border/20 text-[11px] italic text-foreground">
+                                <FileText className="h-3 w-3 text-secondary inline mr-1" />
+                                "{b.notes}"
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="pt-1 flex justify-between items-center text-xs">
+                          <span className="font-semibold text-foreground">
+                            {isRental ? (
+                              <span className="text-secondary font-bold text-[11px]">Rental Reservation</span>
+                            ) : b.amount ? (
+                              `${Number(b.amount).toLocaleString()} RWF`
+                            ) : (
+                              "Service Inquiry"
+                            )}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedBookingDetail(b)}
+                            className="h-7 text-xs font-bold text-secondary hover:text-secondary gap-1"
+                          >
+                            <Eye className="h-3.5 w-3.5" /> Details
+                          </Button>
+                        </div>
                       </div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusColor(b.status)}`}>
-                        {b.status}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -345,6 +419,103 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
+
+      {/* Booking / Rental Detail Modal */}
+      <Dialog open={!!selectedBookingDetail} onOpenChange={(open) => !open && setSelectedBookingDetail(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                selectedBookingDetail?.booking_type === "equipment" ? "bg-amber-500/10 text-amber-500 border-amber-500/30" : "bg-secondary/10 text-secondary border-secondary/20"
+              }`}>
+                {selectedBookingDetail?.booking_type === "equipment" ? "Equipment Rental" : selectedBookingDetail?.booking_type}
+              </span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor(selectedBookingDetail?.status || "")}`}>
+                {selectedBookingDetail?.status}
+              </span>
+            </div>
+            <DialogTitle className="text-base font-bold text-foreground mt-1">
+              {selectedBookingDetail && (
+                selectedBookingDetail.booking_type === "equipment"
+                  ? (selectedBookingDetail.equipment_name || selectedBookingDetail.equipment?.name || "Equipment Rental")
+                  : selectedBookingDetail.booking_type === "service"
+                  ? (selectedBookingDetail.service_name || "Production Service Inquiry")
+                  : (selectedBookingDetail.events?.title || "Event Ticket")
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Booking Ref: {selectedBookingDetail?.id?.slice(0, 8)?.toUpperCase()}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedBookingDetail && (
+            <div className="space-y-3.5 text-xs mt-2">
+              {/* Schedule and timings */}
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/40 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Dates:</span>
+                  <span className="font-semibold text-foreground">
+                    {selectedBookingDetail.start_date ? `${selectedBookingDetail.start_date} → ${selectedBookingDetail.end_date || selectedBookingDetail.start_date}` : "N/A"}
+                  </span>
+                </div>
+                {selectedBookingDetail.start_time && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Operating Window:</span>
+                    <span className="font-semibold text-foreground">
+                      {selectedBookingDetail.start_time} – {selectedBookingDetail.end_time || ""}
+                    </span>
+                  </div>
+                )}
+                {selectedBookingDetail.rental_days && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Rental Duration:</span>
+                    <span className="font-bold text-secondary">
+                      {selectedBookingDetail.rental_days} day(s)
+                    </span>
+                  </div>
+                )}
+                {selectedBookingDetail.booking_type === "equipment" && (
+                  <div className="flex justify-between items-center pt-1 border-t border-border/30">
+                    <span className="text-muted-foreground">Transport & Crew:</span>
+                    <span className={`font-semibold ${selectedBookingDetail.include_setup ? "text-emerald-500" : "text-muted-foreground"}`}>
+                      {selectedBookingDetail.include_setup ? "Included (On-site setup requested)" : "Self-Pickup"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Special Notes & Descriptions */}
+              {selectedBookingDetail.notes && (
+                <div className="space-y-1">
+                  <span className="text-muted-foreground font-semibold flex items-center gap-1 text-[11px]">
+                    <FileText className="h-3 w-3 text-secondary" />
+                    Special Requirements & Notes:
+                  </span>
+                  <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 italic text-foreground text-xs leading-relaxed">
+                    "{selectedBookingDetail.notes}"
+                  </div>
+                </div>
+              )}
+
+              {/* Total Rate (Only for Non-Rentals) */}
+              {selectedBookingDetail.booking_type !== "equipment" && (
+                <div className="p-3 rounded-xl bg-card border border-border/40 flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium">Estimated Amount:</span>
+                  <span className="font-extrabold text-foreground text-sm">
+                    {selectedBookingDetail.amount ? `${Number(selectedBookingDetail.amount).toLocaleString()} RWF` : "Quote on Request"}
+                  </span>
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end">
+                <Button size="sm" variant="outline" onClick={() => setSelectedBookingDetail(null)} className="text-xs">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

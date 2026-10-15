@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Phone, Mail, MapPin, Clock, ShieldCheck } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, ShieldCheck, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -53,7 +53,7 @@ const ContactPage = () => {
       console.error("Contact submission error:", err);
       toast({
         title: "Submission Temporarily Unavailable",
-        description: "We could not deliver your request online right now. Please call or WhatsApp us at +250 788 000 000 or email info@kundwaib.com.",
+        description: "We could not deliver your request online right now. Please call or WhatsApp us at +250 784 289 407 or email info@kundwaib.com.",
         variant: "destructive"
       });
     } finally {
@@ -169,7 +169,7 @@ const ContactPage = () => {
                   <div>
                     <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Phone Number</label>
                     <Input
-                      placeholder="+250 788 000 000"
+                      placeholder="+250 784 289 407"
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
@@ -215,9 +215,27 @@ const ContactPage = () => {
                   <div className="p-2.5 rounded-xl bg-secondary/10 text-secondary border border-secondary/20">
                     <Phone className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Call or WhatsApp</p>
-                    <p className="font-medium text-foreground text-sm mt-0.5">+250 788 000 000</p>
+                    <p className="font-bold text-foreground text-base mt-0.5">+250 784 289 407</p>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <a
+                        href="tel:+250784289407"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-xs font-bold transition-colors"
+                      >
+                        <Phone className="h-3.5 w-3.5" /> Call Directly
+                      </a>
+                      <a
+                        href={`https://wa.me/250784289407?text=${encodeURIComponent(
+                          "Hello Kundwa IB Group, I would like to inquire about your event production services."
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 text-xs font-bold transition-colors border border-emerald-500/20"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" /> Chat on WhatsApp
+                      </a>
+                    </div>
                   </div>
                 </div>
 

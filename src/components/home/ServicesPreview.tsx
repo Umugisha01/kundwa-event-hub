@@ -22,6 +22,7 @@ const categoryData = [
 ];
 
 export function ServicesPreview() {
+  const [mainServices, setMainServices] = useState<any[]>([]);
   const [dbServices, setDbServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
@@ -29,25 +30,35 @@ export function ServicesPreview() {
   const isDark = theme === "dark";
 
   useEffect(() => {
-    supabase
-      .from("services")
-      .select("*")
-      .then(({ data, error }) => {
-        if (!error && data) {
-          setDbServices(data);
-        }
-        setLoading(false);
-      });
+    Promise.all([
+      supabase.from("main_services").select("*").order("order"),
+      supabase.from("services").select("*")
+    ]).then(([msRes, sRes]) => {
+      if (msRes.data && msRes.data.length > 0) {
+        setMainServices(msRes.data);
+      }
+      if (sRes.data) {
+        setDbServices(sRes.data);
+      }
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
   }, []);
 
-  const categories = categoryData.map((cat) => {
-    const items = dbServices.filter((s) => s.category === cat.title);
-    return {
-      title: cat.title,
-      description: cat.description,
-      items: items.map((s) => s.name)
-    };
-  });
+  const effectiveCategories = mainServices.length > 0
+    ? mainServices.map(m => ({
+        title: m.title,
+        description: m.description || "Comprehensive event solutions.",
+        items: dbServices.filter(s => s.category === m.title).map(s => s.name)
+      }))
+    : categoryData.map((cat) => ({
+        title: cat.title,
+        description: cat.description,
+        items: dbServices.filter((s) => s.category === cat.title).map((s) => s.name)
+      }));
+
+  const categories = effectiveCategories;
 
   const getCategoryIcon = (title: string) => {
     switch (title) {

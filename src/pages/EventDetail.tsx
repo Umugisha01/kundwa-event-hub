@@ -18,7 +18,8 @@ import {
   ArrowLeft,
   Share2,
   CalendarX,
-  RefreshCw
+  RefreshCw,
+  MessageSquare
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveMediaUrl } from "@/config/api";
@@ -224,13 +225,15 @@ export default function EventDetail() {
         </div>
       </section>
 
-      {/* Main Content: Left Column (Poster + Tickets) & Right Column (Event Details) */}
+      {/* Main Content */}
       <section className="py-10 md:py-16 px-4 md:px-8 bg-background">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto space-y-12">
+          
+          {/* Top Section: Left (Poster & Description) & Right (Sidebar Details) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             
-            {/* Left Column: Poster + Tickets Section */}
-            <div className="lg:col-span-8 space-y-10">
+            {/* Left Column: Event Poster & Description */}
+            <div className="lg:col-span-8 space-y-8">
               
               {/* Event Poster Card */}
               <div className="rounded-2xl overflow-hidden border border-border/80 shadow-xl bg-card">
@@ -252,71 +255,127 @@ export default function EventDetail() {
                 </div>
               )}
 
-              {/* Tickets Section matching Template Image 3 */}
-              <div className="space-y-6 pt-4">
-                <div className="border-b border-border/60 pb-3 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                    <TicketIcon className="w-6 h-6 text-primary" /> Tickets
-                  </h2>
-                  <span className="text-xs text-muted-foreground font-semibold">
+              {/* Tickets Section directly underneath "About This Event" - zero empty gap */}
+              <div id="tickets" className="space-y-5 pt-6 border-t border-border/60 scroll-mt-28">
+                <div className="border-b border-border/60 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-secondary/15 text-secondary border border-secondary/25">
+                      <TicketIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                        Tickets & Passes
+                      </h2>
+                    </div>
+                  </div>
+
+                  <span className="self-start sm:self-auto text-xs font-bold text-secondary bg-secondary/10 border border-secondary/25 px-3 py-1 rounded-full">
                     {event.ticket_tiers.length} Ticket Option{event.ticket_tiers.length > 1 ? "s" : ""} Available
                   </span>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 items-stretch">
-                  {event.ticket_tiers.map((tier: TicketTier) => {
+                {/* Dynamic Responsive Grid: Perfectly fits edge-to-edge whether 1, 2, 3, 4, 5, 6+ tiers */}
+                <div 
+                  className={`grid ${
+                    event.ticket_tiers.length === 1
+                      ? "grid-cols-1 max-w-md mx-auto"
+                      : event.ticket_tiers.length === 2
+                      ? "grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
+                      : event.ticket_tiers.length === 3
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                      : event.ticket_tiers.length === 4
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+                      : event.ticket_tiers.length === 5
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+                      : event.ticket_tiers.length === 6
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                      : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5"
+                  } items-stretch`}
+                >
+                  {event.ticket_tiers.map((tier: TicketTier, index: number) => {
                     const qty = tierQuantities[tier.id] || 1;
                     const tierTotal = tier.price * qty;
+                    const totalTiers = event.ticket_tiers.length;
+
+                    // Dynamic alignment class for remaining/trailing cards
+                    const cardSpanClass = 
+                      totalTiers === 3 && index === 2
+                        ? "sm:col-span-2 lg:col-span-1 max-w-md sm:mx-auto lg:max-w-none w-full"
+                        : totalTiers === 5 && index === 4
+                        ? "sm:col-span-2 lg:col-start-2 lg:col-span-2 max-w-sm sm:mx-auto lg:max-w-none w-full"
+                        : "";
 
                     return (
                       <div
                         key={tier.id}
-                        className="flex-1 min-w-0 rounded-2xl border-2 border-secondary/30 bg-card p-5 flex flex-col justify-between hover:border-secondary transition-all shadow-sm hover:shadow-md relative overflow-hidden"
+                        className={`group relative rounded-2xl border-2 border-secondary/30 hover:border-secondary bg-card/90 backdrop-blur-sm p-4 sm:p-4.5 flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-0.5 ${cardSpanClass}`}
                       >
-                        {/* Subtle top indicator */}
-                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-secondary to-primary" />
+                        {/* Subtle top indicator bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-secondary via-primary to-secondary rounded-t-2xl" />
 
-                        <div className="space-y-3 text-center">
-                          <h3 className="font-black text-foreground text-xs sm:text-sm uppercase tracking-wider min-h-[2.5rem] flex items-center justify-center">
+                        <div className="space-y-2 text-center pt-1">
+                          <h3 className="font-black text-foreground text-xs sm:text-sm uppercase tracking-wide min-h-[2.25rem] flex items-center justify-center leading-snug px-0.5 text-balance">
                             {tier.name}
                           </h3>
 
-                          {/* Price styled prominently in brand secondary */}
-                          <div className="font-black text-2xl lg:text-3xl text-secondary tracking-tight">
-                            {tier.price.toLocaleString()}FRW
+                          {tier.description && (
+                            <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed px-0.5 min-h-[2rem]">
+                              {tier.description}
+                            </p>
+                          )}
+
+                          {/* Price styled prominently with clean spacing and clear currency */}
+                          <div className="py-2">
+                            <div className="flex items-baseline justify-center gap-1.5 whitespace-nowrap">
+                              <span className={`font-black tracking-tight text-secondary ${
+                                totalTiers >= 4 
+                                  ? "text-xl sm:text-2xl" 
+                                  : "text-2xl lg:text-3xl"
+                              }`}>
+                                {tier.price.toLocaleString()}
+                              </span>
+                              <span className="font-black text-xs sm:text-sm text-secondary/90 tracking-normal">
+                                FRW
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-medium text-muted-foreground block mt-0.5">
+                              per ticket
+                            </span>
                           </div>
                         </div>
 
                         {/* Quantity controls & Buy Now Button */}
-                        <div className="pt-6 space-y-4">
-                          <div className="flex items-center justify-between px-1 text-xs">
-                            <span className="font-semibold text-muted-foreground">Quantity:</span>
-                            <div className="flex items-center border border-border rounded-lg bg-muted/20">
+                        <div className="pt-3 border-t border-border/50 space-y-3 mt-1">
+                          <div className="flex items-center justify-between px-0.5 text-xs">
+                            <span className="font-bold text-muted-foreground text-[11px]">Quantity:</span>
+                            <div className="flex items-center border border-border/80 rounded-lg bg-muted/40 shadow-xs">
                               <button
                                 type="button"
                                 onClick={() => handleQtyChange(tier.id, -1)}
                                 disabled={qty <= 1}
-                                className="p-1.5 hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+                                className="p-1 hover:bg-muted text-foreground disabled:opacity-30 transition-colors rounded-l-lg cursor-pointer"
+                                aria-label="Decrease quantity"
                               >
-                                <Minus className="w-3.5 h-3.5" />
+                                <Minus className="w-3 h-3" />
                               </button>
-                              <span className="px-2.5 font-bold text-sm text-foreground">
+                              <span className="px-2 font-black text-xs sm:text-sm text-foreground select-none min-w-[1.5rem] text-center">
                                 {qty}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleQtyChange(tier.id, 1)}
-                                className="p-1.5 hover:bg-muted text-foreground transition-colors"
+                                className="p-1 hover:bg-muted text-foreground transition-colors rounded-r-lg cursor-pointer"
+                                aria-label="Increase quantity"
                               >
-                                <Plus className="w-3.5 h-3.5" />
+                                <Plus className="w-3 h-3" />
                               </button>
                             </div>
                           </div>
 
                           {qty > 1 && (
-                            <div className="flex justify-between items-center text-xs font-semibold px-1 text-muted-foreground">
-                              <span>Total ({qty} tickets):</span>
-                              <span className="font-bold text-foreground text-xs">
+                            <div className="flex justify-between items-center text-[10px] sm:text-xs font-semibold px-2 py-1 bg-muted/40 rounded-lg text-muted-foreground border border-border/40">
+                              <span>Total ({qty}x):</span>
+                              <span className="font-black text-foreground">
                                 {tierTotal.toLocaleString()} FRW
                               </span>
                             </div>
@@ -324,7 +383,7 @@ export default function EventDetail() {
 
                           <Button
                             onClick={() => handleBuyNow(tier)}
-                            className="w-full py-4 rounded-xl font-black text-xs sm:text-sm tracking-wide btn-gold shadow-md transition-all active:scale-[0.98]"
+                            className="w-full py-4 sm:py-5 rounded-xl font-black text-xs sm:text-sm tracking-wider btn-gold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                           >
                             BUY NOW
                           </Button>
@@ -334,10 +393,9 @@ export default function EventDetail() {
                   })}
                 </div>
               </div>
-
             </div>
 
-            {/* Right Column: Event Details Sidebar Card matching Template Images 2 & 3 */}
+            {/* Right Column: Event Details Sidebar Card */}
             <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
               <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-xl space-y-6">
                 <h2 className="text-lg font-bold text-foreground border-b border-border/60 pb-3">
@@ -468,31 +526,51 @@ export default function EventDetail() {
                     </div>
                   </div>
 
-                  {/* PHONE */}
+                  {/* PHONE & WHATSAPP */}
                   <div className="pt-3 flex items-start gap-3.5">
                     <div className="p-2 rounded-lg bg-secondary/15 text-secondary shrink-0">
                       <Phone className="w-5 h-5" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                        PHONE
+                        CONTACT / WHATSAPP
                       </span>
                       <a
-                        href={`tel:${event.phone || "+250789808030"}`}
-                        className="font-semibold text-secondary hover:underline"
+                        href={`tel:${event.phone || "+250784289407"}`}
+                        className="font-bold text-secondary hover:underline block text-sm"
                       >
-                        {event.phone || "+250789808030"}
+                        {event.phone || "+250 784 289 407"}
+                      </a>
+                      <a
+                        href={`https://wa.me/250784289407?text=${encodeURIComponent(
+                          `Hello Kundwa IB Group, I have a question regarding the event: ${event.title}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-500 hover:text-emerald-400 mt-1"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> Chat on WhatsApp
                       </a>
                     </div>
                   </div>
 
                 </div>
 
-                {/* ADD TO CALENDAR Button matching template with website theme */}
-                <div className="pt-4 border-t border-border/60">
+                {/* Sidebar Action Buttons */}
+                <div className="pt-4 border-t border-border/60 space-y-3">
+                  <a href="#tickets" className="block w-full">
+                    <Button
+                      className="w-full py-6 rounded-xl font-black tracking-wider text-xs sm:text-sm btn-gold shadow-lg transition-all"
+                    >
+                      <TicketIcon className="w-4 h-4 mr-2" />
+                      GET TICKETS ({event.ticket_tiers.length} TIERS)
+                    </Button>
+                  </a>
+
                   <Button
+                    variant="outline"
                     onClick={() => setShowCalendarModal(true)}
-                    className="w-full py-6 rounded-xl font-bold tracking-wider text-sm btn-gold shadow-lg transition-all"
+                    className="w-full py-5 rounded-xl font-bold tracking-wider text-xs border-border/80 transition-all"
                   >
                     ADD TO CALENDAR
                   </Button>
@@ -502,6 +580,7 @@ export default function EventDetail() {
             </div>
 
           </div>
+
         </div>
       </section>
 

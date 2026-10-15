@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaMapPin, FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaXTwitter, FaYoutube, FaRightToBracket } from "react-icons/fa6";
+import { FaMapPin, FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaXTwitter, FaYoutube, FaRightToBracket, FaWhatsapp } from "react-icons/fa6";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -21,7 +21,7 @@ export function Footer() {
   }, []);
 
   const email = settings?.contact_email || "info@kundwaib.com";
-  const phone = settings?.contact_phone || "+250 788 000 000";
+  const phone = settings?.contact_phone || "+250 784 289 407";
   const address = settings?.contact_address || "Kigali, Rwanda";
   const copyright = settings?.copyright_text || `© ${new Date().getFullYear()} Kundwa IB Group. All rights reserved.`;
   const tagline = settings?.tagline || "Creating unforgettable experiences with world-class sound, lighting, and stage production.";
@@ -163,7 +163,20 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-3">
                 <FaPhone className="h-4 w-4 text-secondary shrink-0" />
-                <span>{phone}</span>
+                <a href="tel:+250784289407" className="hover:text-secondary transition-colors">
+                  {phone}
+                </a>
+              </div>
+              <div className="flex items-center gap-3">
+                <FaWhatsapp className="h-4 w-4 text-emerald-400 shrink-0" />
+                <a
+                  href={`https://wa.me/250784289407?text=${encodeURIComponent("Hello Kundwa IB Group, I would like to inquire about your event production services.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  WhatsApp Us
+                </a>
               </div>
               <div className="flex items-center gap-3">
                 <FaEnvelope className="h-4 w-4 text-secondary shrink-0" />
@@ -175,6 +188,16 @@ export function Footer() {
 
             {/* Social Media Links (Minimalist, No background) (Moved here) */}
             <div className="flex items-center gap-4.5 mt-6">
+              <a
+                href={`https://wa.me/250784289407?text=${encodeURIComponent("Hello Kundwa IB Group!")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-emerald-400 transition-all duration-300 transform hover:-translate-y-0.5 text-lg"
+                aria-label="WhatsApp"
+                title="Chat on WhatsApp"
+              >
+                <FaWhatsapp />
+              </a>
               {facebook && (
                 <a
                   href={facebook}

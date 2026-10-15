@@ -109,7 +109,7 @@ const EventsPage = () => {
             Curated Experiences
           </span>
           <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">
-            Upcoming <span className="text-secondary">Events & Shows</span>
+            Upcoming <span className="text-secondary">Events & Concerts</span>
           </h1>
           <p className="text-slate-300 max-w-2xl mx-auto text-sm md:text-base mb-8">
             Experience Kigali's most anticipated festivals, concerts, and leadership summits with instant digital ticketing.

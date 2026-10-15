@@ -125,7 +125,14 @@ export function Testimonials() {
                 <div className="pl-2 pt-4 border-t border-border/40">
                   <div className="flex items-center gap-1 mb-4">
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <FaStar key={j} className="h-3.5 w-3.5 fill-secondary text-secondary" />
+                      <FaStar
+                        key={j}
+                        className={`h-3.5 w-3.5 transition-colors ${
+                          j < (Number(t.rating) > 0 ? Number(t.rating) : 5)
+                            ? "fill-secondary text-secondary drop-shadow-[0_0_6px_rgba(234,179,8,0.3)]"
+                            : "fill-muted/30 text-muted-foreground/30"
+                        }`}
+                      />
                     ))}
                   </div>
                   <div className="flex items-center gap-3.5">

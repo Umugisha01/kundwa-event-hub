@@ -32,6 +32,7 @@ const ServiceDetailPage = () => {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchServiceDetail = useCallback(async () => {
     if (!slug) return;
@@ -92,16 +93,57 @@ const ServiceDetailPage = () => {
     fetchServiceDetail();
   }, [fetchServiceDetail]);
 
-  const handleInquiry = () => {
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all required fields");
+  const handleInquiry = async () => {
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast.error("Please fill in your name, email, and phone number.");
       return;
     }
-    toast.success("Inquiry sent successfully!", {
-      description: "Our team will get back to you within 24 hours.",
-    });
-    setInquiryOpen(false);
-    setFormData({ name: "", email: "", phone: "", message: "" });
+    setSubmitting(true);
+    try {
+      const notesContent = `[Service Inquiry for ${service?.name || "Service"}]
+Client Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+Message / Requirements: ${formData.message || "Requested custom quote"}`;
+
+      // Insert directly into bookings
+      const { error: bookingErr } = await supabase.from("bookings").insert({
+        booking_type: "service",
+        service_name: service?.name || "Service Inquiry",
+        customer_name: formData.name,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        notes: notesContent,
+        status: "Pending",
+        amount: 0
+      });
+
+      if (bookingErr) throw bookingErr;
+
+      // Mirror to contact / inquiries
+      try {
+        await supabase.from("service_inquiries").insert({
+          service_name: service?.name || "Service Inquiry",
+          customer_name: formData.name,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          message: formData.message || "Requested custom quote",
+          status: "Pending"
+        });
+      } catch {
+        // ignore
+      }
+
+      toast.success("Inquiry sent & added to bookings!", {
+        description: "Our team will get back to you within 24 hours.",
+      });
+      setInquiryOpen(false);
+      setFormData({ name: "", email: "", phone: "", message: "" });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit inquiry. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -178,32 +220,15 @@ const ServiceDetailPage = () => {
                 <MessageSquare className="h-4 w-4" /> Get a Quote
               </Button>
               <Link to="/contact">
-                <Button variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-2">
+                <Button 
+                  variant="ghost"
+                  className="bg-secondary/15 hover:bg-secondary hover:text-slate-900 text-secondary border-2 border-secondary/60 font-bold text-base px-6 py-3 rounded-xl backdrop-blur-md transition-all duration-300 hover:scale-105 gap-2 shadow-lg"
+                >
                   <Phone className="h-4 w-4" /> Talk to Us
                 </Button>
               </Link>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Highlights Bar */}
-      <section className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
-            {service.highlights.map((h, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="py-6 px-4 text-center"
-              >
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{h.label}</p>
-                <p className="text-lg font-bold text-foreground">{h.value}</p>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -315,16 +340,17 @@ const ServiceDetailPage = () => {
                   />
                 </div>
                 <div>
-                  <Label className="text-foreground text-sm">Phone</Label>
+                  <Label className="text-foreground text-sm">Phone / WhatsApp *</Label>
                   <Input
+                    required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+250 78 000 0000"
+                    placeholder="+250 784 289 407"
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label className="text-foreground text-sm">Tell us about your event *</Label>
+                  <Label className="text-foreground text-sm">Tell us about your event</Label>
                   <Textarea
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -333,12 +359,30 @@ const ServiceDetailPage = () => {
                     className="mt-1"
                   />
                 </div>
-                <Button className="btn-gold w-full gap-2" onClick={handleInquiry}>
-                  <Send className="h-4 w-4" /> Send Inquiry
+                <Button className="btn-gold w-full gap-2" disabled={submitting} onClick={handleInquiry}>
+                  {submitting ? "Sending Inquiry..." : <><Send className="h-4 w-4" /> Send Service Inquiry</>}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Or call us directly: <a href="tel:+250780000000" className="text-secondary font-medium">+250 78 000 0000</a>
-                </p>
+                <div className="pt-2 border-t border-border/40 text-center space-y-2">
+                  <p className="text-xs text-muted-foreground">Or connect with our production director immediately:</p>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <a
+                      href={`https://wa.me/250784289407?text=${encodeURIComponent(
+                        `Hello Kundwa IB Group, I am interested in ${service.name} for my upcoming event.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 text-xs font-bold transition-colors border border-emerald-500/20"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" /> Chat on WhatsApp
+                    </a>
+                    <a
+                      href="tel:+250784289407"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-xs font-bold transition-colors"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Call +250 784 289 407
+                    </a>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -404,8 +448,11 @@ const ServiceDetailPage = () => {
               <MessageSquare className="h-4 w-4" /> Get a Quote
             </Button>
             <Link to="/contact">
-              <Button variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-                Contact Us
+              <Button 
+                variant="ghost"
+                className="bg-secondary/15 hover:bg-secondary hover:text-slate-900 text-secondary border-2 border-secondary/60 font-bold text-base px-8 py-3 rounded-xl backdrop-blur-md transition-all duration-300 hover:scale-105 gap-2 shadow-lg"
+              >
+                <Phone className="h-4 w-4" /> Contact Us
               </Button>
             </Link>
           </div>
@@ -444,16 +491,17 @@ const ServiceDetailPage = () => {
               />
             </div>
             <div>
-              <Label className="text-foreground text-sm">Phone</Label>
+              <Label className="text-foreground text-sm">Phone / WhatsApp *</Label>
               <Input
+                required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+250 78 000 0000"
+                placeholder="+250 784 289 407"
                 className="mt-1"
               />
             </div>
             <div>
-              <Label className="text-foreground text-sm">Message *</Label>
+              <Label className="text-foreground text-sm">Message</Label>
               <Textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -462,16 +510,35 @@ const ServiceDetailPage = () => {
                 className="mt-1"
               />
             </div>
-            <Button className="btn-gold w-full gap-2" onClick={handleInquiry}>
-              <Send className="h-4 w-4" /> Send Inquiry
+            <Button className="btn-gold w-full gap-2" disabled={submitting} onClick={handleInquiry}>
+              {submitting ? "Sending Inquiry..." : <><Send className="h-4 w-4" /> Send Service Inquiry</>}
             </Button>
-            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-              <a href="tel:+250780000000" className="flex items-center gap-1 hover:text-secondary transition-colors">
-                <Phone className="h-3 w-3" /> +250 78 000 0000
-              </a>
-              <a href="mailto:info@kundwaib.com" className="flex items-center gap-1 hover:text-secondary transition-colors">
-                <Mail className="h-3 w-3" /> info@kundwaib.com
-              </a>
+            <div className="pt-2 border-t border-border/40 text-center space-y-2">
+              <p className="text-xs text-muted-foreground">Or reach our team directly:</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <a
+                  href={`https://wa.me/250784289407?text=${encodeURIComponent(
+                    `Hello Kundwa IB Group, I am inquiring about ${service.name} for my event.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 text-xs font-bold transition-colors border border-emerald-500/20"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" /> WhatsApp
+                </a>
+                <a
+                  href="tel:+250784289407"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 text-xs font-bold transition-colors"
+                >
+                  <Phone className="h-3.5 w-3.5" /> Call +250 784 289 407
+                </a>
+                <a
+                  href="mailto:info@kundwaib.com"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-foreground hover:bg-muted/80 text-xs font-bold transition-colors"
+                >
+                  <Mail className="h-3.5 w-3.5" /> Email
+                </a>
+              </div>
             </div>
           </div>
         </DialogContent>

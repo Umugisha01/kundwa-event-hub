@@ -11,7 +11,8 @@ import dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from the root .env file
+# Load environment variables from local or root .env file
+dotenv.load_dotenv(BASE_DIR / '.env')
 dotenv.load_dotenv(BASE_DIR.parent / '.env')
 
 # Quick-start development settings - unsuitable for production
@@ -20,8 +21,10 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1')
 
 allowed_hosts_raw = os.environ.get('ALLOWED_HOSTS', '*')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()]
+if '.vercel.app' not in ALLOWED_HOSTS and '*' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('.vercel.app')
 
-# Essential for HTTPS detection behind reverse proxies (Render, Railway, Fly, Heroku)
+# Essential for HTTPS detection behind reverse proxies (Vercel, Render, Railway, Fly, Heroku)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
@@ -80,8 +83,13 @@ DB_NAME = os.environ.get('DB_NAME')
 if DATABASE_URL:
     try:
         import dj_database_url
+        is_supabase_or_ssl = 'supabase' in DATABASE_URL or 'sslmode' in DATABASE_URL
         DATABASES = {
-            'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=0 if not DEBUG else 600,
+                ssl_require=is_supabase_or_ssl
+            )
         }
     except Exception:
         DATABASES = {

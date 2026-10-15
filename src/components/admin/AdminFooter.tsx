@@ -31,7 +31,7 @@ export function AdminFooter() {
   const [generalForm, setGeneralForm] = useState({
     tagline: "Creating unforgettable experiences with world-class sound, lighting, and stage production.",
     contact_email: "info@kundwaib.com",
-    contact_phone: "+250 788 000 000",
+    contact_phone: "+250 784 289 407",
     contact_address: "Kigali, Rwanda",
     copyright_text: `© ${new Date().getFullYear()} Kundwa IB Group. All rights reserved.`,
   });
@@ -79,7 +79,7 @@ export function AdminFooter() {
         setGeneralForm({
           tagline: data.tagline || "Creating unforgettable experiences with world-class sound, lighting, and stage production.",
           contact_email: data.contact_email || "info@kundwaib.com",
-          contact_phone: data.contact_phone || "+250 788 000 000",
+          contact_phone: data.contact_phone || "+250 784 289 407",
           contact_address: data.contact_address || "Kigali, Rwanda",
           copyright_text: data.copyright_text || `© ${new Date().getFullYear()} Kundwa IB Group. All rights reserved.`,
         });
