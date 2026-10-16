@@ -108,7 +108,7 @@ if not USE_LOCAL_DB and DATABASE_URL and _is_host_connectable(DATABASE_URL):
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
-                conn_max_age=0,  # 0 prevents stale sockets on cloud DBs
+                conn_max_age=300,  # 300s keeps connection alive, eliminating 1s SSL handshake on every request
                 ssl_require=is_supabase_or_ssl
             )
         }
@@ -128,6 +128,7 @@ elif USE_LOCAL_DB or DB_HOST in ('localhost', '127.0.0.1'):
             'PASSWORD': os.environ.get('LOCAL_DB_PASSWORD', 'Bnc20031!'),
             'HOST': 'localhost',
             'PORT': '5432',
+            'CONN_MAX_AGE': 300,
         }
     }
 else:

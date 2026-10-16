@@ -52,6 +52,47 @@ class MockChannel {
   }
 }
 
+interface CacheItem {
+  data: any;
+  timestamp: number;
+}
+
+const memoryCache = new Map<string, CacheItem>();
+const inFlightRequests = new Map<string, Promise<{ data: any; error: any }>>();
+
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+// Tables that should bypass cache (user-specific / transaction-sensitive)
+const UNCACHED_TABLES = new Set(["bookings", "tickets", "chat_messages"]);
+
+export function invalidateQueryCache(table?: string) {
+  if (!table) {
+    memoryCache.clear();
+    try {
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith("agy_cache_")) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    } catch {}
+    return;
+  }
+
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith(`${table}:`) || key.startsWith(`${table}?`)) {
+      memoryCache.delete(key);
+    }
+  }
+
+  try {
+    Object.keys(sessionStorage).forEach((key) => {
+      if (key.startsWith(`agy_cache_${table}:`) || key.startsWith(`agy_cache_${table}?`)) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch {}
+}
+
 class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
   table: string;
   filters: { [key: string]: any } = {};
@@ -195,6 +236,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
 
     const basePath = `/api/${endpoint}/${this.isSingle && this.filters.id ? `${this.filters.id}/` : ""}`;
     let url = apiUrl(basePath);
+    let queryString = "";
     if (!this.isSingle || !this.filters.id) {
       const params = new URLSearchParams();
       Object.entries(this.filters).forEach(([k, v]) => {
@@ -203,26 +245,78 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
       if (this.ordering) params.append("ordering", this.ordering);
       if (this.limitNum) params.append("limit", String(this.limitNum));
 
-      const queryString = params.toString();
+      queryString = params.toString();
       if (queryString) url += `?${queryString}`;
     }
 
-    const response = await this.fetchWithAuth(url, { method: "GET" });
+    const canCache = !UNCACHED_TABLES.has(this.table);
+    const cacheKey = `${endpoint}?${queryString}&single=${this.isSingle}&id=${this.filters.id || ""}`;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      return { data: null, error: new Error(errText || `HTTP ${response.status}`) };
-    }
-
-    const json = await response.json();
-
-    if (this.isSingle) {
-      if (Array.isArray(json)) {
-        return { data: json[0] || null, error: null };
+    // 1. Fast path: In-Memory cache (0ms instant return)
+    if (canCache && memoryCache.has(cacheKey)) {
+      const cached = memoryCache.get(cacheKey)!;
+      if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return { data: cached.data, error: null };
       }
-      return { data: json, error: null };
     }
-    return { data: json, error: null };
+
+    // 2. Fast path: SessionStorage cache (0ms instant return on reload/navigation)
+    if (canCache && typeof sessionStorage !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem(`agy_cache_${cacheKey}`);
+        if (stored) {
+          const parsed = JSON.parse(stored) as CacheItem;
+          if (Date.now() - parsed.timestamp < CACHE_TTL_MS) {
+            memoryCache.set(cacheKey, parsed);
+            return { data: parsed.data, error: null };
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Deduplication: Join existing in-flight request if identical query is already pending
+    if (inFlightRequests.has(cacheKey)) {
+      return inFlightRequests.get(cacheKey)!;
+    }
+
+    // 4. Execute network request
+    const networkPromise = (async () => {
+      try {
+        const response = await this.fetchWithAuth(url, { method: "GET" });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          return { data: null, error: new Error(errText || `HTTP ${response.status}`) };
+        }
+
+        const json = await response.json();
+        let resultData: any;
+
+        if (this.isSingle) {
+          resultData = Array.isArray(json) ? (json[0] || null) : json;
+        } else {
+          resultData = json;
+        }
+
+        // Cache the result
+        if (canCache && resultData !== null) {
+          const cacheItem: CacheItem = { data: resultData, timestamp: Date.now() };
+          memoryCache.set(cacheKey, cacheItem);
+          try {
+            sessionStorage.setItem(`agy_cache_${cacheKey}`, JSON.stringify(cacheItem));
+          } catch {}
+        }
+
+        return { data: resultData, error: null };
+      } catch (err: any) {
+        return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
+      } finally {
+        inFlightRequests.delete(cacheKey);
+      }
+    })();
+
+    inFlightRequests.set(cacheKey, networkPromise);
+    return networkPromise;
   }
 
   private async executeInsert(): Promise<{ data: any; error: any }> {
@@ -254,6 +348,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
     }
 
     const json = await response.json();
+    invalidateQueryCache(endpoint);
     return { data: json, error: null };
   }
 
@@ -294,6 +389,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
     }
 
     const json = await response.json();
+    invalidateQueryCache(endpoint);
     return { data: json, error: null };
   }
 
@@ -315,6 +411,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
       return { data: null, error: new Error(errText || `Delete failed with HTTP ${response.status}`) };
     }
 
+    invalidateQueryCache(endpoint);
     return { data: true, error: null };
   }
 

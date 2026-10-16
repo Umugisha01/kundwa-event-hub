@@ -21,10 +21,16 @@ const categoryData = [
   }
 ];
 
+const defaultCategoryItems: Record<string, string[]> = {
+  "Event Production": ["Sound Systems & Line Arrays", "Stage Lighting & Trussing", "LED Video Walls", "Stage Setup & Rigging"],
+  "Event Management": ["Artist Booking & Lineup", "Ticketing & Access Control", "Branding & Media Coverage", "Crowd & Venue Safety"],
+  "Corporate Events": ["Conference AV & Livestreaming", "Keynote Stage Setup", "Gala Dinners & Award Ceremonies", "Simultaneous Interpretation"],
+};
+
 export function ServicesPreview() {
   const [mainServices, setMainServices] = useState<any[]>([]);
   const [dbServices, setDbServices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
 
   const isDark = theme === "dark";
@@ -37,7 +43,7 @@ export function ServicesPreview() {
       if (msRes.data && msRes.data.length > 0) {
         setMainServices(msRes.data);
       }
-      if (sRes.data) {
+      if (sRes.data && sRes.data.length > 0) {
         setDbServices(sRes.data);
       }
       setLoading(false);
@@ -47,16 +53,22 @@ export function ServicesPreview() {
   }, []);
 
   const effectiveCategories = mainServices.length > 0
-    ? mainServices.map(m => ({
-        title: m.title,
-        description: m.description || "Comprehensive event solutions.",
-        items: dbServices.filter(s => s.category === m.title).map(s => s.name)
-      }))
-    : categoryData.map((cat) => ({
-        title: cat.title,
-        description: cat.description,
-        items: dbServices.filter((s) => s.category === cat.title).map((s) => s.name)
-      }));
+    ? mainServices.map(m => {
+        const matching = dbServices.filter(s => s.category === m.title).map(s => s.name);
+        return {
+          title: m.title,
+          description: m.description || "Comprehensive event solutions.",
+          items: matching.length > 0 ? matching : (defaultCategoryItems[m.title] || ["Professional Equipment", "Certified Engineers", "Setup & Teardown"])
+        };
+      })
+    : categoryData.map((cat) => {
+        const matching = dbServices.filter((s) => s.category === cat.title).map((s) => s.name);
+        return {
+          title: cat.title,
+          description: cat.description,
+          items: matching.length > 0 ? matching : (defaultCategoryItems[cat.title] || ["Professional Equipment", "Certified Engineers", "Setup & Teardown"])
+        };
+      });
 
   const categories = effectiveCategories;
 
@@ -99,32 +111,8 @@ export function ServicesPreview() {
           </p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
-            <p className="text-muted-foreground text-sm">Loading services...</p>
-          </div>
-        ) : dbServices.length === 0 ? (
-          <div className="max-w-xl mx-auto py-12 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md">
-            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-              Our comprehensive services portfolio is currently being refreshed online. Contact our production team directly to discuss sound systems, lighting, stage design, or ticketing solutions.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link to="/services">
-                <Button className="btn-gold gap-1.5">
-                  View All Services <FaArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
-              <Link to="/contact">
-                <Button variant="outline">
-                  Contact Us
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap justify-center gap-8">
-            {categories.filter((cat) => cat.items.length > 0).map((cat, i) => (
+        <div className="flex flex-wrap justify-center gap-8">
+          {categories.filter((cat) => cat.items.length > 0).map((cat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
@@ -184,7 +172,6 @@ export function ServicesPreview() {
               </motion.div>
             ))}
           </div>
-        )}
 
         {/* View All Button */}
         <div className="text-center mt-12">
