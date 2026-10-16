@@ -85,20 +85,23 @@ DB_PASSWORD = os.environ.get('DB_PASSWORD', 'Bnc20031!')
 DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_PORT = os.environ.get('DB_PORT', '5432')
 
-def _is_host_resolvable(url_str):
+def _is_host_connectable(url_str):
     if not url_str:
         return False
     try:
         import urllib.parse, socket
-        parsed = urllib.parse.urlparse(url_str)
+        parsed = urllib.parse.urlparse(url_str.strip())
         if parsed.hostname:
-            socket.getaddrinfo(parsed.hostname, parsed.port or 5432, socket.AF_UNSPEC, socket.SOCK_STREAM)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.5)
+            s.connect((parsed.hostname, parsed.port or 5432))
+            s.close()
             return True
     except Exception:
         return False
     return True
 
-if not USE_LOCAL_DB and DATABASE_URL and _is_host_resolvable(DATABASE_URL):
+if not USE_LOCAL_DB and DATABASE_URL and _is_host_connectable(DATABASE_URL):
     try:
         import dj_database_url
         is_supabase_or_ssl = 'supabase' in DATABASE_URL or 'sslmode' in DATABASE_URL
