@@ -7,7 +7,8 @@ from .views import (
     TestimonialViewSet, TrustedBrandViewSet, SiteStatisticViewSet,
     ProfileViewSet, UserRoleViewSet,
     RegisterView, CustomTokenObtainPairView, FileUploadView, HealthCheckView,
-    MoMoInitiatePaymentView, MoMoPaymentStatusView, MoMoApproveSimulationView
+    MoMoInitiatePaymentView, MoMoPaymentStatusView, MoMoApproveSimulationView,
+    SyncProductionDataView
 )
 
 router = DefaultRouter()
@@ -48,6 +49,10 @@ urlpatterns = [
     path('payments/momo/status/<str:ref>', MoMoPaymentStatusView.as_view()),
     path('payments/momo/approve-test/<str:ref>/', MoMoApproveSimulationView.as_view(), name='momo-approve-test'),
     path('payments/momo/approve-test/<str:ref>', MoMoApproveSimulationView.as_view()),
+    
+    # Admin Database Sync Endpoint
+    path('admin/sync-production-data/', SyncProductionDataView.as_view(), name='sync-production-data'),
+    path('admin/sync-production-data', SyncProductionDataView.as_view()),
 
     path('', include(router.urls)),
 ]

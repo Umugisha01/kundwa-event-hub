@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, apiUrl, invalidateQueryCache } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -10,7 +10,7 @@ import {
   CheckCircle2, Clock, ArrowUpRight, QrCode, Printer,
   Calendar as CalendarIcon, Edit3, Save, X, Search,
   Sparkles, Layers, Eye, RefreshCw, AlertCircle, ArrowRight,
-  ShieldCheck, FileText, Mail, Phone, ExternalLink, MapPin
+  ShieldCheck, FileText, Mail, Phone, ExternalLink, MapPin, Database
 } from "lucide-react";
 import { CalendarModal } from "@/components/events/CalendarModal";
 
@@ -23,6 +23,7 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
   
   // Platform statistics & data
   const [loading, setLoading] = useState(true);
+  const [syncingDb, setSyncingDb] = useState(false);
   const [bookings, setBookings] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
@@ -34,6 +35,37 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
     years_experience: 12,
     countries_reached: 6,
   });
+
+  const handleSyncDatabase = async () => {
+    setSyncingDb(true);
+    try {
+      const token = localStorage.getItem("django_access_token");
+      const res = await fetch(apiUrl("/api/admin/sync-production-data/"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Sync failed");
+      
+      invalidateQueryCache();
+      toast({
+        title: "Database Synchronized! ✨",
+        description: "All live database tables now match local production records."
+      });
+      loadDashboardData();
+    } catch (err: any) {
+      toast({
+        title: "Sync Status",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSyncingDb(false);
+    }
+  };
 
   // Personal admin data
   const [myTickets, setMyTickets] = useState<any[]>([]);
@@ -229,6 +261,16 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
             >
               <Ticket className="w-4 h-4 text-emerald-400" />
               <span>Bookings ({pendingBookingsCount})</span>
+            </Button>
+
+            <Button
+              onClick={handleSyncDatabase}
+              disabled={syncingDb}
+              title="Synchronize live database with all real local records"
+              className="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold rounded-xl text-xs h-10 px-4 shadow-md gap-1.5 transition-transform active:scale-95"
+            >
+              <Database className="w-4 h-4 text-slate-900" />
+              <span>{syncingDb ? "Syncing DB..." : "Sync Live DB"}</span>
             </Button>
 
             <Button

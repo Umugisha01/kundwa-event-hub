@@ -418,3 +418,34 @@ class MoMoApproveSimulationView(APIView):
         res = approve_momo_simulation(ref)
         return Response(res, status=status.HTTP_200_OK)
 
+
+class SyncProductionDataView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if not request.user.roles.filter(role='admin').exists():
+            return Response({'error': 'Admin permissions required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            from django.conf import settings
+            import os
+            from django.db import connection
+
+            sql_path = settings.BASE_DIR / 'sync_supabase_data.sql'
+            if os.path.exists(sql_path):
+                with open(sql_path, 'r', encoding='utf-8') as f:
+                    sql_content = f.read()
+                with connection.cursor() as cursor:
+                    cursor.execute(sql_content)
+                return Response({'success': True, 'message': 'Successfully synchronized real production data into database.'})
+
+            fixture_path = settings.BASE_DIR / 'local_data_export.json'
+            if os.path.exists(fixture_path):
+                from django.core.management import call_command
+                call_command('loaddata', str(fixture_path))
+                return Response({'success': True, 'message': 'Successfully loaded local_data_export.json into database.'})
+
+            return Response({'error': 'No data synchronization files found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
