@@ -4,7 +4,12 @@
  * otherwise falls back to local relative paths proxied by Vite.
  */
 
-export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+export const API_BASE = (
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname.includes("vercel.app") && !window.location.hostname.includes("kundwa-event-hub")
+    ? "https://kundwa-event-hub.vercel.app"
+    : "")
+).replace(/\/+$/, "");
 
 /**
  * Returns a fully qualified or relative API endpoint URL.

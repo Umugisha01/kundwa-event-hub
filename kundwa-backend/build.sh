@@ -15,4 +15,9 @@ python manage.py collectstatic --no-input
 echo "==> Seeding initial database records (idempotent)..."
 python manage.py seed_db
 
+echo "==> Loading production data export..."
+if [ -f "local_data_export.json" ]; then
+    python manage.py loaddata local_data_export.json || true
+fi
+
 echo "==> Build finished successfully!"

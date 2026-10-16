@@ -1,0 +1,1390 @@
+[
+{
+  "model": "api.profile",
+  "pk": "ba5956f4-9f74-44bb-87de-878f0b09f6c1",
+  "fields": {
+    "user": 1,
+    "full_name": "Admin User",
+    "phone": null,
+    "avatar_url": null,
+    "created_at": "2026-06-23T00:10:48.401Z",
+    "updated_at": "2026-06-23T00:10:48.401Z"
+  }
+},
+{
+  "model": "api.profile",
+  "pk": "c3a89828-d940-49c4-9ea9-0c88feb09534",
+  "fields": {
+    "user": 2,
+    "full_name": "Kundwa Administrator",
+    "phone": null,
+    "avatar_url": null,
+    "created_at": "2026-10-06T21:47:10.761Z",
+    "updated_at": "2026-10-06T21:47:10.761Z"
+  }
+},
+{
+  "model": "api.userrole",
+  "pk": "1cd3b58d-6090-496c-b366-1100c33cde4a",
+  "fields": {
+    "user": 1,
+    "role": "admin"
+  }
+},
+{
+  "model": "api.userrole",
+  "pk": "c4d3faf3-e2d1-495a-a598-8a91793ae6c7",
+  "fields": {
+    "user": 2,
+    "role": "admin"
+  }
+},
+{
+  "model": "api.event",
+  "pk": "4b1b2ad3-8ad0-44e2-a5a7-200962118110",
+  "fields": {
+    "title": "Royal Wedding Gala",
+    "description": "An extraordinary celebration of love and culture at the prestigious Intare Conference Arena featuring bespoke audiovisuals, lavish stage craft, and gourmet dining.",
+    "date": "2026-07-07T16:00:00Z",
+    "end_date": "2026-07-07T23:00:00Z",
+    "door_time": "4:00 PM",
+    "status": "Upcoming",
+    "location": "Kigali Rwanda",
+    "venue": "Intare Conference Arena",
+    "organizer": "Kundwa IB Event Productions",
+    "category": "Gala",
+    "phone": "+250 788 000 000",
+    "image_url": "/assets/hero-event.jpg",
+    "is_featured": false,
+    "ticket_price": "50000.00",
+    "total_tickets": 800,
+    "tickets_sold": 451,
+    "ticket_tiers": [
+      {
+        "id": "tier-gala-regular",
+        "name": "GALA GUEST ENTRY",
+        "sold": 301,
+        "price": 50000,
+        "capacity": 500,
+        "description": "General guest admission and seated gourmet dinner service"
+      },
+      {
+        "id": "tier-gala-couple",
+        "name": "VIP COUPLE PASS",
+        "sold": 120,
+        "price": 90000,
+        "capacity": 200,
+        "description": "Entry for two with reserved prime table and champagne toast"
+      },
+      {
+        "id": "tier-gala-royal",
+        "name": "ROYAL TABLE (10 GUESTS)",
+        "sold": 3,
+        "price": 450000,
+        "capacity": 10,
+        "description": "Full private table of 10 with private sommelier service"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.400Z",
+    "updated_at": "2026-10-13T21:14:09.036Z"
+  }
+},
+{
+  "model": "api.event",
+  "pk": "f51dc207-46f0-454c-89cc-cfd3c8e33f88",
+  "fields": {
+    "title": "Rwanda Corporate Tech Summit 2026",
+    "description": "East Africa's premier technology, cloud, and AI conference gathering industry innovators, founders, and leaders at Kigali Convention Centre.",
+    "date": "2026-08-06T09:00:00Z",
+    "end_date": "2026-08-07T18:00:00Z",
+    "door_time": "9:00 AM",
+    "status": "Upcoming",
+    "location": "Kigali Rwanda",
+    "venue": "Kigali Convention Centre",
+    "organizer": "Rwanda Tech Network",
+    "category": "Corporate",
+    "phone": "+250 788 000 000",
+    "image_url": "/assets/event-corporate.jpg",
+    "is_featured": true,
+    "ticket_price": "50000.00",
+    "total_tickets": 1200,
+    "tickets_sold": 341,
+    "ticket_tiers": [
+      {
+        "id": "tier-tech-delegate",
+        "name": "STANDARD DELEGATE",
+        "sold": 261,
+        "price": 50000,
+        "capacity": 800,
+        "description": "Access to all keynote stages, expo arena, and networking lunches"
+      },
+      {
+        "id": "tier-tech-exec",
+        "name": "EXECUTIVE ACCESS PASS",
+        "sold": 65,
+        "price": 120000,
+        "capacity": 300,
+        "description": "Executive boardroom roundtables, C-level lounge, and speaker reception dinner"
+      },
+      {
+        "id": "tier-tech-investor",
+        "name": "INVESTOR & FOUNDER PASS",
+        "sold": 15,
+        "price": 200000,
+        "capacity": 100,
+        "description": "Private pitch rooms, 1-on-1 VC meetings, and VIP banquet access"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.399Z",
+    "updated_at": "2026-10-13T16:39:32.336Z"
+  }
+},
+{
+  "model": "api.event",
+  "pk": "fdb64f0c-cea1-46e9-93b1-6be242043e02",
+  "fields": {
+    "title": "Kigali Jazz Junction - Summer Edition",
+    "description": "An unforgettable evening of live jazz, fusion rhythms, and world-class performances featuring renowned regional and international musicians at KCEV Camp Kigali.",
+    "date": "2026-07-22T18:00:00Z",
+    "end_date": "2026-07-22T23:59:00Z",
+    "door_time": "6:00 PM",
+    "status": "Upcoming",
+    "location": "Kigali Rwanda",
+    "venue": "KCEV Camp Kigali",
+    "organizer": "RG Consult Inc & Kundwa IB",
+    "category": "Concert",
+    "phone": "+250 788 000 000",
+    "image_url": "/assets/event-concert.jpg",
+    "is_featured": true,
+    "ticket_price": "15000.00",
+    "total_tickets": 2500,
+    "tickets_sold": 210,
+    "ticket_tiers": [
+      {
+        "id": "tier-kjj-regular",
+        "name": "REGULAR PASS",
+        "sold": 150,
+        "price": 15000,
+        "capacity": 1500,
+        "description": "Standard access to the main amphitheater and festival grounds"
+      },
+      {
+        "id": "tier-kjj-vip",
+        "name": "VIP SEATING",
+        "sold": 50,
+        "price": 35000,
+        "capacity": 800,
+        "description": "Prime stage-view seating with table service and 1 welcome drink"
+      },
+      {
+        "id": "tier-kjj-vvip",
+        "name": "VVIP TABLE LOUNGE",
+        "sold": 10,
+        "price": 100000,
+        "capacity": 200,
+        "description": "Exclusive elevated hospitality lounge with complimentary buffet & drinks"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.397Z",
+    "updated_at": "2026-09-22T12:52:30.135Z"
+  }
+},
+{
+  "model": "api.event",
+  "pk": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+  "fields": {
+    "title": "RYLA RWANDA",
+    "description": "Rotary Youth Leadership Awards 2026. Theme: Empowering the next generation of Youth change agents. Inspiring workshops, networking, mentorship, and youth leadership empowerment.",
+    "date": "2026-03-27T14:00:00Z",
+    "end_date": "2026-03-28T23:00:00Z",
+    "door_time": "4:00 PM",
+    "status": "Active",
+    "location": "Kigali Rwanda",
+    "venue": "UR Gikondo Campus",
+    "organizer": "ROTARY CLUB KIGALI VIRUNGA",
+    "category": "Festival",
+    "phone": "+250789808030",
+    "image_url": "/ryla-rwanda.jpg",
+    "is_featured": true,
+    "ticket_price": "0.00",
+    "total_tickets": 1950,
+    "tickets_sold": 71,
+    "ticket_tiers": [
+      {
+        "id": "tier-early-bird",
+        "name": "EARLY BIRD TICKET",
+        "sold": 44,
+        "price": 5000,
+        "capacity": 500,
+        "description": ""
+      },
+      {
+        "id": "tier-gate",
+        "name": "GATE TICKET",
+        "sold": 18,
+        "price": 20000,
+        "capacity": 1000,
+        "description": ""
+      },
+      {
+        "id": "tier-vip",
+        "name": "VIP LEADERSHIP PASS",
+        "sold": 8,
+        "price": 50000,
+        "capacity": 100,
+        "description": ""
+      },
+      {
+        "id": "tier-1791882967445",
+        "name": "VVIP",
+        "sold": 0,
+        "price": 15000,
+        "capacity": 100,
+        "description": ""
+      },
+      {
+        "id": "tier-premium",
+        "name": "PREMIUM TIER",
+        "sold": 0,
+        "price": 20000,
+        "capacity": 150,
+        "description": ""
+      },
+      {
+        "id": "tier-1791928846224",
+        "name": "NEW TICKET TIER",
+        "sold": 1,
+        "price": 0,
+        "capacity": 100,
+        "description": "General Access pass"
+      }
+    ],
+    "created_at": "2026-09-22T08:30:34.733Z",
+    "updated_at": "2026-10-13T22:14:24.759Z"
+  }
+},
+{
+  "model": "api.mainservice",
+  "pk": "5bebf288-ba28-42f8-bd90-67c1408b9f72",
+  "fields": {
+    "title": "Event Management",
+    "slug": "event-management",
+    "description": "End-to-end event strategy including multi-channel advertisement, brand identity, and secure ticketing solutions.",
+    "image_url": "/assets/event-concert-BQ1lRCHR.jpg",
+    "order": 2,
+    "color": "from-secondary/80 to-secondary",
+    "cta_text": "Inquire About Event Management",
+    "created_at": "2026-10-13T08:11:49.286Z",
+    "updated_at": "2026-10-13T08:11:49.286Z"
+  }
+},
+{
+  "model": "api.mainservice",
+  "pk": "b69cc848-0d07-4a73-95fe-7eb4a5c82482",
+  "fields": {
+    "title": "Event Production",
+    "slug": "event-production",
+    "description": "From sound systems to lighting and custom stage design, we deliver world-class production for every scale.",
+    "image_url": "/assets/lighting-system-nWaROWBf.jpg",
+    "order": 1,
+    "color": "from-primary/80 to-primary",
+    "cta_text": "Inquire About Event Production",
+    "created_at": "2026-10-13T08:11:49.278Z",
+    "updated_at": "2026-10-13T08:11:49.278Z"
+  }
+},
+{
+  "model": "api.mainservice",
+  "pk": "dc2cdb86-ede3-4c34-b214-4ff2dc5f469b",
+  "fields": {
+    "title": "Corporate Events",
+    "slug": "corporate-events",
+    "description": "Polished corporate conferences, gala dinners, summits, and executive networking productions that leave a mark.",
+    "image_url": "/assets/event-corporate-Cw1XL7S-.jpg",
+    "order": 3,
+    "color": "from-foreground/70 to-foreground/90",
+    "cta_text": "Inquire About Corporate Events",
+    "created_at": "2026-10-13T08:11:49.289Z",
+    "updated_at": "2026-10-13T08:11:49.289Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "23ad9c8d-9ac8-4902-a8fb-f2a49f1e4a98",
+  "fields": {
+    "slug": "sound-system",
+    "name": "Sound System",
+    "category": "Event Production",
+    "tagline": "Crystal-clear audio for every scale",
+    "description": "Our professional sound systems deliver pristine audio quality for events of any size — from intimate gatherings to massive outdoor festivals. We use industry-leading equipment from brands like JBL, QSC, and d&b audiotechnik, operated by certified sound engineers who ensure every note, word, and beat is heard perfectly.",
+    "icon": "Volume2",
+    "image_url": "/assets/sound-system-BvTBqtrw.jpg",
+    "gallery_images": [
+      "/assets/sound-system-BvTBqtrw.jpg",
+      "/assets/event-concert-BQ1lRCHR.jpg",
+      "/assets/hero-event-kmSdNpGf.jpg"
+    ],
+    "features": [
+      "Line array & point-source systems for any venue size",
+      "Wireless microphone systems (Shure, Sennheiser)",
+      "Digital mixing consoles with multi-track recording",
+      "Monitor systems & in-ear monitors for performers",
+      "Subwoofer arrays for deep, powerful bass",
+      "Certified sound engineers included",
+      "Setup, sound-check & teardown handled",
+      "Backup equipment on standby"
+    ],
+    "highlights": [
+      {
+        "label": "Capacity",
+        "value": "50 – 50,000+"
+      },
+      {
+        "label": "Brands",
+        "value": "JBL · QSC · d&b"
+      },
+      {
+        "label": "Engineers",
+        "value": "Certified Team"
+      },
+      {
+        "label": "Support",
+        "value": "24/7 On-site"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "From 50-person corporate meetings to 50,000+ outdoor festivals. We scale our system to match your venue and audience.",
+        "question": "What size events can you cover?"
+      },
+      {
+        "answer": "Yes — all our setups include dedicated sound engineers for seamless operation.",
+        "question": "Do you provide sound engineers?"
+      },
+      {
+        "answer": "Multi-track recording and live streaming audio are available. Contact us for details.",
+        "question": "Can I add recording services?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.366Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "56ccc09b-a38b-43c7-91df-171f82a5c3b0",
+  "fields": {
+    "slug": "advertisement",
+    "name": "Advertisement",
+    "category": "Event Management",
+    "tagline": "Fill every seat, build the buzz",
+    "description": "Our multi-channel advertising strategies ensure maximum reach and ticket sales. We combine digital marketing, social media campaigns, influencer partnerships, and traditional media to create buzz that drives attendance and builds lasting brand awareness for your event.",
+    "icon": "Megaphone",
+    "image_url": "/assets/event-concert-BQ1lRCHR.jpg",
+    "gallery_images": [
+      "/assets/event-concert-BQ1lRCHR.jpg",
+      "/assets/event-corporate-Cw1XL7S-.jpg",
+      "/assets/hero-event-kmSdNpGf.jpg"
+    ],
+    "features": [
+      "Social media ad campaigns (Meta, TikTok, X)",
+      "Google Ads & display network",
+      "Influencer & KOL partnerships",
+      "Radio & TV ad placement",
+      "Billboard & outdoor advertising",
+      "Email marketing campaigns",
+      "PR & press release distribution",
+      "Campaign analytics & reporting"
+    ],
+    "highlights": [
+      {
+        "label": "Channels",
+        "value": "10+ Platforms"
+      },
+      {
+        "label": "Reach",
+        "value": "1M+ Audience"
+      },
+      {
+        "label": "ROI",
+        "value": "3–8x Average"
+      },
+      {
+        "label": "Analytics",
+        "value": "Real-time"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "Our campaigns typically deliver 3-8x return on ad spend, depending on event type and target audience.",
+        "question": "What ROI can I expect?"
+      },
+      {
+        "answer": "Yes — all engagements include ad creative design. We can also produce video content.",
+        "question": "Do you handle content creation?"
+      },
+      {
+        "answer": "Absolutely. We use advanced targeting for age, location, interests, and behavior.",
+        "question": "Can you target specific demographics?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.375Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "7efda4fd-b4b8-4c19-9745-1543c1428bef",
+  "fields": {
+    "slug": "branding",
+    "name": "Branding",
+    "category": "Event Management",
+    "tagline": "Your event identity, crafted to perfection",
+    "description": "We create compelling visual identities that make your event unforgettable. From logo design and color systems to printed materials and digital assets, our creative team ensures every touchpoint reflects your event's personality and resonates with your audience.",
+    "icon": "Sparkles",
+    "image_url": "/assets/event-corporate-Cw1XL7S-.jpg",
+    "gallery_images": [
+      "/assets/event-corporate-Cw1XL7S-.jpg",
+      "/assets/hero-event-kmSdNpGf.jpg",
+      "/assets/event-concert-BQ1lRCHR.jpg"
+    ],
+    "features": [
+      "Event logo & visual identity design",
+      "Color palette & typography system",
+      "Social media templates & content kits",
+      "Event posters, banners & flyers",
+      "Branded merchandise design",
+      "Stage & venue signage",
+      "Digital invitation design",
+      "Brand guidelines document"
+    ],
+    "highlights": [
+      {
+        "label": "Turnaround",
+        "value": "3–14 Days"
+      },
+      {
+        "label": "Deliverables",
+        "value": "Print + Digital"
+      },
+      {
+        "label": "Revisions",
+        "value": "Unlimited"
+      },
+      {
+        "label": "Ownership",
+        "value": "Full Rights"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "Typically 3–14 days depending on the scope. We'll discuss timelines during your consultation.",
+        "question": "How long does branding take?"
+      },
+      {
+        "answer": "Yes — all final designs and source files are transferred to you upon completion.",
+        "question": "Do we own the designs?"
+      },
+      {
+        "answer": "Absolutely. We can extend your existing brand identity into event-specific materials.",
+        "question": "Can you match existing branding?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.373Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "bb1a3b17-93d4-443e-a6a5-d3bd4c38d812",
+  "fields": {
+    "slug": "ticketing",
+    "name": "Ticketing",
+    "category": "Event Management",
+    "tagline": "Seamless ticket sales, happy attendees",
+    "description": "Our end-to-end ticketing solutions handle everything from online sales and mobile money payments to QR code validation at the door. We provide real-time analytics, multiple ticket tiers, and a smooth experience for both organizers and attendees.",
+    "icon": "Ticket",
+    "image_url": "/assets/hero-event-kmSdNpGf.jpg",
+    "gallery_images": [
+      "/assets/hero-event-kmSdNpGf.jpg",
+      "/assets/event-concert-BQ1lRCHR.jpg",
+      "/assets/event-corporate-Cw1XL7S-.jpg"
+    ],
+    "features": [
+      "Online ticket sales platform",
+      "Mobile Money integration (MTN, Airtel)",
+      "Credit/debit card payments",
+      "QR code ticket generation & validation",
+      "Multiple ticket tiers (VIP, Standard, etc.)",
+      "Real-time sales dashboard",
+      "Attendee check-in system",
+      "Post-event analytics & reports"
+    ],
+    "highlights": [
+      {
+        "label": "Payments",
+        "value": "MoMo + Card"
+      },
+      {
+        "label": "Validation",
+        "value": "QR Codes"
+      },
+      {
+        "label": "Dashboard",
+        "value": "Real-time"
+      },
+      {
+        "label": "Support",
+        "value": "On-site Team"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "MTN Mobile Money, Airtel Money, Visa, Mastercard, and bank transfers.",
+        "question": "What payment methods are supported?"
+      },
+      {
+        "answer": "Via email and SMS with a unique QR code. They can also access tickets in their dashboard.",
+        "question": "How do attendees receive tickets?"
+      },
+      {
+        "answer": "Yes, we can provide trained check-in teams with scanning devices for your event.",
+        "question": "Do you provide on-site check-in staff?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.376Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "c77ca0df-3359-4aaa-9ade-e28e8b4f2b58",
+  "fields": {
+    "slug": "lighting-system",
+    "name": "Lighting System",
+    "category": "Event Production",
+    "tagline": "Set the mood, steal the show",
+    "description": "Transform any space with our professional lighting systems. From elegant ambient uplighting for galas to high-energy concert rigs with moving heads and lasers, our lighting designers create immersive visual experiences that elevate your event to another level.",
+    "icon": "Lightbulb",
+    "image_url": "/assets/lighting-system-nWaROWBf.jpg",
+    "gallery_images": [
+      "/assets/lighting-system-nWaROWBf.jpg",
+      "/assets/event-concert-BQ1lRCHR.jpg",
+      "/assets/event-corporate-Cw1XL7S-.jpg"
+    ],
+    "features": [
+      "Moving head fixtures (beam, spot, wash)",
+      "LED PAR cans & uplighting",
+      "DMX-controlled intelligent lighting",
+      "Haze & fog machines for atmosphere",
+      "Truss systems & rigging",
+      "Follow spots for keynote speakers",
+      "Pixel-mapped LED bars & strips",
+      "Dedicated lighting designer & operator"
+    ],
+    "highlights": [
+      {
+        "label": "Fixtures",
+        "value": "200+ Available"
+      },
+      {
+        "label": "Control",
+        "value": "Grand MA"
+      },
+      {
+        "label": "Setup",
+        "value": "Same-day Ready"
+      },
+      {
+        "label": "Custom",
+        "value": "Brand Colors"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "Depending on complexity, setup ranges from 2 hours to a full day. We'll coordinate the timeline with you.",
+        "question": "How early do you need to set up?"
+      },
+      {
+        "answer": "Absolutely. We program custom color palettes to match your brand identity perfectly.",
+        "question": "Can you match our brand colors?"
+      },
+      {
+        "answer": "Yes, we have weatherproof fixtures and generators for outdoor events.",
+        "question": "Do you provide outdoor lighting?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.368Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "cf4926c0-0259-4301-8fa3-47fea0e9f049",
+  "fields": {
+    "slug": "corporate-events",
+    "name": "Corporate Events",
+    "category": "Corporate Events",
+    "tagline": "Professional events that deliver results",
+    "description": "We specialize in delivering polished corporate events — from intimate board meetings to large-scale conferences and gala dinners. Our team handles every detail including venue coordination, AV production, catering, branding, and logistics so you can focus on your message.",
+    "icon": "Briefcase",
+    "image_url": "/assets/event-corporate-Cw1XL7S-.jpg",
+    "gallery_images": [
+      "/assets/event-corporate-Cw1XL7S-.jpg",
+      "/assets/hero-event-kmSdNpGf.jpg",
+      "/assets/stage-design-CkEBBEdx.jpg"
+    ],
+    "features": [
+      "Full event planning & coordination",
+      "Venue sourcing & management",
+      "Complete AV & production setup",
+      "Corporate branding & signage",
+      "Catering coordination",
+      "Photography & videography",
+      "Transport & logistics",
+      "Post-event reporting"
+    ],
+    "highlights": [
+      {
+        "label": "Planning",
+        "value": "End-to-End"
+      },
+      {
+        "label": "Venues",
+        "value": "50+ Partners"
+      },
+      {
+        "label": "Catering",
+        "value": "Premium"
+      },
+      {
+        "label": "Coverage",
+        "value": "Photo + Video"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "We recommend 4-12 weeks depending on event scale. Contact us to discuss your timeline.",
+        "question": "How far in advance should we book?"
+      },
+      {
+        "answer": "Yes — we arrange airport transfers, hotel bookings, translation services, and cultural programs.",
+        "question": "Can you handle international delegates?"
+      },
+      {
+        "answer": "Yes, we offer curated team-building programs including outdoor adventures, workshops, and cultural experiences.",
+        "question": "Do you provide team-building activities?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.379Z"
+  }
+},
+{
+  "model": "api.service",
+  "pk": "f131a8bf-941a-4791-a575-d978573e1440",
+  "fields": {
+    "slug": "stage-design",
+    "name": "Stage Design",
+    "category": "Event Production",
+    "tagline": "The stage your event deserves",
+    "description": "Our custom stage designs are engineered for impact and safety. Whether you need a simple podium for a corporate talk or a multi-level concert stage with LED backdrops, our team designs, builds, and installs stages that become the centerpiece of your event.",
+    "icon": "Layers",
+    "image_url": "/assets/stage-design-CkEBBEdx.jpg",
+    "gallery_images": [
+      "/assets/stage-design-CkEBBEdx.jpg",
+      "/assets/hero-event-kmSdNpGf.jpg",
+      "/assets/event-concert-BQ1lRCHR.jpg"
+    ],
+    "features": [
+      "Custom stage sizes (4x3m to 20x12m+)",
+      "Multi-level & runway configurations",
+      "LED backdrop walls & video screens",
+      "Structural engineering & safety certification",
+      "Weather-rated outdoor staging",
+      "VIP & speaker platforms",
+      "Branded stage wraps & skirts",
+      "Complete setup & teardown crew"
+    ],
+    "highlights": [
+      {
+        "label": "Sizes",
+        "value": "4x3m – 20x12m+"
+      },
+      {
+        "label": "Safety",
+        "value": "Certified"
+      },
+      {
+        "label": "LED",
+        "value": "P3.9 Walls"
+      },
+      {
+        "label": "Crew",
+        "value": "Full Team"
+      }
+    ],
+    "faqs": [
+      {
+        "answer": "Yes — our fabrication team can create runways, thrust stages, circular stages, and any custom configuration.",
+        "question": "Can you build custom shapes?"
+      },
+      {
+        "answer": "All our stages are structurally engineered and certified. We carry full liability insurance.",
+        "question": "Is the stage certified safe?"
+      },
+      {
+        "answer": "We assist with venue and municipal permits required for stage installations.",
+        "question": "Do you handle permits?"
+      }
+    ],
+    "created_at": "2026-06-22T23:57:05.370Z"
+  }
+},
+{
+  "model": "api.equipmentcategory",
+  "pk": "529c9ef2-9671-42d0-83a3-870b1af2f240",
+  "fields": {
+    "name": "Stages",
+    "description": "Modular staging platforms, risers, and heavy duty trussing",
+    "icon": "Layers",
+    "order": 4,
+    "created_at": "2026-10-13T10:36:47.117Z"
+  }
+},
+{
+  "model": "api.equipmentcategory",
+  "pk": "c4474057-18b4-49cf-8034-1e1ad5432568",
+  "fields": {
+    "name": "Sound",
+    "description": "Line arrays, subwoofers, digital mixing consoles and microphones",
+    "icon": "Volume2",
+    "order": 3,
+    "created_at": "2026-10-13T10:36:47.110Z"
+  }
+},
+{
+  "model": "api.equipmentcategory",
+  "pk": "d230976a-b56b-49b1-9919-243504853dd5",
+  "fields": {
+    "name": "Screens",
+    "description": "High-resolution LED screens, video walls and projectors",
+    "icon": "Monitor",
+    "order": 1,
+    "created_at": "2026-10-13T10:36:47.088Z"
+  }
+},
+{
+  "model": "api.equipmentcategory",
+  "pk": "ece917f0-09b5-49cd-9677-a742a7b84145",
+  "fields": {
+    "name": "Lighting",
+    "description": "Moving heads, PAR wash lights, lasers, and controllers",
+    "icon": "Lightbulb",
+    "order": 2,
+    "created_at": "2026-10-13T10:36:47.104Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "0e19e245-ac4e-4dab-a8a2-da4f52969466",
+  "fields": {
+    "name": "Stage 8x6m Full",
+    "category": "Stages",
+    "description": "Concert grade full stage setup.",
+    "image_url": "/assets/stage-design-CkEBBEdx.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.394Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "32b47ebd-3462-4044-b15a-ff7e50ed9979",
+  "fields": {
+    "name": "Moving Head Light x4",
+    "category": "Lighting",
+    "description": "Professional intelligent moving heads for concert dynamic lighting.",
+    "image_url": "/assets/lighting-system-nWaROWBf.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.387Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "4bd601ab-1114-4388-88ac-7cb243752a6f",
+  "fields": {
+    "name": "PAR LED Set (16pcs)",
+    "category": "Lighting",
+    "description": "High power color wash lighting set.",
+    "image_url": "/assets/lighting-system-nWaROWBf.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.389Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "57afaf9d-cd2d-4067-8fb5-0810ac9e6085",
+  "fields": {
+    "name": "Stage 4x3m Modular",
+    "category": "Stages",
+    "description": "Modular stage platforms in various sizes, complete with skirting and safety rails.",
+    "image_url": "/assets/stage-design-CkEBBEdx.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.393Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "57f567c7-c7c4-44e8-b74d-bacc043a588c",
+  "fields": {
+    "name": "LED Screen 4x3m",
+    "category": "Screens",
+    "description": "High-resolution LED screens for presentations, video walls, and live feeds.",
+    "image_url": "/assets/hero-event-kmSdNpGf.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.383Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "9e05f84e-fd2f-4297-9d7a-57eb9d0e3528",
+  "fields": {
+    "name": "LED Screen 6x4m",
+    "category": "Screens",
+    "description": "Concert size high-resolution LED screens for large crowds.",
+    "image_url": "/assets/hero-event-kmSdNpGf.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.385Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "c9fa4f07-e6d8-42ce-9798-f7d23cf3074e",
+  "fields": {
+    "name": "Line Array Speaker Set",
+    "category": "Sound",
+    "description": "Concert-grade L-Acoustics K2 touring speakers.",
+    "image_url": "/assets/sound-system-BvTBqtrw.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.391Z"
+  }
+},
+{
+  "model": "api.equipment",
+  "pk": "f6cb5df5-d8d3-4791-b668-ae362cd1b94f",
+  "fields": {
+    "name": "Digital Mixing Console",
+    "category": "Sound",
+    "description": "Yamaha CL5 professional 72-channel console.",
+    "image_url": "/media/uploads/db8dc8ff-0465-4809-9311-1807ffcc80ea.jpg",
+    "status": "Available",
+    "created_at": "2026-06-22T23:57:05.392Z"
+  }
+},
+{
+  "model": "api.booking",
+  "pk": "63945f1c-0ca8-4104-b064-4c6f5871a6d6",
+  "fields": {
+    "user": null,
+    "event": null,
+    "equipment": null,
+    "equipment_name": "JBL VTX Line Array System",
+    "service_name": null,
+    "booking_type": "equipment",
+    "status": "Pending",
+    "amount": "0.00",
+    "notes": "Sound engineer required on-site throughout evening.",
+    "start_date": "2026-10-20",
+    "end_date": "2026-10-22",
+    "start_time": "10:00",
+    "end_time": "22:00",
+    "rental_days": 2,
+    "include_setup": true,
+    "customer_name": "Aline Uwase",
+    "customer_phone": "+250 788 999 888",
+    "customer_email": "aline@example.com",
+    "created_at": "2026-10-13T16:10:38.945Z",
+    "updated_at": "2026-10-13T16:10:38.945Z"
+  }
+},
+{
+  "model": "api.booking",
+  "pk": "da79d03b-87c2-4eba-9ce4-4df0e6ede718",
+  "fields": {
+    "user": null,
+    "event": null,
+    "equipment": "0e19e245-ac4e-4dab-a8a2-da4f52969466",
+    "equipment_name": "Stage 8x6m Full",
+    "service_name": null,
+    "booking_type": "equipment",
+    "status": "Pending",
+    "amount": "0.00",
+    "notes": "Stage placement at Kigali Convention Center Main Hall A. Heavy rigging points needed on roof truss. Deliver 2 hours before soundcheck.",
+    "start_date": "2026-10-15",
+    "end_date": "2026-10-18",
+    "start_time": "08:00",
+    "end_time": "18:00",
+    "rental_days": 3,
+    "include_setup": true,
+    "customer_name": "Eric Mugisha (Kigali Tech Summit)",
+    "customer_phone": "+250 788 123 456",
+    "customer_email": "eric.mugisha@techsummit.rw",
+    "created_at": "2026-10-13T15:47:17.666Z",
+    "updated_at": "2026-10-13T15:47:17.666Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "31c9cbf5-1c15-41ed-a9df-1615ebcfd9c1",
+  "fields": {
+    "user": 1,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-AL1OM",
+    "ticket_type": "GATE TICKET",
+    "tier_id": "tier-gate",
+    "quantity": 1,
+    "unit_price": "20000.00",
+    "total_price": "20000.00",
+    "customer_name": "Bumugisha",
+    "customer_email": "umugishaone@gmail.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-AL1OM\",\"event\":\"RYLA RWANDA\",\"tier\":\"GATE TICKET\",\"quantity\":1,\"attendee\":\"Bumugisha\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-06T19:15:32.012Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "36e69410-9ebc-4b0b-828d-1a4496441e27",
+  "fields": {
+    "user": 1,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-BQDBN",
+    "ticket_type": "NEW TICKET TIER",
+    "tier_id": "tier-1791928846224",
+    "quantity": 1,
+    "unit_price": "0.00",
+    "total_price": "0.00",
+    "customer_name": "BUMUGISHA Neema Christian",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-BQDBN\",\"event\":\"RYLA RWANDA\",\"tier\":\"NEW TICKET TIER\",\"quantity\":1,\"attendee\":\"BUMUGISHA Neema Christian\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\",\"momo_ref\":\"PK-F5B0KM\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-13T22:14:24.740Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "401966e4-faa4-4815-931a-4bf3083d1c19",
+  "fields": {
+    "user": 1,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-HV8SE",
+    "ticket_type": "GATE TICKET",
+    "tier_id": "tier-gate",
+    "quantity": 1,
+    "unit_price": "20000.00",
+    "total_price": "20000.00",
+    "customer_name": "BUMUGISHA",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-HV8SE\",\"event\":\"RYLA RWANDA\",\"tier\":\"GATE TICKET\",\"quantity\":1,\"attendee\":\"BUMUGISHA\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-06T19:15:03.833Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "4ba38d31-3b54-4998-9cae-01cd0f79ea7c",
+  "fields": {
+    "user": null,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-DEUHI",
+    "ticket_type": "GATE TICKET",
+    "tier_id": "tier-gate",
+    "quantity": 1,
+    "unit_price": "20000.00",
+    "total_price": "20000.00",
+    "customer_name": "Umugisha One",
+    "customer_email": "umugishaone@gmail.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-DEUHI\",\"event\":\"RYLA Rwanda\",\"tier\":\"GATE TICKET\",\"quantity\":1,\"attendee\":\"Umugisha One\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\"}",
+    "status": "Active",
+    "purchased_at": "2026-09-22T09:52:40.082Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "96268685-7e60-4bb9-8a31-b97d8846ab28",
+  "fields": {
+    "user": 1,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-J1CP1",
+    "ticket_type": "EARLY BIRD TICKET",
+    "tier_id": "tier-early-bird",
+    "quantity": 1,
+    "unit_price": "5000.00",
+    "total_price": "5000.00",
+    "customer_name": "BUMUGISHA Neema Christian",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-J1CP1\",\"event\":\"RYLA RWANDA\",\"tier\":\"EARLY BIRD TICKET\",\"quantity\":1,\"attendee\":\"BUMUGISHA Neema Christian\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-13T12:11:47.626Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "b6b0c181-108e-41a1-8db3-eb7a23fc7328",
+  "fields": {
+    "user": 1,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-TQJFP",
+    "ticket_type": "GATE TICKET",
+    "tier_id": "tier-gate",
+    "quantity": 1,
+    "unit_price": "20000.00",
+    "total_price": "20000.00",
+    "customer_name": "BUMUGISHA Neema Christian",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-TQJFP\",\"event\":\"RYLA RWANDA\",\"tier\":\"GATE TICKET\",\"quantity\":1,\"attendee\":\"BUMUGISHA Neema Christian\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-06T19:14:41.830Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "d7e4555d-6196-40c8-90a2-f21e1df1f7fd",
+  "fields": {
+    "user": 1,
+    "event": "fe67cbf7-b128-4de3-9a20-580d3bcbe584",
+    "ticket_code": "KIB-RYLA-FGRNP",
+    "ticket_type": "EARLY BIRD TICKET",
+    "tier_id": "tier-early-bird",
+    "quantity": 1,
+    "unit_price": "5000.00",
+    "total_price": "5000.00",
+    "customer_name": "BUMUGISHA Neema Christian",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RYLA-FGRNP\",\"event\":\"RYLA RWANDA\",\"tier\":\"EARLY BIRD TICKET\",\"quantity\":1,\"attendee\":\"BUMUGISHA Neema Christian\",\"date\":\"2026-03-27T14:00:00Z\",\"venue\":\"UR Gikondo Campus\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-13T11:00:33.472Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "da0db1eb-f9d4-4021-bacd-50dfe34f6ed6",
+  "fields": {
+    "user": 1,
+    "event": "f51dc207-46f0-454c-89cc-cfd3c8e33f88",
+    "ticket_code": "KIB-RWAN-9RI2J",
+    "ticket_type": "STANDARD DELEGATE",
+    "tier_id": "tier-tech-delegate",
+    "quantity": 1,
+    "unit_price": "50000.00",
+    "total_price": "50000.00",
+    "customer_name": "BUMUGISHA Neema Christian",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-RWAN-9RI2J\",\"event\":\"Rwanda Corporate Tech Summit 2026\",\"tier\":\"STANDARD DELEGATE\",\"quantity\":1,\"attendee\":\"BUMUGISHA Neema Christian\",\"date\":\"2026-08-06T09:00:00Z\",\"venue\":\"Kigali Convention Centre\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-13T16:39:32.306Z"
+  }
+},
+{
+  "model": "api.ticket",
+  "pk": "e00c6bcf-29e9-437e-857e-78fc8bdb71a6",
+  "fields": {
+    "user": 1,
+    "event": "4b1b2ad3-8ad0-44e2-a5a7-200962118110",
+    "ticket_code": "KIB-ROYA-IGXVO",
+    "ticket_type": "GALA GUEST ENTRY",
+    "tier_id": "tier-gala-regular",
+    "quantity": 1,
+    "unit_price": "50000.00",
+    "total_price": "50000.00",
+    "customer_name": "BUMUGISHA Neema Christian",
+    "customer_email": "admin@kundwaib.com",
+    "customer_phone": "+250780453841",
+    "qr_code_data": "{\"ticket_code\":\"KIB-ROYA-IGXVO\",\"event\":\"Royal Wedding Gala\",\"tier\":\"GALA GUEST ENTRY\",\"quantity\":1,\"attendee\":\"BUMUGISHA Neema Christian\",\"date\":\"2026-07-07T16:00:00Z\",\"venue\":\"Intare Conference Arena\",\"momo_ref\":\"PK-95C49C43F3\"}",
+    "status": "Active",
+    "purchased_at": "2026-10-13T21:14:09.002Z"
+  }
+},
+{
+  "model": "api.chatmessage",
+  "pk": "47105ddf-6aa7-48c5-a860-c7893ee85afb",
+  "fields": {
+    "sender": 1,
+    "receiver": null,
+    "message": "Hello!",
+    "is_read": false,
+    "created_at": "2026-07-09T12:44:25.373Z"
+  }
+},
+{
+  "model": "api.chatmessage",
+  "pk": "ec4a6cc5-29cb-4ba5-ab04-b3d030d172a9",
+  "fields": {
+    "sender": 1,
+    "receiver": null,
+    "message": "How is everything",
+    "is_read": false,
+    "created_at": "2026-07-09T12:44:37.060Z"
+  }
+},
+{
+  "model": "api.footersettings",
+  "pk": "5920fe87-af89-4478-97a4-0060959ba200",
+  "fields": {
+    "contact_email": "info@kundwaib.com",
+    "contact_phone": "+250 784 289 407",
+    "contact_address": "Kigali, Rwanda",
+    "tagline": "Creating unforgettable experiences with world-class sound, lighting, and stage production.",
+    "facebook_url": "https://facebook.com/kundwaib",
+    "instagram_url": "https://instagram.com/kundwaib",
+    "twitter_url": "https://twitter.com/kundwaib",
+    "youtube_url": "https://youtube.com/kundwaib",
+    "copyright_text": "© 2026 Kundwa IB Group. All rights reserved.",
+    "quick_links": [
+      {
+        "id": "1",
+        "url": "/",
+        "label": "Home"
+      },
+      {
+        "id": "2",
+        "url": "/services",
+        "label": "Services"
+      },
+      {
+        "id": "3",
+        "url": "/rentals",
+        "label": "Rentals"
+      },
+      {
+        "id": "4",
+        "url": "/events",
+        "label": "Events"
+      },
+      {
+        "id": "5",
+        "url": "/contact",
+        "label": "Contact"
+      }
+    ],
+    "services_list": [
+      {
+        "id": "1",
+        "url": "/services",
+        "label": "Sound Systems"
+      },
+      {
+        "id": "2",
+        "url": "/services",
+        "label": "Lighting Design"
+      },
+      {
+        "id": "3",
+        "url": "/services",
+        "label": "Stage Production"
+      },
+      {
+        "id": "4",
+        "url": "/services",
+        "label": "Event Management"
+      }
+    ],
+    "updated_at": "2026-10-05T10:45:44.019Z"
+  }
+},
+{
+  "model": "api.herosettings",
+  "pk": "31a6dc4c-3507-4e78-831e-450f381c0001",
+  "fields": {
+    "headline_prefix": "Creating",
+    "headline_highlight": "Unforgettable",
+    "headline_suffix": "Experiences",
+    "subtitle_prefix": "with",
+    "subtitle_brand": "Kundwa",
+    "glitch_words": [
+      "Sound",
+      "Events",
+      "IB Group"
+    ],
+    "description": "Creating unforgettable experiences with world-class sound, lighting, and stage production across East Africa.",
+    "background_image": "/14.jpg",
+    "cta_buttons": [
+      {
+        "id": "1",
+        "url": "/services",
+        "icon": "calendar",
+        "label": "Book a Service",
+        "style": "primary"
+      },
+      {
+        "id": "2",
+        "url": "/events",
+        "icon": "ticket",
+        "label": "Buy Ticket",
+        "style": "secondary"
+      },
+      {
+        "id": "3",
+        "url": "/rentals",
+        "icon": "wrench",
+        "label": "Rent Equipment",
+        "style": "outline"
+      }
+    ],
+    "carousel_photos": [
+      "/photos/12.jpg",
+      "/photos/13.jpg",
+      "/photos/14.jpg",
+      "/photos/gosheni_Choir_15.jpg",
+      "/photos/gosheni_Choir_16.jpg",
+      "/photos/ichthus_01.jpg",
+      "/photos/ichthus_02.jpg",
+      "/photos/ichthus_03.jpg",
+      "/photos/ichthus_04.jpg",
+      "/photos/ichthus_05.jpg",
+      "/photos/ichthus_06.jpg"
+    ],
+    "updated_at": "2026-10-05T09:14:17.660Z"
+  }
+},
+{
+  "model": "api.portfolio",
+  "pk": "38a803f3-4fc6-44bf-bf97-457aff7412de",
+  "fields": {
+    "title": "East Africa Concert Tour",
+    "category": "Concerts",
+    "description": "Full sound, stage lighting, and rigging setup for a 5-city stadium concert tour. Serviced over 50,000 attendees with zero technical downtime.\nso the sky is wating",
+    "thumbnail": "/media/uploads/fe5351b2-b6e5-4b63-8c19-bf14f8e4b6e7.jpeg",
+    "images": [
+      "/assets/event-concert-BQ1lRCHR.jpg",
+      "/assets/hero-event-kmSdNpGf.jpg"
+    ],
+    "video_url": "/media/uploads/75e04b68-bc7e-4a51-b1f2-6dcd4add6900.MOV",
+    "date": "December 2025",
+    "client": "East Africa Music Group",
+    "created_at": "2026-06-22T23:57:05.416Z",
+    "updated_at": "2026-10-06T11:13:36.584Z"
+  }
+},
+{
+  "model": "api.portfolio",
+  "pk": "68b30bb8-5bd4-4a6c-98fa-d64456e009ce",
+  "fields": {
+    "title": "JEHOVAH JIREH CHOIR",
+    "category": "Corporate Events",
+    "description": "IMANA IRATSINZE Concert",
+    "thumbnail": "/media/uploads/9fb9f3c8-5de2-42da-8f52-65e4889fb1f1.png",
+    "images": [],
+    "video_url": "https://www.instagram.com/reel/DWChdTogTpN/?utm_source=ig_web_copy_link&cplk=MzRlODBiNWFlZA==&srtk=MzRlODBiNWFlZA==",
+    "date": "October 2026",
+    "client": "JJCHOIR",
+    "created_at": "2026-10-13T09:13:31.941Z",
+    "updated_at": "2026-10-13T09:13:31.942Z"
+  }
+},
+{
+  "model": "api.portfolio",
+  "pk": "eb6d01ee-d22b-4e1c-b33b-da7291c811f5",
+  "fields": {
+    "title": "Hyssop Choir Concert",
+    "category": "Corporate Events",
+    "description": "This project was for ZAMARI Concert , and kundwa we worked hard to give the best moment with lighting system, stages, and Sound system!",
+    "thumbnail": "/media/uploads/16397814-c2ff-4a4e-ba71-5463a3de8c7b.png",
+    "images": [
+      "/media/uploads/16397814-c2ff-4a4e-ba71-5463a3de8c7b.png"
+    ],
+    "video_url": "https://youtu.be/d95efgueY80?si=r_BRlTWGcgDb5_lA",
+    "date": "October 2024",
+    "client": "Hyssop",
+    "created_at": "2026-10-13T08:11:07.009Z",
+    "updated_at": "2026-10-13T08:11:07.009Z"
+  }
+},
+{
+  "model": "api.testimonial",
+  "pk": "fef65fd1-4226-47d5-bdf4-de789211a678",
+  "fields": {
+    "client_name": "Jean-Paul Nsengimana, Lead Concert Organizer",
+    "message": "When it comes to sound systems and lighting setups in East Africa, there is no one else I trust. Absolute professionals.\nand ask me ever thing you want",
+    "image_url": "/media/uploads/76000ccb-62cf-4fdb-abaa-3c7cab4d476f.jpg",
+    "rating": 5,
+    "created_at": "2026-06-22T23:57:05.406Z"
+  }
+},
+{
+  "model": "api.trustedbrand",
+  "pk": "26c94f95-f45c-4c65-b9ff-447820543a0f",
+  "fields": {
+    "name": "Hyssop",
+    "logo_url": "/media/uploads/d4a6a50d-70f2-4e19-adfe-7b4ea43a7034.png",
+    "created_at": "2026-10-08T07:58:34.764Z"
+  }
+},
+{
+  "model": "api.trustedbrand",
+  "pk": "dd9e8739-90f1-4623-b70a-f0dfd700a881",
+  "fields": {
+    "name": "Jehovah Jireh Choir",
+    "logo_url": "/media/uploads/5aa45654-a380-4ea8-8023-61301c283045.png",
+    "created_at": "2026-06-22T23:57:05.410Z"
+  }
+},
+{
+  "model": "api.trustedbrand",
+  "pk": "e1750540-0be3-41fa-9701-3a863542f38d",
+  "fields": {
+    "name": "Ichthus Choir",
+    "logo_url": "/media/uploads/949b047c-4da4-40f8-8dd8-7d523b532e00.png",
+    "created_at": "2026-10-06T09:25:48.774Z"
+  }
+},
+{
+  "model": "api.sitestatistic",
+  "pk": "3687c167-01e1-4da7-939f-bfbfb76d4fed",
+  "fields": {
+    "events_produced": 520,
+    "attendees_served": 125000,
+    "years_experience": 12,
+    "countries_reached": 6,
+    "updated_at": "2026-06-22T23:57:05.360Z"
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$Wa91hI4eaEyTAU3VydOVvm$jLx2ZMzQXlFaKePxgnXOva8o8IWGrMAgJHWAgUmsA6M=",
+    "last_login": "2026-09-22T12:41:36.449Z",
+    "is_superuser": true,
+    "username": "admin@kundwaib.com",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@kundwaib.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-06-23T00:10:47.398Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$IhO56GnPAoeLsmSqwsgNNi$CFc4dLuxaztoRa02jWNNsac9j8WXsxDudqbEZbZKYsc=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@kundwaib.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-06T21:47:10.091Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]

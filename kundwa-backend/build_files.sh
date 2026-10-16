@@ -19,4 +19,12 @@ fi
 echo "===> Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
+echo "===> Running database migrations..."
+python3 manage.py migrate --noinput || true
+
+echo "===> Synchronizing database data from local export..."
+if [ -f "local_data_export.json" ]; then
+    python3 manage.py loaddata local_data_export.json || true
+fi
+
 echo "===> Build completed successfully!"
