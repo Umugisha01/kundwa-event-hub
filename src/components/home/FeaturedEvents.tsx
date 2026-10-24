@@ -148,7 +148,6 @@ export function FeaturedEvents() {
                   background: cardBg,
                   border: cardBorder,
                   boxShadow: cardShadow,
-                  animationDelay: `${i * 0.15}s`
                 }}
               >
                 {/* Vertical Accent Bar */}

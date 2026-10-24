@@ -11,10 +11,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Read from localStorage; fall back to system preference
-    const stored = localStorage.getItem("kundwa-theme") as Theme | null;
-    if (stored) return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    // Default to light mode unless the user explicitly toggles and saves a preference
+    const stored = localStorage.getItem("kundwa-theme-v2") as Theme | null;
+    if (stored === "light" || stored === "dark") return stored;
+    return "light";
   });
 
   useEffect(() => {
@@ -24,6 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove("dark");
     }
+    localStorage.setItem("kundwa-theme-v2", theme);
     localStorage.setItem("kundwa-theme", theme);
   }, [theme]);
 

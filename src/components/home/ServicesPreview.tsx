@@ -118,7 +118,7 @@ export function ServicesPreview() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.12, duration: 0.5 }}
+                transition={{ duration: 0.2 }}
                 className="relative rounded-[24px] p-8 flex flex-col justify-between transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl group border backdrop-blur-md overflow-hidden w-full md:max-w-[380px]"
                 style={{
                   background: navBg,

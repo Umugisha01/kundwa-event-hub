@@ -75,10 +75,7 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
     if (isAdmin) {
       navigate("/admin");
     } else {
-      toast({
-        title: "Admin Access",
-        description: "Press and hold for 1.5 seconds to open Admin Portal",
-      });
+      navigate("/login");
     }
   };
 
@@ -102,8 +99,8 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
         onTouchStart={handleStart}
         onTouchEnd={clearHold}
         onTouchCancel={clearHold}
-        title={isAdmin ? "Go to Admin Dashboard" : "Press & hold for 1.5s to access Admin Login"}
-        aria-label="Admin Portal access"
+        title=""
+        aria-label="Admin Portal"
         className={`relative flex items-center justify-center p-2 rounded-xl select-none transition-all duration-300 ${
           isAdmin
             ? "bg-primary/20 text-primary border border-primary/40 shadow-sm shadow-primary/20 hover:scale-105 active:scale-95"

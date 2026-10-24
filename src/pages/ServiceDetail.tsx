@@ -295,7 +295,7 @@ Message / Requirements: ${formData.message || "Requested custom quote"}`;
                     initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
+                    transition={{ duration: 0.2 }}
                     className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border/50"
                   >
                     <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">

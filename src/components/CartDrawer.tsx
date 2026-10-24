@@ -110,7 +110,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
       />
 
       <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div className={`w-screen max-w-md transform transition-all duration-300 ${
+        <div className={`w-screen max-w-md transform transition-all duration-150 ${
           isDark 
             ? "bg-slate-950/95 border-l border-white/10 text-white" 
             : "bg-white/95 border-l border-black/10 text-slate-900"

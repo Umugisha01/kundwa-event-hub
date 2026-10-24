@@ -143,7 +143,6 @@ export function HeroSection() {
             {/* Headline */}
             <h1
               className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[1.05] tracking-tight mb-4 animate-fade-in"
-              style={{ animationDelay: "0.1s" }}
             >
               {headlinePrefix}{" "}
               <span className="relative inline-block">
@@ -162,7 +161,6 @@ export function HeroSection() {
             {/* Headline Subtitle with Dynamic Glitching Text */}
             <div 
               className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-6 leading-normal animate-fade-in"
-              style={{ animationDelay: "0.2s" }}
             >
               <span className="text-white/70 font-light">{subtitlePrefix}</span>{" "}
               <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]">{subtitleBrand}</span>{" "}
@@ -177,7 +175,6 @@ export function HeroSection() {
             {/* CTA buttons */}
             <div
               className="flex flex-wrap gap-4 animate-fade-in mt-6 md:mt-10"
-              style={{ animationDelay: "0.3s" }}
             >
               {ctaButtons.map((btn: any) => {
                 if (btn.style === "primary") {

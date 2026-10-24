@@ -48,7 +48,6 @@ export function StatsSection() {
               className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 md:p-6 text-center
                          hover:-translate-y-1 hover:border-secondary/30 transition-all duration-400 animate-fade-in"
               style={{
-                animationDelay: `${i * 0.1}s`,
                 background: "linear-gradient(135deg, hsl(220 50% 12% / 0.9), hsl(220 50% 8% / 0.95))",
                 boxShadow: "0 8px 32px rgba(10, 20, 40, 0.5), inset 0 1px 0 rgba(240, 245, 255, 0.08)",
               }}

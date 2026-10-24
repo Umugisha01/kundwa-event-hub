@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaMapPin, FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaXTwitter, FaYoutube, FaRightToBracket, FaWhatsapp } from "react-icons/fa6";
+import { FaMapPin, FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaXTwitter, FaYoutube, FaWhatsapp } from "react-icons/fa6";
+import { Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -103,21 +104,18 @@ export function Footer() {
                 </button>
               </Link>
               
-              {!user && (
-                <Link to="/login">
-                  <button
-                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 border"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.08)",
-                      border: "1px solid rgba(255, 255, 255, 0.15)",
-                      color: "rgba(255, 255, 255, 0.85)",
-                    }}
-                  >
-                    <FaRightToBracket className="h-3.5 w-3.5 text-secondary" />
-                    Login
-                  </button>
-                </Link>
-              )}
+              {/* Admin Sign (replaces login button with no instructions) */}
+              <Link
+                to={user ? "/admin" : "/login"}
+                aria-label="Admin Portal"
+                className="w-full py-2.5 px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center border group"
+                style={{
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.14)",
+                }}
+              >
+                <Shield className="h-4 w-4 text-slate-400 group-hover:text-secondary transition-colors" />
+              </Link>
             </div>
           </div>
 

@@ -377,17 +377,17 @@ const RentalsPage = () => {
             Equipment
           </motion.span>
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ duration: 0.2 }}
             className="text-4xl md:text-6xl font-bold mt-3 mb-5"
           >
             Rent Equipment
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.2 }}
             className="text-white/80 max-w-2xl mx-auto text-lg font-medium"
           >
             Premium event equipment available for daily rental. All gear is professionally maintained.

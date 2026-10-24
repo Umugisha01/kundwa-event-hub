@@ -397,17 +397,17 @@ Message: ${wizardData.notes || "No additional message"}`;
             What We Offer
           </motion.span>
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ duration: 0.2 }}
             className="text-4xl md:text-6xl font-bold mt-3 mb-5"
           >
             Our Services
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.2 }}
             className="text-white/80 max-w-2xl mx-auto text-lg font-medium"
           >
             From production to management, we deliver world-class event experiences across Africa.
@@ -537,10 +537,10 @@ Message: ${wizardData.notes || "No additional message"}`;
             {equipmentRentals.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ duration: 0.2 }}
                 className="bg-primary-foreground/5 border border-primary-foreground/10 rounded-2xl overflow-hidden group hover:bg-primary-foreground/10 transition-all duration-300"
               >
                 <div className="relative h-36 overflow-hidden">
