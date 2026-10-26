@@ -318,8 +318,18 @@ class RegisterView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, 'initial_data') and self.initial_data:
+            if 'username' not in self.initial_data and 'email' in self.initial_data:
+                self.initial_data['username'] = self.initial_data['email']
+
     def validate(self, attrs):
         username_or_email = attrs.get('username', '').strip()
+        if not username_or_email and hasattr(self, 'initial_data') and self.initial_data:
+            username_or_email = (self.initial_data.get('email') or '').strip()
+            attrs['username'] = username_or_email
+
         if '@' in username_or_email:
             user_by_email = User.objects.filter(email__iexact=username_or_email).first()
             if user_by_email:

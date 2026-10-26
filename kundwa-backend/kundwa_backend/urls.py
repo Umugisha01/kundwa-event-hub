@@ -18,7 +18,8 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.views.static import serve
-from api.views import HealthCheckView
+from api.views import HealthCheckView, CustomTokenObtainPairView, RegisterView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('', HealthCheckView.as_view(), name='root-health'),
@@ -26,6 +27,15 @@ urlpatterns = [
     path('health', HealthCheckView.as_view()),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+
+    # Root route aliases for auth (supports direct /auth/login and /api/auth/login)
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='root-token-login'),
+    path('auth/login', CustomTokenObtainPairView.as_view()),
+    path('auth/register/', RegisterView.as_view(), name='root-register'),
+    path('auth/register', RegisterView.as_view()),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='root-token-refresh'),
+    path('auth/token/refresh', TokenRefreshView.as_view()),
+
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
