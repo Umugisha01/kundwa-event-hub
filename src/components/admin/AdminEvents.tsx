@@ -89,38 +89,68 @@ export function AdminEvents() {
   }, []);
 
   const save = async () => {
-    if (!form.title || !form.date) {
-      toast({ title: "Title and start date are required", variant: "destructive" });
+    if (!form.title) {
+      toast({ title: "Event title is required", variant: "destructive" });
       return;
     }
 
+    if (!form.date) {
+      toast({ title: "Start date and time are required", variant: "destructive" });
+      return;
+    }
+
+    const startDate = new Date(form.date);
+    if (isNaN(startDate.getTime())) {
+      toast({ title: "Please enter a valid start date & time", variant: "destructive" });
+      return;
+    }
+
+    let endDateIso: string | null = null;
+    if (form.end_date) {
+      const endDate = new Date(form.end_date);
+      if (!isNaN(endDate.getTime())) {
+        endDateIso = endDate.toISOString();
+      }
+    }
+
     const tiers = Array.isArray(form.ticket_tiers) ? form.ticket_tiers : [];
-    const minPrice = tiers.length > 0
-      ? Math.min(...tiers.map((t: any) => parseFloat(t.price) || 0))
+    const sanitizedTiers = tiers.map((t: any, index: number) => ({
+      id: t.id || `tier-${index + 1}-${Date.now()}`,
+      name: (t.name || "").trim() || `Tier ${index + 1}`,
+      price: Math.max(0, parseFloat(t.price) || 0),
+      capacity: Math.max(0, parseInt(t.capacity) || 0),
+      sold: Math.max(0, parseInt(t.sold) || 0),
+      description: t.description || "",
+    }));
+
+    const rawMinPrice = sanitizedTiers.length > 0
+      ? Math.min(...sanitizedTiers.map((t: any) => t.price))
       : (parseFloat(form.ticket_price) || 0);
 
-    const sumCapacity = tiers.length > 0
-      ? tiers.reduce((acc: number, t: any) => acc + (parseInt(t.capacity) || 0), 0)
+    const safeMinPrice = isFinite(rawMinPrice) ? Math.max(0, rawMinPrice) : 0;
+
+    const sumCapacity = sanitizedTiers.length > 0
+      ? sanitizedTiers.reduce((acc: number, t: any) => acc + (t.capacity || 0), 0)
       : (parseInt(form.total_tickets) || 100);
     
     const payload = {
-      title: form.title,
-      description: form.description,
-      date: new Date(form.date).toISOString(),
-      end_date: form.end_date ? new Date(form.end_date).toISOString() : null,
+      title: form.title.trim(),
+      description: form.description || "",
+      date: startDate.toISOString(),
+      end_date: endDateIso,
       door_time: form.door_time || "4:00 PM",
       status: form.status || "Active",
-      location: form.location,
-      venue: form.venue,
-      organizer: form.organizer,
-      category: form.category,
-      phone: form.phone,
-      image_url: form.image_url,
-      is_featured: form.is_featured,
-      ticket_price: minPrice,
+      location: form.location || "",
+      venue: form.venue || "",
+      organizer: form.organizer || "Kundwa Event Productions",
+      category: form.category || "Festival",
+      phone: form.phone || "+250 784 289 407",
+      image_url: form.image_url || null,
+      is_featured: !!form.is_featured,
+      ticket_price: safeMinPrice,
       total_tickets: sumCapacity,
       tickets_sold: parseInt(form.tickets_sold) || 0,
-      ticket_tiers: tiers,
+      ticket_tiers: sanitizedTiers,
     };
 
     try {
@@ -137,7 +167,7 @@ export function AdminEvents() {
       setEditId(null);
       fetchEvents();
     } catch (err: any) {
-      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+      toast({ title: "Save failed", description: err.message || "Unable to save event", variant: "destructive" });
     }
   };
 

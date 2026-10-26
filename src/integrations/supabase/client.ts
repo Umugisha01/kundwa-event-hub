@@ -93,6 +93,37 @@ export function invalidateQueryCache(table?: string) {
   } catch {}
 }
 
+function parseApiError(status: number, rawText: string, defaultAction: string = "Request"): string {
+  if (!rawText) return `${defaultAction} failed with HTTP ${status}`;
+
+  // 1. Try parsing JSON error (DRF detail, message, error or validation object)
+  try {
+    const json = JSON.parse(rawText);
+    if (typeof json === "string") return json;
+    if (json.detail) return String(json.detail);
+    if (json.message) return String(json.message);
+    if (json.error) return String(json.error);
+    const entries = Object.entries(json);
+    if (entries.length > 0) {
+      const [field, errs] = entries[0];
+      const errStr = Array.isArray(errs) ? errs.join(", ") : String(errs);
+      return `${field}: ${errStr}`;
+    }
+  } catch {}
+
+  // 2. Handle HTML response (e.g. Django 500/502 error pages)
+  if (rawText.includes("<!doctype html>") || rawText.includes("<html") || rawText.includes("<title>")) {
+    const titleMatch = rawText.match(/<title>(.*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : "";
+    if (title && !title.includes("<!doctype")) {
+      return `${title}. The backend encountered an issue processing this request.`;
+    }
+    return `Server Error (${status}). The server encountered an unexpected condition.`;
+  }
+
+  return rawText.slice(0, 300);
+}
+
 class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
   table: string;
   filters: { [key: string]: any } = {};
@@ -286,7 +317,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
 
         if (!response.ok) {
           const errText = await response.text();
-          return { data: null, error: new Error(errText || `HTTP ${response.status}`) };
+          return { data: null, error: new Error(parseApiError(response.status, errText, "Fetch")) };
         }
 
         const json = await response.json();
@@ -344,7 +375,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
 
     if (!response.ok) {
       const errText = await response.text();
-      return { data: null, error: new Error(errText || `Insert failed with HTTP ${response.status}`) };
+      return { data: null, error: new Error(parseApiError(response.status, errText, "Insert")) };
     }
 
     const json = await response.json();
@@ -385,7 +416,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
 
     if (!response.ok) {
       const errText = await response.text();
-      return { data: null, error: new Error(errText || `Update failed with HTTP ${response.status}`) };
+      return { data: null, error: new Error(parseApiError(response.status, errText, "Update")) };
     }
 
     const json = await response.json();
@@ -408,7 +439,7 @@ class DjangoQueryBuilder implements PromiseLike<{ data: any; error: any }> {
 
     if (!response.ok && response.status !== 204) {
       const errText = await response.text();
-      return { data: null, error: new Error(errText || `Delete failed with HTTP ${response.status}`) };
+      return { data: null, error: new Error(parseApiError(response.status, errText, "Delete")) };
     }
 
     invalidateQueryCache(endpoint);

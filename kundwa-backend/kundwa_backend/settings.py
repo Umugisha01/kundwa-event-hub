@@ -101,7 +101,7 @@ def _is_host_connectable(url_str):
         return False
     return True
 
-if not USE_LOCAL_DB and DATABASE_URL and _is_host_connectable(DATABASE_URL):
+if not USE_LOCAL_DB and DATABASE_URL:
     try:
         import dj_database_url
         is_supabase_or_ssl = 'supabase' in DATABASE_URL or 'sslmode' in DATABASE_URL
@@ -109,9 +109,11 @@ if not USE_LOCAL_DB and DATABASE_URL and _is_host_connectable(DATABASE_URL):
             'default': dj_database_url.config(
                 default=DATABASE_URL,
                 conn_max_age=300,  # 300s keeps connection alive, eliminating 1s SSL handshake on every request
+                conn_health_checks=True,
                 ssl_require=is_supabase_or_ssl
             )
         }
+        DATABASES['default']['CONN_HEALTH_CHECKS'] = True
     except Exception:
         DATABASES = {
             'default': {
@@ -129,6 +131,7 @@ elif USE_LOCAL_DB or DB_HOST in ('localhost', '127.0.0.1'):
             'HOST': 'localhost',
             'PORT': '5432',
             'CONN_MAX_AGE': 300,
+            'CONN_HEALTH_CHECKS': True,
         }
     }
 else:
@@ -180,6 +183,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'EXCEPTION_HANDLER': 'api.exceptions.custom_api_exception_handler',
 }
 
 # Simple JWT settings
