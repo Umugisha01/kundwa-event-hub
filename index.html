@@ -4,9 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#060b13" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#f1f5f9" />
+  <meta name="theme-color" content="#060b13" />
   <!-- TODO: Set the document title to the name of your application -->
   <title>Kundwa IB Group — Africa's Premier Event Production</title>
   <meta name="description"
@@ -23,21 +21,20 @@
   <script>
     (function () {
       try {
-        var theme = localStorage.getItem('kundwa-theme-v2') || localStorage.getItem('kundwa-theme') || 'light';
-        var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.style.backgroundColor = 'hsl(220, 60%, 6%)';
-        } else {
+        var theme = localStorage.getItem('kundwa-theme-v2') || localStorage.getItem('kundwa-theme') || 'dark';
+        if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.style.backgroundColor = 'hsl(220, 20%, 96%)';
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.backgroundColor = 'hsl(220, 60%, 6%)';
         }
       } catch (e) {}
     })();
   </script>
 </head>
 
-<body style="background-color: inherit;">
+<body style="background-color: hsl(220, 60%, 6%); margin: 0; padding: 0;">
   <div id="root" style="min-height: 100vh; background-color: inherit;"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

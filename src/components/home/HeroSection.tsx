@@ -240,10 +240,14 @@ export function HeroSection() {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            {/* The carousel container */}
             <div 
               className="relative w-full h-[200px] sm:h-[250px] md:h-[350px] flex items-center justify-center overflow-visible"
-              style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
+              style={{ 
+                perspective: "1200px", 
+                transformStyle: "preserve-3d",
+                transform: "translate3d(0, 0, 0)",
+                contain: "paint layout",
+              }}
             >
               {photos.map((src, idx) => {
                 let offset = idx - activeIndex;

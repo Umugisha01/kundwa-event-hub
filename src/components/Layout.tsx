@@ -9,7 +9,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const isHome = location.pathname === "/";
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-150">
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />

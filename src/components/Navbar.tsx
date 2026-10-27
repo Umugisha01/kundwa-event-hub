@@ -101,7 +101,6 @@ export function Navbar() {
           border: scrolled ? "none" : navBorder,
           borderBottom: scrolled ? (isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)") : undefined,
           transform: "translate3d(-50%, 0, 0)",
-          willChange: "top, width, border-radius, background",
         }}
       >
         {/* ── Logo Container (Left) ── */}

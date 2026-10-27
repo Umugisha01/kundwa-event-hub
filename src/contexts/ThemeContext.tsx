@@ -11,10 +11,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Default to light mode unless the user explicitly toggles and saves a preference
+    // Default to dark mode matching Kundwa's primary brand theme
     const stored = localStorage.getItem("kundwa-theme-v2") as Theme | null;
     if (stored === "light" || stored === "dark") return stored;
-    return "light";
+    return "dark";
   });
 
   useEffect(() => {
