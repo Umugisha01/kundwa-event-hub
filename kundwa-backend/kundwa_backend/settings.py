@@ -104,11 +104,22 @@ def _is_host_connectable(url_str):
 if not USE_LOCAL_DB and DATABASE_URL:
     try:
         import dj_database_url
+
+        # Automatically rewrite Supabase pooler from session mode (5432) to transaction mode (6543)
+        # to prevent EMAXCONNSESSION (max clients reached in session mode) in serverless environments.
+        if 'pooler.supabase.com:5432' in DATABASE_URL:
+            DATABASE_URL = DATABASE_URL.replace('pooler.supabase.com:5432', 'pooler.supabase.com:6543')
+
         is_supabase_or_ssl = 'supabase' in DATABASE_URL or 'sslmode' in DATABASE_URL
+        is_serverless = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+
+        # In serverless environments, set conn_max_age to 0 so lambdas do not hoard pool connections
+        conn_max_age = 0 if is_serverless else 300
+
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
-                conn_max_age=300,  # 300s keeps connection alive, eliminating 1s SSL handshake on every request
+                conn_max_age=conn_max_age,
                 conn_health_checks=True,
                 ssl_require=is_supabase_or_ssl
             )

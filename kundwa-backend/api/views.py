@@ -363,6 +363,8 @@ class FileUploadView(APIView):
     def post(self, request):
         import os
         import uuid
+        import base64
+        from io import BytesIO
         from django.core.files.storage import default_storage
         from django.core.files.base import ContentFile
 
@@ -370,12 +372,52 @@ class FileUploadView(APIView):
             return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
         file_obj = request.FILES['file']
-        ext = os.path.splitext(file_obj.name)[1]
-        filename = f"{uuid.uuid4()}{ext}"
+        raw_bytes = file_obj.read()
+        ext = os.path.splitext(file_obj.name)[1].lower()
+        content_type = getattr(file_obj, 'content_type', '') or 'application/octet-stream'
 
-        # Save to 'uploads/filename' under MEDIA_ROOT
-        path = default_storage.save(f"uploads/{filename}", ContentFile(file_obj.read()))
-        url = f"/media/{path}"
+        is_serverless = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+        url = None
+
+        # 1. Try local disk storage if NOT in serverless read-only environment
+        if not is_serverless:
+            try:
+                filename = f"{uuid.uuid4()}{ext}"
+                path = default_storage.save(f"uploads/{filename}", ContentFile(raw_bytes))
+                url = f"/media/{path}"
+            except OSError:
+                url = None
+
+        # 2. In serverless (e.g. Vercel) or when filesystem is read-only, generate optimized data URL
+        if not url:
+            is_image = ext in ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg') or 'image' in content_type
+
+            if is_image and ext != '.svg':
+                try:
+                    from PIL import Image
+                    img = Image.open(BytesIO(raw_bytes))
+
+                    if img.mode in ('RGBA', 'LA') and ext in ('.jpg', '.jpeg'):
+                        bg = Image.new('RGB', img.size, (255, 255, 255))
+                        bg.paste(img, mask=img.split()[-1])
+                        img = bg
+                    elif img.mode not in ('RGB', 'RGBA'):
+                        img = img.convert('RGB')
+
+                    max_dim = 1600
+                    if max(img.size) > max_dim:
+                        img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
+                    out_buffer = BytesIO()
+                    img.save(out_buffer, format='WEBP', quality=85, method=4)
+                    b64 = base64.b64encode(out_buffer.getvalue()).decode('utf-8')
+                    url = f"data:image/webp;base64,{b64}"
+                except Exception:
+                    b64 = base64.b64encode(raw_bytes).decode('utf-8')
+                    url = f"data:{content_type};base64,{b64}"
+            else:
+                b64 = base64.b64encode(raw_bytes).decode('utf-8')
+                url = f"data:{content_type};base64,{b64}"
 
         return Response({'url': url}, status=status.HTTP_201_CREATED)
 
