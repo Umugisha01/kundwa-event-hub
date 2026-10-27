@@ -78,9 +78,28 @@ export function PortfolioPreview() {
 
         {/* Projects Grid */}
         {loading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
-            <p className="text-muted-foreground text-sm">Loading project showcase...</p>
+          <div className="flex flex-wrap justify-center gap-8 mb-12">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="overflow-hidden rounded-[24px] border flex flex-col justify-between relative w-full md:max-w-[380px] h-[480px] animate-pulse"
+                style={{
+                  background: cardBg,
+                  border: cardBorder,
+                  boxShadow: cardShadow,
+                }}
+              >
+                <div className="h-56 w-full bg-muted/40" />
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="h-6 w-3/4 bg-muted/50 rounded-lg" />
+                    <div className="h-4 w-full bg-muted/30 rounded" />
+                    <div className="h-4 w-2/3 bg-muted/30 rounded" />
+                  </div>
+                  <div className="h-4 w-1/3 bg-muted/30 rounded pt-4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : projects.length === 0 ? (
           <div className="max-w-xl mx-auto py-12 px-6 text-center rounded-3xl border border-border/70 bg-card/60 backdrop-blur-md mb-12">
@@ -129,6 +148,7 @@ export function PortfolioPreview() {
                   alt={project.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90" />
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between z-10">

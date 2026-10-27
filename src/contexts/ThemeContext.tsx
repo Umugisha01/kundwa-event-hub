@@ -19,10 +19,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    const themeColorMeta = document.querySelectorAll('meta[name="theme-color"]');
     if (theme === "dark") {
       root.classList.add("dark");
+      root.style.backgroundColor = "hsl(220, 60%, 6%)";
+      themeColorMeta.forEach(meta => meta.setAttribute("content", "#060b13"));
     } else {
       root.classList.remove("dark");
+      root.style.backgroundColor = "hsl(220, 20%, 96%)";
+      themeColorMeta.forEach(meta => meta.setAttribute("content", "#f1f5f9"));
     }
     localStorage.setItem("kundwa-theme-v2", theme);
     localStorage.setItem("kundwa-theme", theme);

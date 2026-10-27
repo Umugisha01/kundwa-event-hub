@@ -235,7 +235,7 @@ Message / Requirements: ${formData.message || "Requested custom quote"}`;
       {/* Description + Gallery */}
       <section className="section-padding">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
-          <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <motion.div initial={{ opacity: 0.1, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "250px 0px" }} transition={{ duration: 0.25 }}>
             <h2 className="text-3xl font-bold text-foreground mb-4">About This Service</h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">{service.description}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -250,7 +250,7 @@ Message / Requirements: ${formData.message || "Requested custom quote"}`;
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <motion.div initial={{ opacity: 0.1, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "250px 0px" }} transition={{ duration: 0.25 }}>
             <div className="rounded-2xl overflow-hidden shadow-2xl mb-3">
               <img src={service.galleryImages[activeImage]} alt={`${service.name} gallery`} className="w-full h-72 md:h-96 object-cover" width={800} height={600} />
             </div>
@@ -292,9 +292,9 @@ Message / Requirements: ${formData.message || "Requested custom quote"}`;
                 ].map((item, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0.1, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, margin: "250px 0px" }}
                     transition={{ duration: 0.2 }}
                     className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border/50"
                   >
@@ -312,9 +312,10 @@ Message / Requirements: ${formData.message || "Requested custom quote"}`;
 
             {/* Inline Inquiry Form */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0.1, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "250px 0px" }}
+              transition={{ duration: 0.25 }}
               className="bg-card rounded-2xl border border-border shadow-xl p-8"
             >
               <h3 className="text-xl font-bold text-foreground mb-1">Request a Quote</h3>

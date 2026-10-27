@@ -121,6 +121,7 @@ export function HeroSection() {
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
           src={bgImage}
           alt="Event Background"
+          decoding="async"
         />
 
         {/* Cinematic gradient overlays */}
@@ -130,9 +131,9 @@ export function HeroSection() {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-secondary/60 to-transparent" />
       </div>
 
-      {/* ── Floating ambient orbs ── */}
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl pointer-events-none animate-float" />
-      <div className="absolute bottom-1/3 right-1/3 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" style={{ animationDelay: "1.5s" }} />
+      {/* ── Floating ambient orbs (hidden on small mobile to avoid GPU frame drops) ── */}
+      <div className="hidden sm:block absolute top-1/4 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-2xl md:blur-3xl pointer-events-none animate-float transform-gpu" />
+      <div className="hidden sm:block absolute bottom-1/3 right-1/3 w-64 h-64 bg-primary/10 rounded-full blur-2xl md:blur-3xl pointer-events-none transform-gpu" style={{ animationDelay: "1.5s" }} />
 
       {/* ── Main content ── */}
       <div className="relative z-10 w-full px-6 md:px-16 lg:px-[80px] pt-24 pb-12 md:pt-32 md:pb-16 lg:pt-16 lg:pb-16">

@@ -23,8 +23,7 @@ const BLUE_D = "hsl(220, 60%, 15%)";   // deeper pressed state
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [lang, setLang] = useState<"en" | "rw">("en");
-  const [scrollY, setScrollY] = useState(0);
-  const [mouseX, setMouseX] = useState(50);
+  const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const { role } = useAuth();
@@ -39,36 +38,39 @@ export function Navbar() {
     ...(role === "admin" ? [{ to: "/admin", label: "Admin", labelRw: "Ubuyobozi" }] : []),
   ];
 
-  /* scroll tracking */
+  /* scroll tracking - throttled with rAF, only re-renders when crossing 24px threshold */
   useEffect(() => {
-    const fn = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-
-  /* mouse X for shimmer */
-  useEffect(() => {
-    const fn = (e: MouseEvent) => {
-      if (!navRef.current) return;
-      const r = navRef.current.getBoundingClientRect();
-      setMouseX(((e.clientX - r.left) / r.width) * 100);
+    let rafId: number | null = null;
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        const isPastThreshold = window.scrollY > 24;
+        setScrolled(prev => (prev !== isPastThreshold ? isPastThreshold : prev));
+        rafId = null;
+      });
     };
-    window.addEventListener("mousemove", fn, { passive: true });
-    return () => window.removeEventListener("mousemove", fn);
+
+    if (typeof window !== "undefined" && window.scrollY > 24) {
+      setScrolled(true);
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => { setIsOpen(false); }, [location.pathname]);
 
-  const scrolled = scrollY > 24;
-
   /* ── Dynamic nav background (Floating Glass/Mirror Pill) ── */
   const navBg = isDark
     ? scrolled
-      ? "rgba(6, 11, 19, 0.85)"
-      : "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(10, 15, 30, 0.55) 100%)"
+      ? "rgba(6, 11, 19, 0.88)"
+      : "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(10, 15, 30, 0.65) 100%)"
     : scrolled
-      ? "rgba(243, 244, 246, 0.75)"
-      : "linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.18) 100%)";
+      ? "rgba(243, 244, 246, 0.88)"
+      : "linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.25) 100%)";
 
   const navBorder = isDark
     ? `1px solid rgba(255, 255, 255, 0.15)`
@@ -91,17 +93,19 @@ export function Navbar() {
   return (
     <>
       <div
-        className={`fixed left-1/2 -translate-x-1/2 z-50 flex items-center justify-between pointer-events-auto transition-all duration-500 h-[56px] md:h-[64px] ${scrolled
+        className={`fixed left-1/2 -translate-x-1/2 z-50 flex items-center justify-between pointer-events-auto transition-all duration-300 h-[56px] md:h-[64px] ${scrolled
             ? "top-0 w-full max-w-full rounded-none px-6 md:px-12"
             : "top-2 md:top-4 w-[92%] max-w-[1280px] rounded-full px-6"
           }`}
         style={{
           background: navBg,
-          backdropFilter: "blur(40px) saturate(220%)",
-          WebkitBackdropFilter: "blur(40px) saturate(220%)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
           boxShadow: navShadow,
           border: scrolled ? "none" : navBorder,
           borderBottom: scrolled ? (isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)") : undefined,
+          transform: "translate3d(-50%, 0, 0)",
+          willChange: "top, width, border-radius, background",
         }}
       >
         {/* ── Logo Container (Left) ── */}

@@ -8,7 +8,13 @@ export function FloatingWhatsApp() {
   const cleanPhone = "250784289407";
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 select-none">
+    <div
+      className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 select-none"
+      style={{
+        transform: "translate3d(0, 0, 0)",
+        willChange: "transform",
+      }}
+    >
       {/* Quick popup tooltip/card */}
       {isOpen && (
         <div className="w-72 p-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-200 text-foreground">

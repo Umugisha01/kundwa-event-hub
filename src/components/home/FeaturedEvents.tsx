@@ -134,9 +134,30 @@ export function FeaturedEvents() {
         </div>
 
         {loading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-secondary mx-auto mb-4"></div>
-            <p className="text-muted-foreground text-sm">Loading featured events...</p>
+          <div className="flex flex-wrap justify-center gap-8">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="overflow-hidden rounded-[24px] border flex flex-col justify-between w-full md:max-w-[380px] h-[520px] animate-pulse"
+                style={{
+                  background: cardBg,
+                  border: cardBorder,
+                  boxShadow: cardShadow,
+                }}
+              >
+                <div className="aspect-4/3 w-full bg-muted/40" />
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="h-6 w-3/4 bg-muted/50 rounded-lg" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-4 bg-muted/30 rounded" />
+                    <div className="h-4 bg-muted/30 rounded" />
+                    <div className="h-4 bg-muted/30 rounded" />
+                    <div className="h-4 bg-muted/30 rounded" />
+                  </div>
+                  <div className="h-10 bg-muted/40 rounded-xl mt-4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="flex flex-wrap justify-center gap-8">
@@ -166,6 +187,7 @@ export function FeaturedEvents() {
                     alt={event.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    decoding="async"
                     onError={(e: any) => {
                       // Fallback if URL fails to load
                       const lower = (event.title || "").toLowerCase();

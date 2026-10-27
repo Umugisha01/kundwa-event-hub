@@ -141,6 +141,7 @@ export function Testimonials() {
                         alt={t.client_name}
                         className="h-11 w-11 rounded-full object-cover border border-border/50 shadow-sm"
                         loading="lazy"
+                        decoding="async"
                       />
                     )}
                     <div>
@@ -167,13 +168,13 @@ export function Testimonials() {
             Trusted Partners
           </p>
 
-          <div className="relative w-full overflow-hidden py-3">
+          <div className="relative w-full overflow-hidden py-3" style={{ contain: "paint" }}>
             {/* Cinematic Edge Gradients for Smooth In/Out Fade */}
             <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 md:w-36 z-10 bg-gradient-to-r from-background via-background/85 to-transparent" />
             <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 md:w-36 z-10 bg-gradient-to-l from-background via-background/85 to-transparent" />
 
             {/* Continuous Marquee Track Moving Right to Left */}
-            <div className="flex w-max animate-marquee-slow hover:[animation-play-state:paused]">
+            <div className="flex w-max animate-marquee-slow hover:[animation-play-state:paused]" style={{ willChange: "transform", transform: "translate3d(0, 0, 0)" }}>
               {/* Set 1 */}
               <div className="flex items-center gap-8 md:gap-14 pr-8 md:pr-14">
                 {marqueeBrands.map((b, i) => (
@@ -187,6 +188,7 @@ export function Testimonials() {
                         alt={b.name}
                         className="h-8 md:h-10 w-auto max-w-[130px] md:max-w-[160px] object-contain filter grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
                         loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           const target = e.currentTarget;
                           target.style.display = "none";

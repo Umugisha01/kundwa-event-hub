@@ -450,9 +450,10 @@ Message: ${wizardData.notes || "No additional message"}`;
           <section key={i} className={`section-padding ${i % 2 === 1 ? "bg-muted/40" : ""}`}>
             <div className="max-w-7xl mx-auto">
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0.1, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "250px 0px" }}
+                transition={{ duration: 0.25 }}
                 className="grid md:grid-cols-2 gap-10 items-center"
               >
                 {/* Image */}
@@ -537,9 +538,9 @@ Message: ${wizardData.notes || "No additional message"}`;
             {equipmentRentals.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0.1, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "250px 0px" }}
                 transition={{ duration: 0.2 }}
                 className="bg-primary-foreground/5 border border-primary-foreground/10 rounded-2xl overflow-hidden group hover:bg-primary-foreground/10 transition-all duration-300"
               >

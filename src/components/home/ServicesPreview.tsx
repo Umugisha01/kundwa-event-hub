@@ -115,10 +115,10 @@ export function ServicesPreview() {
           {categories.filter((cat) => cat.items.length > 0).map((cat, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0.1, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.2 }}
+                viewport={{ once: true, margin: "250px 0px" }}
+                transition={{ duration: 0.25 }}
                 className="relative rounded-[24px] p-8 flex flex-col justify-between transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl group border backdrop-blur-md overflow-hidden w-full md:max-w-[380px]"
                 style={{
                   background: navBg,
