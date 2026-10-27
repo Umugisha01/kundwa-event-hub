@@ -26,14 +26,14 @@ EVENTS_DATA = [
         "is_featured": True,
         "ticket_price": 5000.00,
         "total_tickets": 1600,
-        "tickets_sold": 65,
+        "tickets_sold": 0,
         "ticket_tiers": [
             {
                 "id": "tier-early-bird",
                 "name": "EARLY BIRD TICKET",
                 "price": 5000,
                 "capacity": 500,
-                "sold": 42,
+                "sold": 0,
                 "description": "Standard conference & festival grounds entry pass with access to all workshops"
             },
             {
@@ -41,7 +41,7 @@ EVENTS_DATA = [
                 "name": "GATE TICKET",
                 "price": 20000,
                 "capacity": 1000,
-                "sold": 15,
+                "sold": 0,
                 "description": "Regular admission on festival days, includes event booklet and general seating"
             },
             {
@@ -49,7 +49,7 @@ EVENTS_DATA = [
                 "name": "VIP LEADERSHIP PASS",
                 "price": 50000,
                 "capacity": 100,
-                "sold": 8,
+                "sold": 0,
                 "description": "Reserved front seating, mentor lounge networking access, and evening gala dinner"
             }
         ]
@@ -71,14 +71,14 @@ EVENTS_DATA = [
         "is_featured": True,
         "ticket_price": 15000.00,
         "total_tickets": 2500,
-        "tickets_sold": 210,
+        "tickets_sold": 0,
         "ticket_tiers": [
             {
                 "id": "tier-kjj-regular",
                 "name": "REGULAR PASS",
                 "price": 15000,
                 "capacity": 1500,
-                "sold": 150,
+                "sold": 0,
                 "description": "Standard access to the main amphitheater and festival grounds"
             },
             {
@@ -86,7 +86,7 @@ EVENTS_DATA = [
                 "name": "VIP SEATING",
                 "price": 35000,
                 "capacity": 800,
-                "sold": 50,
+                "sold": 0,
                 "description": "Prime stage-view seating with table service and 1 welcome drink"
             },
             {
@@ -94,7 +94,7 @@ EVENTS_DATA = [
                 "name": "VVIP TABLE LOUNGE",
                 "price": 100000,
                 "capacity": 200,
-                "sold": 10,
+                "sold": 0,
                 "description": "Exclusive elevated hospitality lounge with complimentary buffet & drinks"
             }
         ]
@@ -116,14 +116,14 @@ EVENTS_DATA = [
         "is_featured": True,
         "ticket_price": 50000.00,
         "total_tickets": 1200,
-        "tickets_sold": 340,
+        "tickets_sold": 0,
         "ticket_tiers": [
             {
                 "id": "tier-tech-delegate",
                 "name": "STANDARD DELEGATE",
                 "price": 50000,
                 "capacity": 800,
-                "sold": 260,
+                "sold": 0,
                 "description": "Access to all keynote stages, expo arena, and networking lunches"
             },
             {
@@ -131,7 +131,7 @@ EVENTS_DATA = [
                 "name": "EXECUTIVE ACCESS PASS",
                 "price": 120000,
                 "capacity": 300,
-                "sold": 65,
+                "sold": 0,
                 "description": "Executive boardroom roundtables, C-level lounge, and speaker reception dinner"
             },
             {
@@ -139,7 +139,7 @@ EVENTS_DATA = [
                 "name": "INVESTOR & FOUNDER PASS",
                 "price": 200000,
                 "capacity": 100,
-                "sold": 15,
+                "sold": 0,
                 "description": "Private pitch rooms, 1-on-1 VC meetings, and VIP banquet access"
             }
         ]
@@ -161,14 +161,14 @@ EVENTS_DATA = [
         "is_featured": False,
         "ticket_price": 50000.00,
         "total_tickets": 800,
-        "tickets_sold": 450,
+        "tickets_sold": 0,
         "ticket_tiers": [
             {
                 "id": "tier-gala-regular",
                 "name": "GALA GUEST ENTRY",
                 "price": 50000,
                 "capacity": 500,
-                "sold": 300,
+                "sold": 0,
                 "description": "General guest admission and seated gourmet dinner service"
             },
             {
@@ -176,7 +176,7 @@ EVENTS_DATA = [
                 "name": "VIP COUPLE PASS",
                 "price": 90000,
                 "capacity": 200,
-                "sold": 120,
+                "sold": 0,
                 "description": "Entry for two with reserved prime table and champagne toast"
             },
             {
@@ -184,7 +184,7 @@ EVENTS_DATA = [
                 "name": "ROYAL TABLE (10 GUESTS)",
                 "price": 450000,
                 "capacity": 10,
-                "sold": 3,
+                "sold": 0,
                 "description": "Full private table of 10 with private sommelier service"
             }
         ]

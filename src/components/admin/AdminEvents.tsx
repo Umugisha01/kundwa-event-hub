@@ -75,9 +75,38 @@ export function AdminEvents() {
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase.from("events").select("*").order("date", { ascending: false });
-      if (error) throw error;
-      setEvents(data || []);
+      const [eventsRes, ticketsRes] = await Promise.all([
+        supabase.from("events").select("*").order("date", { ascending: false }),
+        supabase.from("tickets").select("id, event_id, quantity, total_price, ticket_type, status")
+      ]);
+      if (eventsRes.error) throw eventsRes.error;
+
+      const rawEvents = eventsRes.data || [];
+      const allTickets = ticketsRes.data || [];
+
+      // Calculate REAL ticket sales and REAL revenue directly from purchased tickets
+      const enrichedEvents = rawEvents.map(ev => {
+        const evTickets = allTickets.filter((t: any) => t.event_id === ev.id);
+        const realSold = evTickets.reduce((sum: number, t: any) => sum + (parseInt(t.quantity) || 1), 0);
+        const realRevenue = evTickets.reduce((sum: number, t: any) => sum + (parseFloat(t.total_price) || 0), 0);
+
+        // Also sync tier sold counts with real tickets
+        const tiers = Array.isArray(ev.ticket_tiers) ? ev.ticket_tiers.map((tier: any) => {
+          const tierSold = evTickets
+            .filter((t: any) => t.ticket_type === tier.name || String(t.tier_id) === String(tier.id))
+            .reduce((sum: number, t: any) => sum + (parseInt(t.quantity) || 1), 0);
+          return { ...tier, sold: tierSold };
+        }) : [];
+
+        return {
+          ...ev,
+          tickets_sold: realSold,
+          real_revenue: realRevenue,
+          ticket_tiers: tiers.length > 0 ? tiers : ev.ticket_tiers
+        };
+      });
+
+      setEvents(enrichedEvents);
     } catch (err: any) {
       console.error("Could not fetch events:", err);
       toast({ title: "Fetch Error", description: err.message, variant: "destructive" });
@@ -337,7 +366,9 @@ export function AdminEvents() {
           <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500"><DollarSign className="h-5 w-5" /></div>
           <div>
             <p className="text-xs text-muted-foreground font-semibold">Est. Gross Sales</p>
-            <p className="text-xl font-bold text-foreground">{events.reduce((acc, e) => acc + ((e.tickets_sold || 0) * (e.ticket_price || 0)), 0).toLocaleString()} RWF</p>
+            <p className="text-xl font-bold text-foreground">
+              {events.reduce((acc, e) => acc + (e.real_revenue !== undefined ? e.real_revenue : ((e.tickets_sold || 0) * (e.ticket_price || 0))), 0).toLocaleString()} RWF
+            </p>
           </div>
         </div>
         <div className="card-premium p-4 flex items-center gap-3">
@@ -654,7 +685,7 @@ export function AdminEvents() {
               const totalCap = e.total_tickets || 100;
               const sold = e.tickets_sold || 0;
               const pct = Math.min(100, Math.round((sold / totalCap) * 100));
-              const revenue = sold * (parseFloat(e.ticket_price) || 0);
+              const revenue = e.real_revenue !== undefined ? e.real_revenue : (sold * (parseFloat(e.ticket_price) || 0));
 
               const tiersCount = (e.ticket_tiers && Array.isArray(e.ticket_tiers)) ? e.ticket_tiers.length : 0;
 

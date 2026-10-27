@@ -203,11 +203,10 @@ export function AdminDashboard({ onNavigateTab }: AdminDashboardProps) {
   };
 
   // Calculated KPI Metrics (Ticket sales generate revenue, service bookings are inquiries)
-  const totalRevenue = bookings.filter((b) => b.booking_type === "event").reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0) +
+  const totalRevenue = bookings.filter((b) => b.booking_type === "event" && (b.status === "Confirmed" || b.status === "Approved")).reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0) +
     tickets.reduce((sum, t) => sum + (parseFloat(t.total_price) || 0), 0);
 
-  const totalTicketsSold = tickets.reduce((sum, t) => sum + (parseInt(t.quantity) || 1), 0) +
-    events.reduce((sum, e) => sum + (parseInt(e.tickets_sold) || 0), 0);
+  const totalTicketsSold = tickets.reduce((sum, t) => sum + (parseInt(t.quantity) || 1), 0);
 
   const activeEventsCount = events.filter((e) => e.status === "Active" || e.status === "Upcoming").length;
   const availableEquipmentCount = equipment.filter((eq) => eq.status === "Available" || !eq.status).length;
