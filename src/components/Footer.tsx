@@ -4,6 +4,7 @@ import { FaMapPin, FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaXTwitter, Fa
 import { Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { AdminHoldButton } from "@/components/AdminHoldButton";
 
 export function Footer() {
   const [settings, setSettings] = useState<any>(null);
@@ -104,18 +105,16 @@ export function Footer() {
                 </button>
               </Link>
               
-              {/* Admin Sign (replaces login button with no instructions) */}
-              <Link
-                to={user ? "/admin" : "/login"}
-                aria-label="Admin Portal"
-                className="w-full py-2.5 px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center border group"
+              {/* Secret Press-and-Hold Admin Shield */}
+              <div
+                className="w-full py-1 px-4 rounded-xl transition-all duration-200 flex items-center justify-center border group"
                 style={{
                   background: "rgba(255, 255, 255, 0.06)",
                   border: "1px solid rgba(255, 255, 255, 0.14)",
                 }}
               >
-                <Shield className="h-4 w-4 text-slate-400 group-hover:text-secondary transition-colors" />
-              </Link>
+                <AdminHoldButton />
+              </div>
             </div>
           </div>
 

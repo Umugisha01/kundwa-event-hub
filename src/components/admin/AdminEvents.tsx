@@ -763,8 +763,7 @@ export function AdminEvents() {
                       <div className="bg-secondary h-full rounded-full" style={{ width: `${pct}%` }} />
                     </div>
                     
-                    <div className="flex justify-between text-xs pt-1">
-                      <span className="text-muted-foreground">From: {(parseFloat(e.ticket_price) || 0).toLocaleString()} RWF</span>
+                    <div className="flex justify-end text-xs pt-1">
                       <span className="font-bold text-secondary">Rev: {revenue.toLocaleString()} RWF</span>
                     </div>
                   </div>

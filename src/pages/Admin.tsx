@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import {
   BarChart3, Calendar, Wrench, MessageSquare, Settings,
   Star, Image, LogOut, Ticket, FileText, Briefcase, Mail,
-  Search, Bell, Sun, Moon, ExternalLink, Menu, X, Plus,
+  Search, Sun, Moon, ExternalLink, Menu, X, Plus,
   ShieldCheck, Layers, LayoutDashboard, Sparkles
 } from "lucide-react";
+import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminEvents } from "@/components/admin/AdminEvents";
 import { AdminServices } from "@/components/admin/AdminServices";
@@ -74,11 +75,37 @@ const navGroups: NavGroup[] = [
 const allTabs = navGroups.flatMap((g) => g.items);
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const tabParam = searchParams.get("tab");
+  const activeTab = (tabParam && allTabs.some((t) => t.id === tabParam)) ? tabParam : "dashboard";
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { user, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  const handleTabChange = (tabId: string) => {
+    setSearchParams({ tab: tabId });
+    setSidebarOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    // Secure history replacement so back button cannot re-enter /admin
+    navigate("/login", { replace: true });
+  };
+
+  // Back-Forward cache protection: prevent browser back button from re-rendering cached admin page
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   const currentTab = allTabs.find((t) => t.id === activeTab) || allTabs[0];
 
@@ -92,7 +119,7 @@ const AdminPage = () => {
         );
         if (matched) {
           e.preventDefault();
-          setActiveTab(matched.id);
+          handleTabChange(matched.id);
         }
       }
     };
@@ -177,10 +204,7 @@ const AdminPage = () => {
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => {
-                          setActiveTab(item.id);
-                          setSidebarOpen(false);
-                        }}
+                        onClick={() => handleTabChange(item.id)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                           isActive
                             ? "bg-slate-200/70 dark:bg-slate-800 text-foreground font-bold shadow-2xs"
@@ -234,7 +258,7 @@ const AdminPage = () => {
             </div>
 
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               title="Sign Out"
               className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
             >
@@ -280,19 +304,8 @@ const AdminPage = () => {
               />
             </div>
 
-            {/* Notification Bell with Badge matching template */}
-            <div className="relative">
-              <button
-                type="button"
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors border border-border/60"
-                title="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-xs">
-                  2
-                </span>
-              </button>
-            </div>
+            {/* Dynamic Notification Bell with Real-time Count & Dropdown */}
+            <AdminNotificationBell onNavigateTab={handleTabChange} />
 
             {/* Dark/Light Mode Toggle */}
             <button
@@ -338,7 +351,7 @@ const AdminPage = () => {
           <div className="max-w-7xl mx-auto">
             {/* The individual admin pages remain 100% functional and unchanged */}
             <div className="animate-fade-in">
-              {activeTab === "dashboard" && <AdminDashboard onNavigateTab={(tab) => setActiveTab(tab)} />}
+              {activeTab === "dashboard" && <AdminDashboard onNavigateTab={handleTabChange} />}
               {activeTab === "stats" && <AdminStats />}
               {activeTab === "events" && <AdminEvents />}
               {activeTab === "services" && <AdminServices />}

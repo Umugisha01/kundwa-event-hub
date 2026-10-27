@@ -75,7 +75,11 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
     if (isAdmin) {
       navigate("/admin");
     } else {
-      navigate("/login");
+      // Require holding; show helpful feedback on short tap
+      toast({
+        title: "Security Shield",
+        description: "Press and hold for 1.5 seconds to unlock Admin access.",
+      });
     }
   };
 

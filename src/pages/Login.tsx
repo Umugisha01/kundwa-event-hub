@@ -41,7 +41,7 @@ const LoginPage = () => {
       });
     } else {
       toast({ title: "Welcome back, Admin!", description: "Access granted to Kundwa Admin Dashboard" });
-      navigate("/admin");
+      navigate("/admin", { replace: true });
     }
   };
 
