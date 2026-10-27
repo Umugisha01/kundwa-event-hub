@@ -173,42 +173,64 @@ export function HeroSection() {
               </span>
             </div>
 
-            {/* CTA buttons */}
-            <div
-              className="flex flex-wrap gap-4 animate-fade-in mt-6 md:mt-10"
-            >
-              {ctaButtons.map((btn: any) => {
-                if (btn.style === "primary") {
-                  return (
-                    <Link key={btn.id || btn.label} to={btn.url}>
-                      <button className="relative group px-7 py-3.5 rounded-2xl font-bold text-base text-[hsl(204,80%,10%)] overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-secondary/30 flex items-center gap-2">
-                        <span className="absolute inset-0 bg-secondary transition-all duration-300 group-hover:brightness-110" />
-                        <span className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-white blur-xl transition-opacity" />
-                        <FaCalendar className="relative h-4.5 w-4.5" />
-                        <span className="relative">{btn.label}</span>
+            {/* CTA buttons: Centered on mobile with first 2 buttons horizontal together */}
+            <div className="w-full max-w-md sm:max-w-none mx-auto sm:mx-0 mt-6 md:mt-10 animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-center sm:items-center justify-center sm:justify-start gap-3 sm:gap-4 w-full">
+                {ctaButtons.length >= 2 ? (
+                  <>
+                    {/* Top row on mobile: First two buttons horizontal together */}
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full sm:w-auto sm:flex sm:items-center">
+                      {/* Button 1: Book a Service */}
+                      {(() => {
+                        const btn = ctaButtons[0];
+                        return (
+                          <Link key={btn.id || btn.label} to={btn.url} className="w-full sm:w-auto">
+                            <button className="relative group w-full px-3.5 sm:px-6 md:px-7 py-3 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm md:text-base text-[hsl(204,80%,10%)] overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-secondary/30 flex items-center justify-center gap-1.5 sm:gap-2">
+                              <span className="absolute inset-0 bg-secondary transition-all duration-300 group-hover:brightness-110" />
+                              <span className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-white blur-xl transition-opacity" />
+                              <FaCalendar className="relative h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                              <span className="relative truncate">{btn.label}</span>
+                            </button>
+                          </Link>
+                        );
+                      })()}
+
+                      {/* Button 2: Buy Ticket */}
+                      {(() => {
+                        const btn = ctaButtons[1];
+                        return (
+                          <Link key={btn.id || btn.label} to={btn.url} className="w-full sm:w-auto">
+                            <button className="w-full px-3.5 sm:px-6 md:px-7 py-3 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm md:text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-secondary/50 hover:text-secondary transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center gap-1.5 sm:gap-2">
+                              <FaTicket className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                              <span className="truncate">{btn.label}</span>
+                            </button>
+                          </Link>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Third button (Rent Equipment): Centered in between on mobile */}
+                    {ctaButtons.slice(2).map((btn: any) => (
+                      <div key={btn.id || btn.label} className="w-full sm:w-auto flex justify-center sm:block">
+                        <Link to={btn.url} className="w-full max-w-[280px] sm:max-w-none sm:w-auto">
+                          <button className="w-full px-4 sm:px-6 md:px-7 py-3 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm md:text-base text-white border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-1.5 sm:gap-2">
+                            <FaWrench className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            <span className="truncate">{btn.label}</span>
+                          </button>
+                        </Link>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  ctaButtons.map((btn: any) => (
+                    <Link key={btn.id || btn.label} to={btn.url} className="w-full sm:w-auto">
+                      <button className="w-full px-5 py-3 rounded-2xl font-bold text-sm text-white border border-white/20 bg-white/5 flex items-center justify-center gap-2">
+                        <span>{btn.label}</span>
                       </button>
                     </Link>
-                  );
-                }
-                if (btn.style === "secondary") {
-                  return (
-                    <Link key={btn.id || btn.label} to={btn.url}>
-                      <button className="px-7 py-3.5 rounded-2xl font-bold text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-secondary/50 hover:text-secondary transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2">
-                        <FaTicket className="h-4.5 w-4.5" />
-                        {btn.label}
-                      </button>
-                    </Link>
-                  );
-                }
-                return (
-                  <Link key={btn.id || btn.label} to={btn.url}>
-                    <button className="px-7 py-3.5 rounded-2xl font-bold text-base text-white border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 flex items-center gap-2">
-                      <FaWrench className="h-4.5 w-4.5" />
-                      {btn.label}
-                    </button>
-                  </Link>
-                );
-              })}
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
