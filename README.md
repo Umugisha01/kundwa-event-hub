@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Kundwa Event Hub
 
-TODO: Document your project here
+Africa's premier event production, equipment rental, and ticketing management platform.
