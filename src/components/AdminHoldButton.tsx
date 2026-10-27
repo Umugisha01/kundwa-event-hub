@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, ShieldCheck } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Shield } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface AdminHoldButtonProps {
@@ -14,12 +13,9 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
-  const { role } = useAuth();
   const navigate = useNavigate();
 
-  const HOLD_DURATION = 1500; // 1.5 seconds
-
-  const isAdmin = role === "admin";
+  const HOLD_DURATION = 5000; // 5 seconds continuous hold required
 
   const clearHold = () => {
     setIsHolding(false);
@@ -35,9 +31,6 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
   };
 
   const handleStart = (e: React.SyntheticEvent) => {
-    // If already logged in, a normal click can take them to admin directly
-    if (isAdmin) return;
-
     e.preventDefault();
     setIsHolding(true);
     startTimeRef.current = performance.now();
@@ -58,29 +51,26 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
       clearHold();
       if ("vibrate" in navigator) {
         try {
-          navigator.vibrate([40, 60, 40]);
+          navigator.vibrate([60, 80, 100]);
         } catch {
           // ignore
         }
       }
       toast({
-        title: "Admin Portal",
+        title: "Admin Portal Unlocked",
         description: "Redirecting to Administrator Login...",
       });
       navigate("/login");
     }, HOLD_DURATION);
   };
 
-  const handleClick = () => {
-    if (isAdmin) {
-      navigate("/admin");
-    } else {
-      // Require holding; show helpful feedback on short tap
-      toast({
-        title: "Security Shield",
-        description: "Press and hold for 1.5 seconds to unlock Admin access.",
-      });
-    }
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Do not redirect on click - inform the user of the 5-second hold requirement
+    toast({
+      title: "Security Shield",
+      description: "Press and hold the shield for 5 seconds to unlock Administrator Login.",
+    });
   };
 
   useEffect(() => {
@@ -104,20 +94,18 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
         onTouchEnd={clearHold}
         onTouchCancel={clearHold}
         title=""
-        aria-label="Admin Portal"
+        aria-label="Admin Portal Shield"
         className={`relative flex items-center justify-center p-2 rounded-xl select-none transition-all duration-300 ${
-          isAdmin
-            ? "bg-primary/20 text-primary border border-primary/40 shadow-sm shadow-primary/20 hover:scale-105 active:scale-95"
-            : isHolding
-            ? "bg-primary/30 text-primary scale-110 shadow-lg shadow-primary/30"
-            : "hover:scale-105 active:scale-95 opacity-75 hover:opacity-100"
+          isHolding
+            ? "bg-primary/25 text-primary scale-110 shadow-lg shadow-primary/30"
+            : "hover:scale-105 active:scale-95 opacity-70 hover:opacity-100"
         }`}
         style={{
           touchAction: "none",
         }}
       >
         {/* Circular progress SVG */}
-        {!isAdmin && isHolding && (
+        {isHolding && (
           <svg
             className="absolute inset-0 h-full w-full -rotate-90 pointer-events-none"
             viewBox="0 0 36 36"
@@ -146,22 +134,18 @@ export function AdminHoldButton({ className = "" }: AdminHoldButtonProps) {
           </svg>
         )}
 
-        {/* Icon */}
-        {isAdmin ? (
-          <ShieldCheck className="h-4 w-4 text-primary animate-pulse" />
-        ) : (
-          <Shield
-            className={`h-4 w-4 transition-transform duration-200 ${
-              isHolding ? "scale-110 text-primary" : "text-muted-foreground"
-            }`}
-          />
-        )}
+        {/* Shield Icon */}
+        <Shield
+          className={`h-4 w-4 transition-transform duration-200 ${
+            isHolding ? "scale-110 text-primary" : "text-slate-400 group-hover:text-white"
+          }`}
+        />
       </button>
 
-      {/* Holding visual tooltip */}
-      {isHolding && !isAdmin && (
-        <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold px-2 py-0.5 rounded-full bg-background/95 text-primary border border-primary/30 shadow-md backdrop-blur-md pointer-events-none animate-in fade-in zoom-in-95">
-          {Math.round(progress)}%
+      {/* Holding visual countdown tooltip */}
+      {isHolding && (
+        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900/95 text-secondary border border-secondary/40 shadow-xl backdrop-blur-md pointer-events-none animate-in fade-in zoom-in-95 z-50">
+          {Math.round(progress)}% ({Math.ceil(Math.max(0, 5 - (progress / 20)))}s)
         </span>
       )}
     </div>

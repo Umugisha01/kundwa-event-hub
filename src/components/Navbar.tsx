@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
-import { AdminHoldButton } from "@/components/AdminHoldButton";
 
 const publicLinks = [
   { to: "/", label: "Home", labelRw: "Ahabanza" },
@@ -33,10 +32,7 @@ export function Navbar() {
 
   const isDark = theme === "dark";
 
-  const navLinks = [
-    ...publicLinks,
-    ...(role === "admin" ? [{ to: "/admin", label: "Admin", labelRw: "Ubuyobozi" }] : []),
-  ];
+  const navLinks = publicLinks;
 
   /* scroll tracking - throttled with rAF, only re-renders when crossing 24px threshold */
   useEffect(() => {
@@ -239,17 +235,11 @@ export function Navbar() {
                   </span>
                 )}
               </button>
-
-              {/* Secret Admin Hold Shield */}
-              <AdminHoldButton />
             </div>
           </div>
 
           {/* ── Mobile controls ── */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Secret Admin Hold Shield */}
-            <AdminHoldButton />
-
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
